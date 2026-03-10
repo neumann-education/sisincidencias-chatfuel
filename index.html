@@ -496,13 +496,23 @@
         /** MODAL DINÁMICO & LOGICA DE ROLES */
         function getValidImageUrl(url) {
             if (!url || typeof url !== 'string' || url.trim() === "") return "";
-            // Si tiene el formato viejo que bloquea Google, lo convertimos al nuevo automáticamente
-            if (url.includes("drive.google.com/uc")) {
-                const idMatch = url.match(/id=([^&]+)/);
-                if (idMatch && idMatch[1]) {
-                    return `https://drive.google.com/thumbnail?id=${idMatch[1]}&sz=w1000`;
-                }
+            
+            // Si la imagen es un formato base64 puro (recién pegada), la muestra sin problemas
+            if (url.startsWith("data:image")) return url;
+
+            // Extraer el ID único del archivo de Google Drive sin importar el formato viejo
+            let fileId = null;
+            const idMatch = url.match(/id=([^&]+)/) || url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+            
+            if (idMatch && idMatch[1]) {
+                fileId = idMatch[1];
             }
+
+            if (fileId) {
+                // TRUCO: Usar el servidor "lh3" de Google para evitar el bloqueo de imágenes rotas (Error 403)
+                return `https://lh3.googleusercontent.com/d/${fileId}`;
+            }
+
             return url;
         }
 
