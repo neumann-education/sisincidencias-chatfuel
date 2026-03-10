@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Incidencias Chatfuel</title>
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Frameworks -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+    
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --success: #1cc88a;
+            --warning: #f6c23e;
+            --danger: #e74a3b;
+            --dark: #2b2d42;
+            --light: #f8f9fa;
+        }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f4f6f9; color: #333; }
+        .hidden { display: none !important; }
+        
+        /* Auth */
+        .auth-wrapper { height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%); }
+        .auth-card { background: #fff; padding: 40px; border-radius: 20px; width: 100%; max-width: 400px; }
+        .logo-circle { width: 60px; height: 60px; background: rgba(67, 97, 238, 0.1); color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto; }
+        
+        /* Nav & Layout */
+        .top-nav { background: #fff; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
+        .nav-brand { font-size: 20px; color: var(--dark); }
+        .nav-brand i { color: var(--primary); }
+        .user-badge { background: rgba(67, 97, 238, 0.1); color: var(--primary); padding: 8px 15px; border-radius: 20px; font-size: 14px; font-weight: 600; }
+        .btn-logout { background: #fee2e2; color: #ef4444; border: none; padding: 8px 12px; border-radius: 10px; transition: 0.3s; }
+        .btn-logout:hover { background: #ef4444; color: #fff; }
+        
+        /* Buttons & Cards */
+        .btn-primary-custom { background: var(--primary); color: #fff; border: none; border-radius: 10px; font-weight: 600; transition: 0.3s; }
+        .btn-primary-custom:hover { background: var(--secondary); color: #fff; }
+        .btn-success-custom { background: var(--success); color: #fff; border: none; border-radius: 10px; font-weight: 600; transition: 0.3s; }
+        .btn-success-custom:hover { background: #17a673; color: #fff; }
+        .table-card { background: #fff; border-radius: 15px; overflow: hidden; }
+        
+        /* Drop Zone para Imágenes */
+        .drop-zone { border: 2px dashed #cbd5e1; border-radius: 10px; padding: 25px 15px; text-align: center; background: #f8fafc; cursor: pointer; transition: 0.3s; position: relative; }
+        .drop-zone:hover, .drop-zone.dragover { border-color: var(--primary); background: #eff6ff; }
+        .drop-zone i { font-size: 30px; color: #94a3b8; margin-bottom: 10px; }
+        .img-preview { max-width: 100%; max-height: 250px; border-radius: 8px; margin-top: 15px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); display: none; object-fit: contain; }
+        
+        /* Table */
+        .table thead th { font-weight: 600; text-transform: uppercase; font-size: 12px; color: #64748b; letter-spacing: 0.5px; }
+        .clickable-row { cursor: pointer; transition: 0.2s; }
+        .clickable-row:hover { background-color: #f8fafc !important; }
+        
+        /* Badges */
+        .badge-status { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .status-pendiente { background: #fef08a; color: #854d0e; }
+        .status-revisado { background: #bbf7d0; color: #166534; }
+        .status-rechazado { background: #fecaca; color: #991b1b; }
+        
+        /* Loader */
+        .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.9); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+        .spinner-container { padding: 30px; border-radius: 15px; background: white; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+
+    <!-- Cargador -->
+    <div id="loader" class="loading-overlay hidden">
+        <div class="spinner-container text-center">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-2 fw-bold text-muted">Sincronizando incidencias...</p>
+        </div>
+    </div>
+
+    <!-- LOGIN -->
+    <section id="loginSection" class="auth-wrapper hidden">
+        <div class="auth-card shadow-lg">
+            <div class="auth-header text-center">
+                <div class="logo-circle mb-3"><i class="fas fa-bug"></i></div>
+                <h2 class="fw-bold">Reportes</h2>
+                <p class="text-muted">Incidencias Chatfuel Multi-Marca</p>
+            </div>
+            <div class="auth-body mt-4">
+                <div class="form-floating mb-3">
+                    <input type="text" id="userInput" class="form-control" placeholder="Usuario" onkeypress="if(event.key==='Enter') attemptLogin()">
+                    <label><i class="fas fa-user me-2"></i>Usuario</label>
+                </div>
+                <div class="form-floating mb-4">
+                    <input type="password" id="passInput" class="form-control" placeholder="Contraseña" onkeypress="if(event.key==='Enter') attemptLogin()">
+                    <label><i class="fas fa-lock me-2"></i>Contraseña</label>
+                </div>
+                <button class="btn btn-primary-custom w-100 py-3" onclick="attemptLogin()">
+                    INGRESAR <i class="fas fa-arrow-right ms-2"></i>
+                </button>
+                <div id="loginError" class="text-danger mt-3 text-center small"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- DASHBOARD -->
+    <main id="mainSection" class="dashboard-container hidden">
+        <nav class="top-nav shadow-sm">
+            <div class="nav-brand">
+                <i class="fas fa-headset me-2"></i><span><b>Gestión</b>Incidencias</span>
+            </div>
+            <div class="nav-user d-flex align-items-center gap-3">
+                <span id="rolBadge" class="user-badge"></span>
+                <button class="btn-logout" onclick="clearSession()"><i class="fas fa-sign-out-alt"></i></button>
+            </div>
+        </nav>
+
+        <div class="content-body p-4">
+            <div class="d-flex justify-content-between align-items-end mb-4 flex-wrap gap-3">
+                <div>
+                    <h4 class="fw-bold mb-1">Panel de Control</h4>
+                    <p class="text-muted mb-0">Seguimiento de problemas en flujos de Chatfuel.</p>
+                </div>
+                <button id="btnNuevo" class="btn btn-success-custom hidden" onclick="openEdit(-1)">
+                    <i class="fas fa-plus me-2"></i>NUEVO REPORTE
+                </button>
+            </div>
+
+            <!-- Cards de Resumen -->
+            <div class="row g-3 mb-4" id="statsCards">
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm bg-primary text-white p-3 h-100" style="cursor: pointer;" onclick="clearFilters()">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">Total Incidencias</h6>
+                                <h3 class="fw-bold mb-0" id="stat-total">0</h3>
+                            </div>
+                            <i class="fas fa-clipboard-list fa-2x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm bg-warning text-dark p-3 h-100" style="cursor: pointer;" onclick="filterByStatus('Pendiente')">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">Pendientes</h6>
+                                <h3 class="fw-bold mb-0" id="stat-pendientes">0</h3>
+                            </div>
+                            <i class="fas fa-clock fa-2x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm bg-success text-white p-3 h-100" style="cursor: pointer;" onclick="filterByStatus('Revisado')">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">Revisados</h6>
+                                <h3 class="fw-bold mb-0" id="stat-revisados">0</h3>
+                            </div>
+                            <i class="fas fa-check-circle fa-2x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm bg-danger text-white p-3 h-100" style="cursor: pointer;" onclick="filterByStatus('Rechazado')">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">Rechazados</h6>
+                                <h3 class="fw-bold mb-0" id="stat-rechazados">0</h3>
+                            </div>
+                            <i class="fas fa-times-circle fa-2x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filtros Avanzados -->
+            <div class="card filter-card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">Rango de Fecha</label>
+                            <input type="text" id="dateRangeFilter" class="form-control" placeholder="📅 Fecha solicitud..." readonly>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small fw-bold">Estado</label>
+                            <select id="statusFilter" class="form-select" onchange="currentPage=1;renderTable()">
+                                <option value="">Todos</option>
+                                <option value="Pendiente">Pendiente</option>
+                                <option value="Revisado">Revisado</option>
+                                <option value="Rechazado">Rechazado</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small fw-bold">Marca</label>
+                            <select id="brandFilter" class="form-select" onchange="currentPage=1;renderTable()">
+                                <option value="">Todas</option>
+                                <option value="BGU">BGU</option>
+                                <option value="IEMPRESA">IEMPRESA</option>
+                                <option value="JVN">JVN</option>
+                            </select>
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label small fw-bold">Búsqueda Rápida</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
+                                <input type="text" id="nameFilter" class="form-control" placeholder="ID, Contacto o Problema..." oninput="currentPage=1;renderTable()">
+                                <button class="btn btn-outline-secondary" onclick="clearFilters()"><i class="fas fa-times"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabla -->
+            <div class="table-card shadow-sm border-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr id="tableHeader"></tr>
+                        </thead>
+                        <tbody id="tableBody"></tbody>
+                    </table>
+                </div>
+                <div id="paginationControls" class="p-3 border-top bg-light"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- MODAL -->
+    <div class="modal fade" id="editModal" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-dark text-white p-4">
+                    <h5 class="modal-title fw-bold" id="modalTitle">Detalle de Incidencia</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4 bg-light">
+                    <!-- Formulario dinámico -->
+                    <div id="editForm" class="row g-4"></div>
+                </div>
+                <div class="modal-footer bg-white p-3 border-top">
+                    <button type="button" class="btn btn-link text-decoration-none text-dark fw-bold" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-primary-custom px-4" onclick="saveData()"><i class="fas fa-save me-2"></i>Guardar Cambios</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+    
+    <script>
+        /** CONFIGURACIÓN Y VARIABLES */
+        // ** CAMBIA ESTA URL POR LA DE TU NUEVO GOOGLE APPS SCRIPT **
+        const API_URL = 'https://script.google.com/macros/s/AKfycbzMdhZWmgZj8BuN8td1qdfEbcIP4GDRft0kpGubUupwb8zdH57P01tRYmOZI-c7JIR9/exec';
+        
+        let userData = { rol: "", nombre: "" };
+        let currentData =[];
+        let isNewRecord = false;
+        let filterDates =[]; 
+        let currentPage = 1;
+        const recordsPerPage = 10;
+        const SESSION_TIMEOUT = 5 * 60 * 60 * 1000;
+        
+        // Estructura de Columnas para Incidencias (Total 11)
+        const COL = {
+            ID: 0,
+            FECHA_SOL: 1,
+            MARCA: 2,
+            NUMERO_CONTACTO: 3,
+            PROBLEMA: 4,
+            SOLUCION: 5,
+            IMG_INCIDENCIA: 6, // Base64 o URL
+            ESTADO: 7, // Pendiente, Revisado, Rechazado
+            COMENTARIO_SOPORTE: 8,
+            IMG_SOPORTE: 9, // Base64 o URL
+            FECHA_ATENCION: 10
+        };
+        
+        /** GESTIÓN DE SESIÓN */
+        function saveSession(data) {
+            localStorage.setItem('incident_session', JSON.stringify({ user: data, loginTime: Date.now() }));
+        }
+        function getSession() {
+            const sessionRaw = localStorage.getItem('incident_session');
+            if (!sessionRaw) return null;
+            const session = JSON.parse(sessionRaw);
+            if (Date.now() - session.loginTime > SESSION_TIMEOUT) {
+                localStorage.removeItem('incident_session');
+                return null;
+            }
+            return session.user;
+        }
+        function clearSession() { localStorage.removeItem('incident_session'); location.reload(); }
+        
+        /** LOGIN */
+        async function attemptLogin() {
+            const user = document.getElementById('userInput').value;
+            const pass = document.getElementById('passInput').value;
+            if (!user || !pass) return Swal.fire('Error', 'Ingrese sus credenciales.', 'warning');
+            
+            const res = await callAPI({ action: 'login', user, pass });
+            if (res && res.success) {
+                saveSession(res);
+                showDashboard(res);
+            } else {
+                document.getElementById('loginError').innerText = res ? res.message : "Error de conexión.";
+            }
+        }
+        
+        window.onload = function() {
+            const user = getSession();
+            if (user) showDashboard(user);
+            else document.getElementById('loginSection').classList.remove('hidden');
+        };
+        
+        function showDashboard(res) {
+            userData = res;
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('mainSection').classList.remove('hidden');
+            
+            let displayRol = res.rol;
+            if(res.rol.includes("ASESORA")) displayRol = "ASESORA";
+            document.getElementById('rolBadge').innerText = `${res.nombre.toUpperCase()} | ${displayRol}`;
+            
+            // Solo Asesoras ven el botón de "Nuevo Reporte"
+            if (res.rol.startsWith("ASESORA_")) {
+                document.getElementById('btnNuevo').classList.remove('hidden');
+            } else {
+                document.getElementById('btnNuevo').classList.add('hidden');
+            }
+            
+            initFilters();
+            loadData();
+        }
+
+        /** DATA LOADING */
+        async function loadData() {
+            const res = await callAPI({ action: 'getData', rol: userData.rol });
+            if (res && res.success) {
+                currentData = res.data;
+                renderTable();
+            }
+        }
+
+        function updateStats(dataToCount) {
+            let total = dataToCount.length;
+            let pendientes = 0, revisados = 0, rechazados = 0;
+        
+            dataToCount.forEach(item => {
+                const f = item.data;
+                if (f[COL.ESTADO] === "Pendiente") pendientes++;
+                else if (f[COL.ESTADO] === "Revisado") revisados++;
+                else if (f[COL.ESTADO] === "Rechazado") rechazados++;
+            });
+        
+            document.getElementById('stat-total').innerText = total;
+            document.getElementById('stat-pendientes').innerText = pendientes;
+            document.getElementById('stat-revisados').innerText = revisados;
+            document.getElementById('stat-rechazados').innerText = rechazados;
+        }
+
+        /** RENDERIZADO DE TABLA */
+        function renderTable() {
+            if (currentData.length === 0) return;
+        
+            const body = document.getElementById('tableBody');
+            const header = document.getElementById('tableHeader');
+        
+            header.innerHTML = `<tr>
+                <th class="ps-4">ID / MARCA</th>
+                <th>FECHA SOLICITUD</th>
+                <th>N° CONTACTO</th>
+                <th>PROBLEMA</th>
+                <th class="text-center">ESTADO</th>
+                <th class="text-end pe-4">ACCIÓN</th>
+            </tr>`;
+        
+            // Filtrado
+            let filteredData =[];
+            for (let i = 1; i < currentData.length; i++) {
+                const f = currentData[i];
+                
+                // Filtro Fecha
+                if (filterDates.length === 2) {
+                    let rowDate = moment(f[COL.FECHA_SOL], 'DD/MM/YYYY HH:mm:ss');
+                    if (!rowDate.isValid()) rowDate = moment(f[COL.FECHA_SOL], 'DD/MM/YYYY');
+                    if (!rowDate.isValid() || rowDate.isBefore(filterDates[0], 'day') || rowDate.isAfter(filterDates[1], 'day')) continue;
+                }
+                
+                const sFilter = document.getElementById('statusFilter').value;
+                if (sFilter && f[COL.ESTADO] !== sFilter) continue;
+                
+                const bFilter = document.getElementById('brandFilter').value;
+                if (bFilter && f[COL.MARCA] !== bFilter) continue;
+                
+                const q = document.getElementById('nameFilter').value.toLowerCase();
+                if (q && !([f[COL.ID], f[COL.NUMERO_CONTACTO], f[COL.PROBLEMA]].some(t => String(t).toLowerCase().includes(q)))) continue;
+        
+                filteredData.push({ index: i, data: f });
+            }
+
+            // Paginación
+            const totalRecords = filteredData.length;
+            const totalPages = Math.ceil(totalRecords / recordsPerPage);
+            const start = (currentPage - 1) * recordsPerPage;
+            const paginated = filteredData.slice(start, start + recordsPerPage);
+        
+            // Generar Filas
+            let html = "";
+            paginated.forEach(item => {
+                const i = item.index;
+                const f = item.data;
+                const brandBadge = f[COL.MARCA] === 'BGU' ? 'bg-primary' : (f[COL.MARCA] === 'IEMPRESA' ? 'bg-success' : 'bg-dark');
+                
+                html += `
+                    <tr class="clickable-row" onclick="openEdit(${i})">
+                        <td class="ps-4">
+                            <div class="fw-bold text-primary small">${f[COL.ID]}</div>
+                            <span class="badge ${brandBadge}" style="font-size: 10px">${f[COL.MARCA]}</span>
+                        </td>
+                        <td class="small text-muted">${f[COL.FECHA_SOL] || '---'}</td>
+                        <td><code class="bg-light p-1 rounded text-dark">${f[COL.NUMERO_CONTACTO]}</code></td>
+                        <td><div class="text-truncate" style="max-width: 250px" title="${f[COL.PROBLEMA]}">${f[COL.PROBLEMA]}</div></td>
+                        <td class="text-center">${getStatusBadge(f[COL.ESTADO])}</td>
+                        <td class="text-end pe-4">
+                            <button class="btn btn-sm btn-outline-primary border-0" onclick="event.stopPropagation(); openEdit(${i})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        </td>
+                    </tr>`;
+            });
+            body.innerHTML = html;
+            updateStats(filteredData);
+            renderPagination(totalRecords, totalPages);            
+        }
+
+        function getStatusBadge(status) {
+            let cls = 'status-pendiente';
+            if(status === 'Revisado') cls = 'status-revisado';
+            if(status === 'Rechazado') cls = 'status-rechazado';
+            return `<span class="badge-status ${cls}">${status || 'Pendiente'}</span>`;
+        }
+        
+        function renderPagination(total, pages) {
+            const cont = document.getElementById('paginationControls');
+            if (pages <= 1) { cont.innerHTML = ''; return; }
+            let html = `<div class="d-flex justify-content-between align-items-center">
+                <span class="small text-muted">Mostrando ${total} registros</span>
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item ${currentPage===1?'disabled':''}"><a class="page-link" href="#" onclick="currentPage--;renderTable()">Anterior</a></li>`;
+            for(let i=1; i<=pages; i++) {
+                html += `<li class="page-item ${currentPage===i?'active':''}"><a class="page-link" href="#" onclick="currentPage=${i};renderTable()">${i}</a></li>`;
+            }
+            html += `<li class="page-item ${currentPage===pages?'disabled':''}"><a class="page-link" href="#" onclick="currentPage++;renderTable()">Siguiente</a></li>
+                </ul>
+            </div>`;
+            cont.innerHTML = html;
+        }
+        
+        /** FILTROS */
+        function initFilters() {
+            $('#dateRangeFilter').daterangepicker({
+                autoUpdateInput: false,
+                locale: { format: 'DD/MM/YYYY', cancelLabel: 'Limpiar', applyLabel: 'Aplicar' }
+            });
+            $('#dateRangeFilter').on('apply.daterangepicker', function(ev, picker) {
+                $(this).val(picker.startDate.format('DD/MM/YYYY') + ' - ' + picker.endDate.format('DD/MM/YYYY'));
+                filterDates = [picker.startDate, picker.endDate];
+                currentPage = 1; renderTable();
+            });
+        }
+        function filterByStatus(status) {
+            document.getElementById('statusFilter').value = status;
+            currentPage = 1; renderTable();
+        }
+        function clearFilters() {
+            document.getElementById('nameFilter').value = "";
+            document.getElementById('statusFilter').value = "";
+            document.getElementById('brandFilter').value = "";
+            $('#dateRangeFilter').val('');
+            filterDates =[];
+            currentPage = 1; renderTable();
+        }
+
+        /** MODAL DINÁMICO & LOGICA DE ROLES */
+        function getValidImageUrl(url) {
+            if (!url || typeof url !== 'string' || url.trim() === "") return "";
+            // Si tiene el formato viejo que bloquea Google, lo convertimos al nuevo automáticamente
+            if (url.includes("drive.google.com/uc")) {
+                const idMatch = url.match(/id=([^&]+)/);
+                if (idMatch && idMatch[1]) {
+                    return `https://drive.google.com/thumbnail?id=${idMatch[1]}&sz=w1000`;
+                }
+            }
+            return url;
+        }
+
+        function openEdit(index) {
+            isNewRecord = (index === -1);
+            const isAsesora = userData.rol.startsWith("ASESORA_");
+            const isSoporte = userData.rol === "SOPORTE";
+            
+            // Iniciar Fila
+            let row = isNewRecord ? Array(11).fill("") :[...currentData[index]];
+            
+            if (isNewRecord && isAsesora) {
+                row[COL.MARCA] = userData.rol.replace("ASESORA_", "");
+                row[COL.ESTADO] = "Pendiente";
+            }
+        
+            document.getElementById("modalTitle").innerHTML = isNewRecord ? '<i class="fas fa-bug me-2"></i>Reportar Incidencia' : '<i class="fas fa-edit me-2"></i>Detalle de Incidencia';
+            
+            // Formatear imágenes (Evita roturas si está vacío o tiene formato viejo)
+            const imgIncidencia = getValidImageUrl(row[COL.IMG_INCIDENCIA]);
+            const imgSoporte = getValidImageUrl(row[COL.IMG_SOPORTE]);
+
+            const formContainer = document.getElementById("editForm");
+            
+            const readAsesora = (!isNewRecord && isSoporte) ? "readonly" : "";
+            const disAsesora = (!isNewRecord && isSoporte) ? "disabled" : "";
+            const readSoporte = isAsesora ? "readonly" : "";
+            const disSoporte = isAsesora ? "disabled" : "";
+
+            let html = `
+                <input type="hidden" id="edit-0" value="${row[COL.ID] || ''}">
+                <input type="hidden" id="edit-1" value="${row[COL.FECHA_SOL] || ''}">
+                <input type="hidden" id="edit-2" value="${row[COL.MARCA] || ''}">
+                <input type="hidden" id="edit-10" value="${row[COL.FECHA_ATENCION] || ''}">
+                
+                <!-- SECCION ASESORA -->
+                <div class="col-md-7">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-header bg-white fw-bold text-primary py-3">
+                            <i class="fas fa-user-tie me-2"></i>Datos del Reporte (Asesora)
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <label class="form-label small fw-bold text-muted">Número de Contacto</label>
+                                    <input type="text" id="edit-3" class="form-control" placeholder="Ej. +51999999999" value="${row[COL.NUMERO_CONTACTO] || ''}" ${readAsesora}>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small fw-bold text-muted">Describe el Problema</label>
+                                    <textarea id="edit-4" class="form-control" rows="3" placeholder="Detalla qué sucedió..." ${readAsesora}>${row[COL.PROBLEMA] || ''}</textarea>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small fw-bold text-muted">Describe la Solución (Opcional)</label>
+                                    <textarea id="edit-5" class="form-control" rows="2" placeholder="Qué pasos hiciste para solucionarlo..." ${readAsesora}>${row[COL.SOLUCION] || ''}</textarea>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small fw-bold text-muted">Evidencia del Problema (Imagen)</label>
+                                    <div class="mb-2 small text-muted"><i class="fas fa-keyboard me-1"></i>Puedes presionar <b>Ctrl+V</b> para pegar captura</div>
+                                    <input type="hidden" id="edit-6" value="${imgIncidencia}">
+                                    ${isAsesora ? `
+                                        <input type="file" id="file-incidencia" class="d-none" accept="image/*">
+                                        <div id="drop-incidencia" class="drop-zone" tabindex="0">
+                                            <i class="fas fa-cloud-upload-alt"></i>
+                                            <p class="mb-0 text-secondary">Haz clic, arrastra o presiona Ctrl+V aquí</p>
+                                        </div>
+                                    ` : ''}
+                                    <img id="preview-incidencia" class="img-preview" src="${imgIncidencia}" style="${imgIncidencia ? 'display:block;' : 'display:none;'}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECCION SOPORTE -->
+                <div class="col-md-5">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-header bg-white fw-bold text-success py-3">
+                            <i class="fas fa-tools me-2"></i>Resolución (Soporte)
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <label class="form-label small fw-bold text-muted">Estado</label>
+                                    <select id="edit-7" class="form-select fw-bold" ${disSoporte}>
+                                        <option value="Pendiente" ${row[COL.ESTADO]==='Pendiente'?'selected':''}>Pendiente</option>
+                                        <option value="Revisado" ${row[COL.ESTADO]==='Revisado'?'selected':''}>Revisado</option>
+                                        <option value="Rechazado" ${row[COL.ESTADO]==='Rechazado'?'selected':''}>Rechazado</option>
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small fw-bold text-muted">Comentarios del Soporte</label>
+                                    <textarea id="edit-8" class="form-control" rows="4" placeholder="Observaciones de la revisión..." ${readSoporte}>${row[COL.COMENTARIO_SOPORTE] || ''}</textarea>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small fw-bold text-muted">Evidencia Soporte (Imagen)</label>
+                                    <input type="hidden" id="edit-9" value="${imgSoporte}">
+                                    ${isSoporte ? `
+                                        <div class="mb-2 small text-muted"><i class="fas fa-keyboard me-1"></i>Presiona <b>Ctrl+V</b> para pegar captura</div>
+                                        <input type="file" id="file-soporte" class="d-none" accept="image/*">
+                                        <div id="drop-soporte" class="drop-zone py-3" tabindex="0">
+                                            <i class="fas fa-cloud-upload-alt fs-4"></i>
+                                            <p class="mb-0 small text-secondary">Clic, arrastra o pega imagen (Ctrl+V)</p>
+                                        </div>
+                                    ` : ''}
+                                    <img id="preview-soporte" class="img-preview" src="${imgSoporte}" style="${imgSoporte ? 'display:block;' : 'display:none;'}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            formContainer.innerHTML = html;
+            new bootstrap.Modal('#editModal').show();
+
+            if (isAsesora) bindImageEvents('drop-incidencia', 'file-incidencia', 'preview-incidencia', 'edit-6');
+            if (isSoporte) bindImageEvents('drop-soporte', 'file-soporte', 'preview-soporte', 'edit-9');
+        }
+
+        /** MANEJO DE IMÁGENES (CLICK, DRAG & DROP) */
+        function bindImageEvents(zoneId, fileId, previewId, hiddenId) {
+            const zone = document.getElementById(zoneId);
+            const fileInput = document.getElementById(fileId);
+            if(!zone) return;
+
+            zone.addEventListener('click', () => fileInput.click());
+            
+            fileInput.addEventListener('change', function() {
+                if (this.files && this.files[0]) processImage(this.files[0], previewId, hiddenId);
+            });
+
+            zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+            zone.addEventListener('dragleave', e => { e.preventDefault(); zone.classList.remove('dragover'); });
+            zone.addEventListener('drop', e => {
+                e.preventDefault();
+                zone.classList.remove('dragover');
+                if (e.dataTransfer.files && e.dataTransfer.files[0]) processImage(e.dataTransfer.files[0], previewId, hiddenId);
+            });
+        }
+
+        function processImage(file, previewId, hiddenId) {
+            if (!file.type.match('image.*')) return Swal.fire('Error', 'Solo se permiten archivos de imagen.', 'error');
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById(previewId).src = e.target.result;
+                document.getElementById(previewId).style.display = 'block';
+                document.getElementById(hiddenId).value = e.target.result; // Guarda Base64
+            };
+            reader.readAsDataURL(file);
+        }
+
+        /** CAPTURAR PEGAR (CTRL+V) EN TODO EL DOCUMENTO CUANDO EL MODAL ESTÁ ABIERTO */
+        document.addEventListener('paste', function(e) {
+            const modal = document.getElementById('editModal');
+            if (!modal || !modal.classList.contains('show')) return;
+
+            const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+            let file = null;
+            for (let i = 0; i < items.length; i++) {
+                if (items[i].kind === 'file') {
+                    file = items[i].getAsFile();
+                    break;
+                }
+            }
+            if (!file) return;
+
+            // Decidir a qué caja va la imagen según el Rol
+            const isAsesora = userData.rol.startsWith("ASESORA_");
+            const isSoporte = userData.rol === "SOPORTE";
+            
+            if (isAsesora && document.getElementById('preview-incidencia')) {
+                processImage(file, 'preview-incidencia', 'edit-6');
+            } else if (isSoporte && document.getElementById('preview-soporte')) {
+                processImage(file, 'preview-soporte', 'edit-9');
+            }
+        });
+        
+        /** GUARDAR DATOS */
+        async function saveData() {
+            let rowData = Array(11).fill("");
+            
+            const isAsesora = userData.rol.startsWith("ASESORA_");
+            const isSoporte = userData.rol === "SOPORTE";
+            const currentId = document.getElementById('edit-0').value;
+            const statusPrev = isNewRecord ? "" : currentData.find(r => r[0].toString() === currentId)[COL.ESTADO];
+            const statusNew = document.getElementById('edit-7').value;
+
+            // Recoger campos (de 0 a 10)
+            for (let i = 0; i < 11; i++) {
+                const el = document.getElementById(`edit-${i}`);
+                if (el) {
+                    rowData[i] = el.value;
+                } else if (!isNewRecord && currentId) {
+                    const originalRow = currentData.find(r => r[0].toString() === currentId.toString());
+                    if(originalRow) rowData[i] = originalRow[i];
+                }
+            }
+
+            // Validaciones
+            if (isAsesora && (!rowData[COL.NUMERO_CONTACTO] || !rowData[COL.PROBLEMA])) {
+                return Swal.fire('Error', 'Debe llenar al menos el N° de Contacto y el Problema', 'warning');
+            }
+
+            // Fechas Internas Automáticas
+            const now = moment().format('DD/MM/YYYY HH:mm:ss');
+            if (isNewRecord) {
+                rowData[COL.FECHA_SOL] = now;
+            }
+            // Si el estado cambia de Pendiente a Revisado/Rechazado, se marca la Fecha de Atención
+            if (isSoporte && statusPrev === "Pendiente" && statusNew !== "Pendiente") {
+                rowData[COL.FECHA_ATENCION] = now;
+            }
+
+            const res = await callAPI({ action: 'update', newData: rowData, rol: userData.rol, isNew: isNewRecord });
+            if (res && res.success) {
+                bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
+                Swal.fire('Éxito', 'Incidencia guardada correctamente', 'success').then(() => {
+                    loadData(); 
+                });
+            }
+        }
+        
+        /** COMUNICACIÓN API (fetch) */
+        async function callAPI(payload) {
+            document.getElementById('loader').classList.remove('hidden');
+            try {
+                const response = await fetch(API_URL, { 
+                    method: 'POST', 
+                    body: JSON.stringify(payload) 
+                });
+                const res = await response.json();
+                document.getElementById('loader').classList.add('hidden');
+                return res;
+            } catch (e) {
+                document.getElementById('loader').classList.add('hidden');
+                Swal.fire('Error', 'No se pudo conectar con el servidor. Revise su conexión o URL del script.', 'error');
+            }
+        }
+    </script>
+</body>
+</html>
