@@ -28,7 +28,21 @@
         .hidden { display: none !important; }
         
         /* Auth */
-        .auth-wrapper { height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%); }
+        .auth-wrapper { 
+            height: 100vh; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            background: linear-gradient(-45deg, #4361ee, #3a0ca3, #4cc9f0, #7209b7);
+            background-size: 400% 400%;
+            animation: gradientBG 12s ease infinite;
+        }
+        
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
         .auth-card { background: #fff; padding: 40px; border-radius: 20px; width: 100%; max-width: 400px; }
         .logo-circle { width: 60px; height: 60px; background: rgba(67, 97, 238, 0.1); color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto; }
         
