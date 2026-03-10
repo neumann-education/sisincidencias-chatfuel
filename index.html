@@ -295,7 +295,9 @@
             COMENTARIO_SOPORTE: 8,
             IMG_SOPORTE: 9, // Base64 o URL
             FECHA_ATENCION: 10,
-            ASESORA_NOMBRE: 11
+            ASESORA_NOMBRE: 11,
+            PLATAFORMA: 12,
+            TIPO: 13
         };
         
         /** GESTIÓN DE SESIÓN */
@@ -341,12 +343,17 @@
             document.getElementById('mainSection').classList.remove('hidden');
             
             let displayRol = res.rol;
+            // Para mostrar un rol más limpio en la etiqueta superior
             if(res.rol.includes("ASESORA")) displayRol = "ASESORA";
+            if(res.rol.startsWith("SOPORTE_")) displayRol = "SOPORTE MARCA";
+
             document.getElementById('rolBadge').innerText = `${res.nombre.toUpperCase()} | ${displayRol}`;
             
-            if (res.rol.startsWith("ASESORA_")) {
+            // Tanto las Asesoras como los Soportes de Marca pueden crear reportes
+            if (res.rol.startsWith("ASESORA_") || res.rol.startsWith("SOPORTE_")) {
                 document.getElementById('btnNuevo').classList.remove('hidden');
             } else {
+                // El SOPORTE global solo audita/revisa
                 document.getElementById('btnNuevo').classList.add('hidden');
             }
 
@@ -354,7 +361,7 @@
             const brandContainer = document.getElementById('brandFilter').closest('.col-md-2');
             const brandSelect = document.getElementById('brandFilter');
             
-            if (res.rol.startsWith("ASESORA_") && res.rol !== "ASESORA_NACIONAL") {
+            if ((res.rol.startsWith("ASESORA_") || res.rol.startsWith("SOPORTE_")) && res.rol !== "ASESORA_NACIONAL") {
                 brandContainer.classList.add('hidden'); // Ocultar si solo ve su marca
             } else if (res.rol === "ASESORA_NACIONAL") {
                 brandSelect.innerHTML = `
@@ -432,15 +439,17 @@
                 // --- 1. FILTRO ESTRICTO POR ROL ---
                 const userRole = userData.rol;
                 const rowBrand = f[COL.MARCA];
+                const rowTipo = f[COL.TIPO];
 
-                if (userRole !== "SOPORTE") {
+                if (userRole !== "SOPORTE") { // "SOPORTE" global ve todo
                     if (userRole === "ASESORA_NACIONAL") {
-                        // Si es Nacional, solo pasa si es JVN o IEMPRESA
-                        if (rowBrand !== "JVN" && rowBrand !== "IEMPRESA") continue;
+                        if ((rowBrand !== "JVN" && rowBrand !== "IEMPRESA") || rowTipo !== "Admisión") continue;
                     } else if (userRole.startsWith("ASESORA_")) {
-                        // Si es asesora normal, solo pasa la marca que diga su rol
                         const allowedBrand = userRole.replace("ASESORA_", "");
-                        if (rowBrand !== allowedBrand) continue;
+                        if (rowBrand !== allowedBrand || rowTipo !== "Admisión") continue;
+                    } else if (userRole.startsWith("SOPORTE_")) {
+                        const allowedBrand = userRole.replace("SOPORTE_", "");
+                        if (rowBrand !== allowedBrand || rowTipo !== "Soporte") continue;
                     }
                 }
                 
@@ -491,6 +500,7 @@
                         <td class="ps-4">
                             <div class="fw-bold text-primary small">${f[COL.ID]}</div>
                             <span class="badge ${brandBadge}" style="font-size: 10px">${f[COL.MARCA]}</span>
+                            <span class="badge bg-secondary" style="font-size: 10px">${f[COL.PLATAFORMA] || 'N/A'}</span>
                             <div class="mt-1" style="font-size: 11px; color: #64748b;">
                                 <i class="fas fa-user me-1"></i>${f[COL.ASESORA_NOMBRE] || 'Sin registrar'}
                             </div>
@@ -586,17 +596,24 @@
 
         function openEdit(index) {
             isNewRecord = (index === -1);
-            const isAsesora = userData.rol.startsWith("ASESORA_");
-            const isSoporte = userData.rol === "SOPORTE";
             
-            // Iniciar Fila a 12 espacios
-            let row = isNewRecord ? Array(12).fill("") :[...currentData[index]];
+            // Definiendo permisos: Creadores (Asesora y Soporte Marca) vs Revisor (Soporte Global)
+            const isCreator = userData.rol.startsWith("ASESORA_") || userData.rol.startsWith("SOPORTE_");
+            const isSoporteAdmin = userData.rol === "SOPORTE";
             
-            if (isNewRecord && isAsesora) {
-                // Asignar marca fija a asesoras normales. La Asesora Nacional la elegirá manualmente.
+            // Iniciar Fila a 14 espacios
+            let row = isNewRecord ? Array(14).fill("") : [...currentData[index]];
+            
+            if (isNewRecord && isCreator) {
+                // Si NO es la asesora nacional, su marca viene por defecto en su rol
                 if (userData.rol !== "ASESORA_NACIONAL") {
-                    row[COL.MARCA] = userData.rol.replace("ASESORA_", "");
+                    row[COL.MARCA] = userData.rol.split('_')[1]; // Extrae BGU de ASESORA_BGU o SOPORTE_BGU
                 }
+                
+                // Asignar el Tipo de reporte automáticamente por su rol
+                if (userData.rol.startsWith("ASESORA_")) row[COL.TIPO] = "Admisión";
+                if (userData.rol.startsWith("SOPORTE_")) row[COL.TIPO] = "Soporte";
+                
                 row[COL.ESTADO] = "Pendiente";
                 row[COL.ASESORA_NOMBRE] = userData.nombre;
             }
@@ -608,19 +625,20 @@
 
             const formContainer = document.getElementById("editForm");
             
-            const readAsesora = (!isNewRecord && isSoporte) ? "readonly" : "";
-            const disAsesora = (!isNewRecord && isSoporte) ? "disabled" : "";
-            const readSoporte = isAsesora ? "readonly" : "";
-            const disSoporte = isAsesora ? "disabled" : "";
+            // Atributos de sólo lectura
+            const readCreator = (!isNewRecord && isSoporteAdmin) ? "readonly" : "";
+            const disCreator = (!isNewRecord && isSoporteAdmin) ? "disabled" : "";
+            const readAdmin = isCreator ? "readonly" : "";
+            const disAdmin = isCreator ? "disabled" : "";
 
             // --- Lógica del selector de Marca ---
-            let disMarca = "disabled"; // Bloqueado por defecto
-            if (isAsesora && userData.rol === "ASESORA_NACIONAL" && isNewRecord) disMarca = ""; // Asesora Nacional sí puede escoger al crear
+            let disMarca = "disabled"; 
+            if (isCreator && userData.rol === "ASESORA_NACIONAL" && isNewRecord) disMarca = ""; 
             
             let optionsMarca = `<option value="">Seleccione...</option>`;
             if (userData.rol === "ASESORA_NACIONAL") {
-                optionsMarca += `<option value="IEMPRESA" ${row[COL.MARCA]==='IEMPRESA'?'selected':''}>IEMPRESA</option>`;
-                optionsMarca += `<option value="JVN" ${row[COL.MARCA]==='JVN'?'selected':''}>JVN</option>`;
+                optionsMarca += `<option value="IEMPRESA" ${row[COL.MARCA]==='IEMPRESA'?'selected':''}>IEMPRESA</option>
+                                 <option value="JVN" ${row[COL.MARCA]==='JVN'?'selected':''}>JVN</option>`;
             } else {
                 optionsMarca += `<option value="BGU" ${row[COL.MARCA]==='BGU'?'selected':''}>BGU</option>
                                  <option value="IEMPRESA" ${row[COL.MARCA]==='IEMPRESA'?'selected':''}>IEMPRESA</option>
@@ -633,7 +651,7 @@
                 <input type="hidden" id="edit-10" value="${row[COL.FECHA_ATENCION] || ''}">
                 <input type="hidden" id="edit-11" value="${row[COL.ASESORA_NOMBRE] || ''}"> 
                 
-                <!-- SECCION ASESORA -->
+                <!-- SECCION CREADOR DEL REPORTE -->
                 <div class="col-md-7">
                     <div class="card border-0 shadow-sm h-100">
                         <div class="card-header bg-white fw-bold text-primary py-3 d-flex justify-content-between align-items-center">
@@ -642,23 +660,35 @@
                         </div>
                         <div class="card-body">
                             <div class="row g-3">
-                                <div class="col-md-5">
+                                <div class="col-md-4">
                                     <label class="form-label small fw-bold text-muted">Marca</label>
                                     <select id="edit-2" class="form-select" ${disMarca}>
                                         ${optionsMarca}
                                     </select>
                                 </div>
-                                <div class="col-md-7">
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-bold text-muted">Tipo</label>
+                                    <input type="text" id="edit-13" class="form-control" value="${row[COL.TIPO] || ''}" readonly>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-bold text-muted">Plataforma</label>
+                                    <select id="edit-12" class="form-select" ${disCreator}>
+                                        <option value="">Seleccione...</option>
+                                        <option value="Chatfuel" ${row[COL.PLATAFORMA]==='Chatfuel'?'selected':''}>Chatfuel</option>
+                                        <option value="ORA" ${row[COL.PLATAFORMA]==='ORA'?'selected':''}>ORA</option>
+                                    </select>
+                                </div>
+                                <div class="col-12">
                                     <label class="form-label small fw-bold text-muted">Número de Contacto</label>
-                                    <input type="text" id="edit-3" class="form-control" placeholder="Ej. +51999999999" value="${row[COL.NUMERO_CONTACTO] || ''}" ${readAsesora}>
+                                    <input type="text" id="edit-3" class="form-control" placeholder="Ej. +51999999999" value="${row[COL.NUMERO_CONTACTO] || ''}" ${readCreator}>
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label small fw-bold text-muted">Describe el Problema</label>
-                                    <textarea id="edit-4" class="form-control" rows="3" placeholder="Detalla qué sucedió..." ${readAsesora}>${row[COL.PROBLEMA] || ''}</textarea>
+                                    <textarea id="edit-4" class="form-control" rows="3" placeholder="Detalla qué sucedió..." ${readCreator}>${row[COL.PROBLEMA] || ''}</textarea>
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label small fw-bold text-muted">Describe la Solución (Opcional)</label>
-                                    <textarea id="edit-5" class="form-control" rows="2" placeholder="Qué pasos hiciste para solucionarlo..." ${readAsesora}>${row[COL.SOLUCION] || ''}</textarea>
+                                    <textarea id="edit-5" class="form-control" rows="2" placeholder="Qué pasos hiciste para solucionarlo..." ${readCreator}>${row[COL.SOLUCION] || ''}</textarea>
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label small fw-bold text-muted">Evidencia del Problema (Imagen)</label>
@@ -784,16 +814,16 @@
         
         /** GUARDAR DATOS */
         async function saveData() {
-            let rowData = Array(12).fill("");
+            let rowData = Array(14).fill(""); // Aumentado a 14 espacios
             
-            const isAsesora = userData.rol.startsWith("ASESORA_");
-            const isSoporte = userData.rol === "SOPORTE";
+            const isCreator = userData.rol.startsWith("ASESORA_") || userData.rol.startsWith("SOPORTE_");
+            const isSoporteAdmin = userData.rol === "SOPORTE";
             const currentId = document.getElementById('edit-0').value;
             const statusPrev = isNewRecord ? "" : currentData.find(r => r[0].toString() === currentId)[COL.ESTADO];
             const statusNew = document.getElementById('edit-7').value;
 
-            // Recoger campos (de 0 a 10)
-             for (let i = 0; i < 12; i++) { 
+            // Recoger campos (de 0 a 13)
+             for (let i = 0; i < 14; i++) { 
                 const el = document.getElementById(`edit-${i}`);
                 if (el) {
                     rowData[i] = el.value;
@@ -803,10 +833,13 @@
                 }
             }
 
-            // Validaciones
-            if (isAsesora) {
+            // Validaciones al crear
+            if (isCreator) {
                 if (userData.rol === "ASESORA_NACIONAL" && !rowData[COL.MARCA]) {
                     return Swal.fire('Error', 'Debe seleccionar una Marca', 'warning');
+                }
+                if (!rowData[COL.PLATAFORMA]) {
+                    return Swal.fire('Error', 'Debe indicar la Plataforma (Chatfuel / ORA)', 'warning');
                 }
                 if (!rowData[COL.NUMERO_CONTACTO] || !rowData[COL.PROBLEMA]) {
                     return Swal.fire('Error', 'Debe llenar al menos el N° de Contacto y el Problema', 'warning');
@@ -818,8 +851,7 @@
             if (isNewRecord) {
                 rowData[COL.FECHA_SOL] = now;
             }
-            // Si el estado cambia de Pendiente a Revisado/Rechazado, se marca la Fecha de Atención
-            if (isSoporte && statusPrev === "Pendiente" && statusNew !== "Pendiente") {
+            if (isSoporteAdmin && statusPrev === "Pendiente" && statusNew !== "Pendiente") {
                 rowData[COL.FECHA_ATENCION] = now;
             }
 
