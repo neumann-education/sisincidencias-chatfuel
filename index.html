@@ -98,8 +98,8 @@
         <div class="auth-card shadow-lg">
             <div class="auth-header text-center">
                 <div class="logo-circle mb-3"><i class="fas fa-bug"></i></div>
-                <h2 class="fw-bold">Reportes</h2>
-                <p class="text-muted">Incidencias Chatfuel Multi-Marca</p>
+                <h2 class="fw-bold">Reporte de Incidencias</h2>
+                <p class="text-muted">Incidencias Chatfuel-ORAIA Multi-Marca</p>
             </div>
             <div class="auth-body mt-4">
                 <div class="form-floating mb-3">
@@ -344,11 +344,31 @@
             if(res.rol.includes("ASESORA")) displayRol = "ASESORA";
             document.getElementById('rolBadge').innerText = `${res.nombre.toUpperCase()} | ${displayRol}`;
             
-            // Solo Asesoras ven el botón de "Nuevo Reporte"
             if (res.rol.startsWith("ASESORA_")) {
                 document.getElementById('btnNuevo').classList.remove('hidden');
             } else {
                 document.getElementById('btnNuevo').classList.add('hidden');
+            }
+
+            // AJUSTE DE UI: Filtro de Marcas según Rol
+            const brandContainer = document.getElementById('brandFilter').closest('.col-md-2');
+            const brandSelect = document.getElementById('brandFilter');
+            
+            if (res.rol.startsWith("ASESORA_") && res.rol !== "ASESORA_NACIONAL") {
+                brandContainer.classList.add('hidden'); // Ocultar si solo ve su marca
+            } else if (res.rol === "ASESORA_NACIONAL") {
+                brandSelect.innerHTML = `
+                    <option value="">Todas (JVN / IEMPRESA)</option>
+                    <option value="IEMPRESA">IEMPRESA</option>
+                    <option value="JVN">JVN</option>
+                `;
+            } else {
+                brandSelect.innerHTML = `
+                    <option value="">Todas las Marcas</option>
+                    <option value="BGU">BGU</option>
+                    <option value="IEMPRESA">IEMPRESA</option>
+                    <option value="JVN">JVN</option>
+                `;
             }
             
             initFilters();
@@ -401,6 +421,21 @@
             let filteredData =[];
             for (let i = 1; i < currentData.length; i++) {
                 const f = currentData[i];
+                
+                // --- 1. FILTRO ESTRICTO POR ROL ---
+                const userRole = userData.rol;
+                const rowBrand = f[COL.MARCA];
+
+                if (userRole !== "SOPORTE") {
+                    if (userRole === "ASESORA_NACIONAL") {
+                        // Si es Nacional, solo pasa si es JVN o IEMPRESA
+                        if (rowBrand !== "JVN" && rowBrand !== "IEMPRESA") continue;
+                    } else if (userRole.startsWith("ASESORA_")) {
+                        // Si es asesora normal, solo pasa la marca que diga su rol
+                        const allowedBrand = userRole.replace("ASESORA_", "");
+                        if (rowBrand !== allowedBrand) continue;
+                    }
+                }
                 
                 // Filtro Fecha
                 if (filterDates.length === 2) {
@@ -539,7 +574,10 @@
             let row = isNewRecord ? Array(12).fill("") :[...currentData[index]];
             
             if (isNewRecord && isAsesora) {
-                row[COL.MARCA] = userData.rol.replace("ASESORA_", "");
+                // Asignar marca fija a asesoras normales. La Asesora Nacional la elegirá manualmente.
+                if (userData.rol !== "ASESORA_NACIONAL") {
+                    row[COL.MARCA] = userData.rol.replace("ASESORA_", "");
+                }
                 row[COL.ESTADO] = "Pendiente";
                 row[COL.ASESORA_NOMBRE] = userData.nombre;
             }
@@ -556,10 +594,23 @@
             const readSoporte = isAsesora ? "readonly" : "";
             const disSoporte = isAsesora ? "disabled" : "";
 
+            // --- Lógica del selector de Marca ---
+            let disMarca = "disabled"; // Bloqueado por defecto
+            if (isAsesora && userData.rol === "ASESORA_NACIONAL" && isNewRecord) disMarca = ""; // Asesora Nacional sí puede escoger al crear
+            
+            let optionsMarca = `<option value="">Seleccione...</option>`;
+            if (userData.rol === "ASESORA_NACIONAL") {
+                optionsMarca += `<option value="IEMPRESA" ${row[COL.MARCA]==='IEMPRESA'?'selected':''}>IEMPRESA</option>`;
+                optionsMarca += `<option value="JVN" ${row[COL.MARCA]==='JVN'?'selected':''}>JVN</option>`;
+            } else {
+                optionsMarca += `<option value="BGU" ${row[COL.MARCA]==='BGU'?'selected':''}>BGU</option>
+                                 <option value="IEMPRESA" ${row[COL.MARCA]==='IEMPRESA'?'selected':''}>IEMPRESA</option>
+                                 <option value="JVN" ${row[COL.MARCA]==='JVN'?'selected':''}>JVN</option>`;
+            }
+
             let html = `
                 <input type="hidden" id="edit-0" value="${row[COL.ID] || ''}">
                 <input type="hidden" id="edit-1" value="${row[COL.FECHA_SOL] || ''}">
-                <input type="hidden" id="edit-2" value="${row[COL.MARCA] || ''}">
                 <input type="hidden" id="edit-10" value="${row[COL.FECHA_ATENCION] || ''}">
                 <input type="hidden" id="edit-11" value="${row[COL.ASESORA_NOMBRE] || ''}"> 
                 
@@ -572,7 +623,13 @@
                         </div>
                         <div class="card-body">
                             <div class="row g-3">
-                                <div class="col-12">
+                                <div class="col-md-5">
+                                    <label class="form-label small fw-bold text-muted">Marca</label>
+                                    <select id="edit-2" class="form-select" ${disMarca}>
+                                        ${optionsMarca}
+                                    </select>
+                                </div>
+                                <div class="col-md-7">
                                     <label class="form-label small fw-bold text-muted">Número de Contacto</label>
                                     <input type="text" id="edit-3" class="form-control" placeholder="Ej. +51999999999" value="${row[COL.NUMERO_CONTACTO] || ''}" ${readAsesora}>
                                 </div>
@@ -728,8 +785,13 @@
             }
 
             // Validaciones
-            if (isAsesora && (!rowData[COL.NUMERO_CONTACTO] || !rowData[COL.PROBLEMA])) {
-                return Swal.fire('Error', 'Debe llenar al menos el N° de Contacto y el Problema', 'warning');
+            if (isAsesora) {
+                if (userData.rol === "ASESORA_NACIONAL" && !rowData[COL.MARCA]) {
+                    return Swal.fire('Error', 'Debe seleccionar una Marca', 'warning');
+                }
+                if (!rowData[COL.NUMERO_CONTACTO] || !rowData[COL.PROBLEMA]) {
+                    return Swal.fire('Error', 'Debe llenar al menos el N° de Contacto y el Problema', 'warning');
+                }
             }
 
             // Fechas Internas Automáticas
