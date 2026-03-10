@@ -684,7 +684,7 @@
         
         /** GUARDAR DATOS */
         async function saveData() {
-            let rowData = Array(11).fill("");
+            let rowData = Array(12).fill("");
             
             const isAsesora = userData.rol.startsWith("ASESORA_");
             const isSoporte = userData.rol === "SOPORTE";
@@ -693,7 +693,7 @@
             const statusNew = document.getElementById('edit-7').value;
 
             // Recoger campos (de 0 a 10)
-            for (let i = 0; i < 11; i++) {
+             for (let i = 0; i < 12; i++) { 
                 const el = document.getElementById(`edit-${i}`);
                 if (el) {
                     rowData[i] = el.value;
