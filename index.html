@@ -694,7 +694,7 @@
                                     <label class="form-label small fw-bold text-muted">Evidencia del Problema (Imagen)</label>
                                     <div class="mb-2 small text-muted"><i class="fas fa-keyboard me-1"></i>Puedes presionar <b>Ctrl+V</b> para pegar captura</div>
                                     <input type="hidden" id="edit-6" value="${imgIncidencia}">
-                                    ${isAsesora ? `
+                                    ${isCreator ? `
                                         <input type="file" id="file-incidencia" class="d-none" accept="image/*">
                                         <div id="drop-incidencia" class="drop-zone" tabindex="0">
                                             <i class="fas fa-cloud-upload-alt"></i>
@@ -718,7 +718,7 @@
                             <div class="row g-3">
                                 <div class="col-12">
                                     <label class="form-label small fw-bold text-muted">Estado</label>
-                                    <select id="edit-7" class="form-select fw-bold" ${disSoporte}>
+                                    <select id="edit-7" class="form-select fw-bold" ${disAdmin}>
                                         <option value="Pendiente" ${row[COL.ESTADO]==='Pendiente'?'selected':''}>Pendiente</option>
                                         <option value="Revisado" ${row[COL.ESTADO]==='Revisado'?'selected':''}>Revisado</option>
                                         <option value="Rechazado" ${row[COL.ESTADO]==='Rechazado'?'selected':''}>Rechazado</option>
@@ -726,12 +726,12 @@
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label small fw-bold text-muted">Comentarios del Soporte</label>
-                                    <textarea id="edit-8" class="form-control" rows="4" placeholder="Observaciones de la revisión..." ${readSoporte}>${row[COL.COMENTARIO_SOPORTE] || ''}</textarea>
+                                    <textarea id="edit-8" class="form-control" rows="4" placeholder="Observaciones de la revisión..." ${readAdmin}>${row[COL.COMENTARIO_SOPORTE] || ''}</textarea>
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label small fw-bold text-muted">Evidencia Soporte (Imagen)</label>
                                     <input type="hidden" id="edit-9" value="${imgSoporte}">
-                                    ${isSoporte ? `
+                                    ${isSoporteAdmin ? `
                                         <div class="mb-2 small text-muted"><i class="fas fa-keyboard me-1"></i>Presiona <b>Ctrl+V</b> para pegar captura</div>
                                         <input type="file" id="file-soporte" class="d-none" accept="image/*">
                                         <div id="drop-soporte" class="drop-zone py-3" tabindex="0">
@@ -750,8 +750,8 @@
             formContainer.innerHTML = html;
             new bootstrap.Modal('#editModal').show();
 
-            if (isAsesora) bindImageEvents('drop-incidencia', 'file-incidencia', 'preview-incidencia', 'edit-6');
-            if (isSoporte) bindImageEvents('drop-soporte', 'file-soporte', 'preview-soporte', 'edit-9');
+            if (isCreator) bindImageEvents('drop-incidencia', 'file-incidencia', 'preview-incidencia', 'edit-6');
+            if (isSoporteAdmin) bindImageEvents('drop-soporte', 'file-soporte', 'preview-soporte', 'edit-9');
         }
 
         /** MANEJO DE IMÁGENES (CLICK, DRAG & DROP) */
@@ -802,12 +802,12 @@
             if (!file) return;
 
             // Decidir a qué caja va la imagen según el Rol
-            const isAsesora = userData.rol.startsWith("ASESORA_");
-            const isSoporte = userData.rol === "SOPORTE";
+            const isCreator = userData.rol.startsWith("ASESORA_");
+            const isSoporteAdmin = userData.rol === "SOPORTE";
             
-            if (isAsesora && document.getElementById('preview-incidencia')) {
+            if (isCreator && document.getElementById('preview-incidencia')) {
                 processImage(file, 'preview-incidencia', 'edit-6');
-            } else if (isSoporte && document.getElementById('preview-soporte')) {
+            } else if (isSoporteAdmin && document.getElementById('preview-soporte')) {
                 processImage(file, 'preview-soporte', 'edit-9');
             }
         });
