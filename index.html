@@ -280,7 +280,8 @@
             ESTADO: 7, // Pendiente, Revisado, Rechazado
             COMENTARIO_SOPORTE: 8,
             IMG_SOPORTE: 9, // Base64 o URL
-            FECHA_ATENCION: 10
+            FECHA_ATENCION: 10,
+            ASESORA_NOMBRE: 11
         };
         
         /** GESTIÓN DE SESIÓN */
@@ -424,6 +425,9 @@
                         <td class="ps-4">
                             <div class="fw-bold text-primary small">${f[COL.ID]}</div>
                             <span class="badge ${brandBadge}" style="font-size: 10px">${f[COL.MARCA]}</span>
+                            <div class="mt-1" style="font-size: 11px; color: #64748b;">
+                                <i class="fas fa-user me-1"></i>${f[COL.ASESORA_NOMBRE] || 'Sin registrar'}
+                            </div>
                         </td>
                         <td class="small text-muted">${f[COL.FECHA_SOL] || '---'}</td>
                         <td><code class="bg-light p-1 rounded text-dark">${f[COL.NUMERO_CONTACTO]}</code></td>
@@ -507,17 +511,17 @@
             const isAsesora = userData.rol.startsWith("ASESORA_");
             const isSoporte = userData.rol === "SOPORTE";
             
-            // Iniciar Fila
-            let row = isNewRecord ? Array(11).fill("") :[...currentData[index]];
+            // Iniciar Fila a 12 espacios
+            let row = isNewRecord ? Array(12).fill("") :[...currentData[index]];
             
             if (isNewRecord && isAsesora) {
                 row[COL.MARCA] = userData.rol.replace("ASESORA_", "");
                 row[COL.ESTADO] = "Pendiente";
+                row[COL.ASESORA_NOMBRE] = userData.nombre;
             }
         
             document.getElementById("modalTitle").innerHTML = isNewRecord ? '<i class="fas fa-bug me-2"></i>Reportar Incidencia' : '<i class="fas fa-edit me-2"></i>Detalle de Incidencia';
             
-            // Formatear imágenes (Evita roturas si está vacío o tiene formato viejo)
             const imgIncidencia = getValidImageUrl(row[COL.IMG_INCIDENCIA]);
             const imgSoporte = getValidImageUrl(row[COL.IMG_SOPORTE]);
 
@@ -533,12 +537,14 @@
                 <input type="hidden" id="edit-1" value="${row[COL.FECHA_SOL] || ''}">
                 <input type="hidden" id="edit-2" value="${row[COL.MARCA] || ''}">
                 <input type="hidden" id="edit-10" value="${row[COL.FECHA_ATENCION] || ''}">
+                <input type="hidden" id="edit-11" value="${row[COL.ASESORA_NOMBRE] || ''}"> 
                 
                 <!-- SECCION ASESORA -->
                 <div class="col-md-7">
                     <div class="card border-0 shadow-sm h-100">
-                        <div class="card-header bg-white fw-bold text-primary py-3">
-                            <i class="fas fa-user-tie me-2"></i>Datos del Reporte (Asesora)
+                        <div class="card-header bg-white fw-bold text-primary py-3 d-flex justify-content-between align-items-center">
+                            <div><i class="fas fa-user-tie me-2"></i>Datos del Reporte</div>
+                            <span class="badge bg-light text-dark border"><i class="fas fa-user me-1"></i> ${row[COL.ASESORA_NOMBRE] || 'Sin asignar'}</span>
                         </div>
                         <div class="card-body">
                             <div class="row g-3">
