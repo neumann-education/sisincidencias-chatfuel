@@ -401,6 +401,13 @@
             document.getElementById('stat-rechazados').innerText = rechazados;
         }
 
+        function normalizeDate(rawDate) {
+            if (!rawDate) return moment.invalid();
+            // Intenta parsear como fecha de Google (ISO) o fecha manual (DD/MM/YYYY)
+            let m = moment(rawDate,[moment.ISO_8601, 'DD/MM/YYYY HH:mm:ss', 'DD/MM/YYYY HH:mm', 'DD/MM/YYYY'], true);
+            if (!m.isValid()) m = moment(rawDate); // Fallback
+            return m;
+        }
         /** RENDERIZADO DE TABLA */
         function renderTable() {
             if (currentData.length === 0) return;
@@ -439,8 +446,8 @@
                 
                 // Filtro Fecha
                 if (filterDates.length === 2) {
-                    let rowDate = moment(f[COL.FECHA_SOL], 'DD/MM/YYYY HH:mm:ss');
-                    if (!rowDate.isValid()) rowDate = moment(f[COL.FECHA_SOL], 'DD/MM/YYYY');
+                    let rowDate = normalizeDate(f[COL.FECHA_SOL]);
+                    // Comprueba si la fecha es válida y si está dentro del rango ignorando la hora
                     if (!rowDate.isValid() || rowDate.isBefore(filterDates[0], 'day') || rowDate.isAfter(filterDates[1], 'day')) continue;
                 }
                 
@@ -456,18 +463,28 @@
                 filteredData.push({ index: i, data: f });
             }
 
+            filteredData.sort((a, b) => {
+                let dateA = normalizeDate(a.data[COL.FECHA_SOL]);
+                let dateB = normalizeDate(b.data[COL.FECHA_SOL]);
+                // Si la fecha B es mayor (más nueva), se posicionará arriba.
+                return dateB.valueOf() - dateA.valueOf(); 
+            });
+
             // Paginación
             const totalRecords = filteredData.length;
             const totalPages = Math.ceil(totalRecords / recordsPerPage);
             const start = (currentPage - 1) * recordsPerPage;
             const paginated = filteredData.slice(start, start + recordsPerPage);
         
-            // Generar Filas
+            // 4. Generar Filas
             let html = "";
             paginated.forEach(item => {
                 const i = item.index;
                 const f = item.data;
                 const brandBadge = f[COL.MARCA] === 'BGU' ? 'bg-primary' : (f[COL.MARCA] === 'IEMPRESA' ? 'bg-success' : 'bg-dark');
+
+                let parsedDate = normalizeDate(f[COL.FECHA_SOL]);
+                let displayDate = parsedDate.isValid() ? parsedDate.format('DD/MM/YYYY HH:mm') : '---';
                 
                 html += `
                     <tr class="clickable-row" onclick="openEdit(${i})">
@@ -478,7 +495,9 @@
                                 <i class="fas fa-user me-1"></i>${f[COL.ASESORA_NOMBRE] || 'Sin registrar'}
                             </div>
                         </td>
-                        <td class="small text-muted">${f[COL.FECHA_SOL] || '---'}</td>
+                        <td class="small text-muted fw-semibold">
+                            <i class="far fa-calendar-alt me-1"></i>${displayDate}
+                        </td>
                         <td><code class="bg-light p-1 rounded text-dark">${f[COL.NUMERO_CONTACTO]}</code></td>
                         <td><div class="text-truncate" style="max-width: 250px" title="${f[COL.PROBLEMA]}">${f[COL.PROBLEMA]}</div></td>
                         <td class="text-center">${getStatusBadge(f[COL.ESTADO])}</td>
