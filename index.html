@@ -99,6 +99,12 @@
         /* Loader */
         .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.9); display: flex; align-items: center; justify-content: center; z-index: 9999; }
         .spinner-container { padding: 30px; border-radius: 15px; background: white; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+         @media (max-width: 1199px) {
+            .modal-dialog.modal-xl {
+                max-width: 96% !important;
+                margin: 1.5rem auto;
+            }
+          }
     </style>
 </head>
 <body>
@@ -275,6 +281,49 @@
                 <div class="modal-footer bg-white p-3 border-top">
                     <button type="button" class="btn btn-link text-decoration-none text-dark fw-bold" data-bs-dismiss="modal">Cerrar</button>
                     <button type="button" class="btn btn-primary-custom px-4" onclick="saveData()"><i class="fas fa-save me-2"></i>Guardar Cambios</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL ENVIAR ACCESOS -->
+    <div class="modal fade" id="accessModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-warning text-dark p-4 border-0">
+                    <h5 class="modal-title fw-bold"><i class="fas fa-paper-plane me-2"></i>Enviar Accesos a Asesora</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4 bg-light">
+                    <p class="small text-muted mb-4">Selecciona una asesora de la lista. Sus credenciales registradas se cargarán automáticamente.</p>
+                    
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-dark">Seleccionar Asesora</label>
+                        <select id="acc-select" class="form-select border-warning" onchange="autoFillAsesora()">
+                            <option value="">Cargando asesoras...</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-dark">Correo Electrónico Destino</label>
+                        <input type="email" id="acc-correo" class="form-control bg-white" placeholder="ejemplo@correo.com">
+                        <small class="text-muted" style="font-size: 11px;">(Puedes corregir el correo si es necesario)</small>
+                    </div>
+                    
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label small fw-bold text-dark">Usuario Asignado</label>
+                            <input type="text" id="acc-user" class="form-control" readonly style="background-color: #e2e8f0;">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-bold text-dark">Contraseña Registrada</label>
+                            <input type="text" id="acc-pass" class="form-control" readonly style="background-color: #e2e8f0;">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-white p-3 border-top">
+                    <button type="button" class="btn btn-link text-decoration-none text-dark fw-bold" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-warning fw-bold px-4 text-dark" onclick="sendAccess()"><i class="fas fa-envelope me-2"></i>Enviar Credenciales</button>
                 </div>
             </div>
         </div>
@@ -1007,6 +1056,86 @@
                     document.getElementById('loader').classList.add('hidden');
                 }
                 Swal.fire('Error', 'No se pudo conectar con el servidor. Revise su conexión o URL del script.', 'error');
+            }
+        }
+
+        let listaAsesoras =[];
+
+        async function openAccessModal() {
+            // Limpiar formulario
+            document.getElementById('acc-correo').value = '';
+            document.getElementById('acc-user').value = '';
+            document.getElementById('acc-pass').value = '';
+            document.getElementById('acc-select').innerHTML = '<option value="">Cargando lista de asesoras...</option>';
+            
+            new bootstrap.Modal('#accessModal').show();
+
+            // Llamar a la base de datos de manera silenciosa para obtener solo Asesoras
+            const res = await callAPI({ action: 'getAsesoras' }, true);
+            
+            if (res && res.success) {
+                listaAsesoras = res.data;
+                let options = '<option value="">Seleccione una asesora...</option>';
+                
+                if (listaAsesoras.length === 0) {
+                    options = '<option value="">No se encontraron asesoras en la base de datos</option>';
+                } else {
+                    listaAsesoras.forEach((a, index) => {
+                        options += `<option value="${index}">${a.nombre} (${a.user})</option>`;
+                    });
+                }
+                document.getElementById('acc-select').innerHTML = options;
+            } else {
+                document.getElementById('acc-select').innerHTML = '<option value="">Error al cargar la lista</option>';
+            }
+        }
+
+        function autoFillAsesora() {
+            const index = document.getElementById('acc-select').value;
+            if (index !== "") {
+                const a = listaAsesoras[index];
+                document.getElementById('acc-correo').value = a.email; // Jala la Columna E o la A
+                document.getElementById('acc-user').value = a.user;    // Jala la Columna A
+                document.getElementById('acc-pass').value = a.pass;    // Jala la Columna B
+            } else {
+                document.getElementById('acc-correo').value = '';
+                document.getElementById('acc-user').value = '';
+                document.getElementById('acc-pass').value = '';
+            }
+        }
+
+        async function sendAccess() {
+            const selectIndex = document.getElementById('acc-select').value;
+            const correo = document.getElementById('acc-correo').value.trim();
+            const user = document.getElementById('acc-user').value.trim();
+            const pass = document.getElementById('acc-pass').value.trim();
+
+            if (selectIndex === "") return Swal.fire('Faltan Datos', 'Debes seleccionar una asesora de la lista.', 'warning');
+            if (!correo) return Swal.fire('Faltan Datos', 'El campo de correo no puede estar vacío.', 'warning');
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) return Swal.fire('Error', 'Ingresa un correo electrónico válido.', 'error');
+
+            const nombreAsesora = listaAsesoras[selectIndex].nombre;
+
+            Swal.fire({
+                title: 'Enviando Accesos...',
+                html: 'Enviando correo a <b>' + correo + '</b>',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
+
+            const res = await callAPI({
+                action: 'sendAccess',
+                email: correo,
+                asesora: nombreAsesora,
+                userAccess: user,
+                passAccess: pass
+            }, true); // silent true
+
+            if (res && res.success) {
+                bootstrap.Modal.getInstance(document.getElementById('accessModal')).hide();
+                Swal.fire('¡Enviado!', `Las credenciales fueron enviadas con éxito a ${nombreAsesora}.`, 'success');
+            } else {
+                Swal.fire('Error', 'Ocurrió un problema al enviar el correo.', 'error');
             }
         }
     </script>
