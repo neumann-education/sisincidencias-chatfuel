@@ -416,47 +416,36 @@
             document.getElementById('mainSection').classList.remove('hidden');
             
             let displayRol = res.rol;
-            // Para mostrar un rol más limpio en la etiqueta superior
             if(res.rol.includes("ASESORA")) displayRol = "ASESORA";
             if(res.rol.startsWith("SOPORTE_")) displayRol = "SOPORTE MARCA";
 
             document.getElementById('rolBadge').innerText = `${res.nombre.toUpperCase()} | ${displayRol}`;
             
-            // Tanto las Asesoras como los Soportes de Marca pueden crear reportes
+            // Asesoras pueden crear reportes
             if (res.rol.startsWith("ASESORA_") || res.rol.startsWith("SOPORTE_")) {
                 document.getElementById('btnNuevo').classList.remove('hidden');
-                document.getElementById('btnAccesos').classList.remove('hidden');
             } else {
-                // El SOPORTE global solo audita/revisa
                 document.getElementById('btnNuevo').classList.add('hidden');
             }
 
-            // LÓGICA PARA MOSTRAR CARDS SOLO A SOPORTE Y ADMIN
+            // SOPORTE y ADMIN ven los cuadros de Resumen y el Botón de ENVIAR ACCESOS
             if (res.rol === "SOPORTE" || res.rol === "ADMIN") {
                 document.getElementById('statsCards').classList.remove('hidden');
+                document.getElementById('btnAccesos').classList.remove('hidden'); // <--- AHORA ESTÁ AQUÍ
             } else {
                 document.getElementById('statsCards').classList.add('hidden');
+                document.getElementById('btnAccesos').classList.add('hidden');
             }
 
-            // AJUSTE DE UI: Filtro de Marcas según Rol
             const brandContainer = document.getElementById('brandFilter').closest('.col-md-2');
             const brandSelect = document.getElementById('brandFilter');
             
             if ((res.rol.startsWith("ASESORA_") || res.rol.startsWith("SOPORTE_")) && res.rol !== "ASESORA_NACIONAL") {
-                brandContainer.classList.add('hidden'); // Ocultar si solo ve su marca
+                brandContainer.classList.add('hidden'); 
             } else if (res.rol === "ASESORA_NACIONAL") {
-                brandSelect.innerHTML = `
-                    <option value="">Todas (JVN / IEMPRESA)</option>
-                    <option value="IEMPRESA">IEMPRESA</option>
-                    <option value="JVN">JVN</option>
-                `;
+                brandSelect.innerHTML = `<option value="">Todas (JVN / IEMPRESA)</option><option value="IEMPRESA">IEMPRESA</option><option value="JVN">JVN</option>`;
             } else {
-                brandSelect.innerHTML = `
-                    <option value="">Todas las Marcas</option>
-                    <option value="BGU">BGU</option>
-                    <option value="IEMPRESA">IEMPRESA</option>
-                    <option value="JVN">JVN</option>
-                `;
+                brandSelect.innerHTML = `<option value="">Todas las Marcas</option><option value="BGU">BGU</option><option value="IEMPRESA">IEMPRESA</option><option value="JVN">JVN</option>`;
             }
             
             initFilters();
@@ -977,15 +966,13 @@
         
         /** GUARDAR DATOS */
         async function saveData() {
-            let rowData = Array(14).fill(""); // Aumentado a 14 espacios
-            
+            let rowData = Array(14).fill(""); 
             const isCreator = userData.rol.startsWith("ASESORA_") || userData.rol.startsWith("SOPORTE_");
             const isSoporteAdmin = userData.rol === "SOPORTE" || userData.rol === "ADMIN";
             const currentId = document.getElementById('edit-0').value;
             const statusPrev = isNewRecord ? "" : currentData.find(r => r[0].toString() === currentId)[COL.ESTADO];
             const statusNew = document.getElementById('edit-7').value;
 
-            // Recoger campos (de 0 a 13)
              for (let i = 0; i < 14; i++) { 
                 const el = document.getElementById(`edit-${i}`);
                 if (el) {
@@ -996,49 +983,40 @@
                 }
             }
 
-            // Validaciones al crear
             if (isCreator) {
-                if (userData.rol === "ASESORA_NACIONAL" && !rowData[COL.MARCA]) {
-                    return Swal.fire('Error', 'Debe seleccionar una Marca', 'warning');
-                }
-                if (!rowData[COL.PLATAFORMA]) {
-                    return Swal.fire('Error', 'Debe indicar la Plataforma (Chatfuel / ORA)', 'warning');
-                }
-                if (!rowData[COL.NUMERO_CONTACTO] || !rowData[COL.PROBLEMA]) {
-                    return Swal.fire('Error', 'Debe llenar al menos el N° de Contacto y el Problema', 'warning');
-                }
+                if (userData.rol === "ASESORA_NACIONAL" && !rowData[COL.MARCA]) return Swal.fire('Error', 'Debe seleccionar una Marca', 'warning');
+                if (!rowData[COL.PLATAFORMA]) return Swal.fire('Error', 'Debe indicar la Plataforma (Chatfuel / ORA)', 'warning');
+                if (!rowData[COL.NUMERO_CONTACTO] || !rowData[COL.PROBLEMA]) return Swal.fire('Error', 'Debe llenar al menos el N° de Contacto y el Problema', 'warning');
             }
 
-            // Fechas Internas Automáticas
             const now = moment().format('DD/MM/YYYY HH:mm:ss');
-            if (isNewRecord) {
-                rowData[COL.FECHA_SOL] = now;
-            }
-            if (isSoporteAdmin && statusPrev === "Pendiente" && statusNew !== "Pendiente") {
-                rowData[COL.FECHA_ATENCION] = now;
-            }
+            if (isNewRecord) rowData[COL.FECHA_SOL] = now;
+            if (isSoporteAdmin && statusPrev === "Pendiente" && statusNew !== "Pendiente") rowData[COL.FECHA_ATENCION] = now;
 
-            // MENSAJE DE ESPERA DE SWEETALERT
-            Swal.fire({
-                title: 'Guardando...',
-                html: 'Sincronizando con la base de datos',
-                allowOutsideClick: false,
-                didOpen: () => {
-                    Swal.showLoading();
+            // 1. CERRAR EL MODAL INMEDIATAMENTE
+            bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
+
+            // 2. MOSTRAR UNA ALERTA PEQUEÑA EN LA ESQUINA (NO BLOQUEANTE)
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'bottom-end',
+                showConfirmButton: false
+            });
+            Toast.fire({ icon: 'info', title: 'Guardando incidencia...' });
+
+            // 3. ENVIAR LOS DATOS AL SCRIPT SIN FRENAR LA PANTALLA
+            callAPI({ action: 'update', newData: rowData, rol: userData.rol, isNew: isNewRecord }, true).then(res => {
+                if (res && res.success) {
+                    Toast.fire({
+                        icon: 'success',
+                        title: '¡Guardado con éxito!',
+                        timer: 3000
+                    });
+                    loadData(); // Refresca la tabla automáticamente sin avisar
+                } else {
+                    Swal.fire('Error', 'Ocurrió un problema al guardar', 'error');
                 }
             });
-
-            // isSilent se pasa como true para que NO aparezca el cargador de pantalla completa
-            const res = await callAPI({ action: 'update', newData: rowData, rol: userData.rol, isNew: isNewRecord }, true);
-            
-            if (res && res.success) {
-                bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
-                Swal.fire('Éxito', 'Incidencia guardada correctamente', 'success').then(() => {
-                    loadData(); 
-                });
-            } else {
-                Swal.fire('Error', 'Ocurrió un problema al guardar', 'error');
-            }
         }
         
         /** COMUNICACIÓN API (fetch) */
