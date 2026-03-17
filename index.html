@@ -105,20 +105,22 @@
         }
 
         /* Estilo para el botón eliminar imagen */
-        .img-container { position: relative; display: inline-block; }
+        .img-container { position: relative; display: inline-block; margin-top: 10px; }
         .btn-remove-img {
             position: absolute;
-            top: 5px;
-            right: 5px;
-            background: rgba(231, 74, 59, 0.9);
+            top: -5px; /* Ajustado para que quede mejor */
+            right: -5px;
+            background: #e74a3b;
             color: white;
             border: none;
             border-radius: 50%;
             width: 25px;
             height: 25px;
-            font-size: 14px;
+            font-size: 16px;
+            line-height: 20px;
             cursor: pointer;
             z-index: 10;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
         .btn-remove-img:hover { background: #e74a3b; }
     </style>
@@ -879,6 +881,15 @@
             formContainer.innerHTML = html;
             new bootstrap.Modal('#editModal').show();
 
+            const imgInc = document.getElementById('preview-incidencia');
+            if (imgInc && imgInc.style.display === 'block') {
+                addRemoveButtonToImage(imgInc, 'edit-6');
+            }
+            const imgSop = document.getElementById('preview-soporte');
+            if (imgSop && imgSop.style.display === 'block') {
+                addRemoveButtonToImage(imgSop, 'edit-9');
+            }
+
             if (isCreator) bindImageEvents('drop-incidencia', 'file-incidencia', 'preview-incidencia', 'edit-6');
             if (isSoporteAdmin) bindImageEvents('drop-soporte', 'file-soporte', 'preview-soporte', 'edit-9');
         }
@@ -909,27 +920,41 @@
                 img.src = e.target.result;
                 img.style.display = 'block';
                 document.getElementById(hiddenId).value = e.target.result;
-
-                // Si no existe el botón de borrar, lo creamos
-                let container = img.parentElement;
-                if (!container.classList.contains('img-container')) {
-                    const wrapper = document.createElement('div');
-                    wrapper.className = 'img-container';
-                    img.parentNode.insertBefore(wrapper, img);
-                    wrapper.appendChild(img);
-
-                    const btn = document.createElement('button');
-                    btn.innerHTML = '×';
-                    btn.className = 'btn-remove-img';
-                    btn.onclick = function() {
-                        img.src = '';
-                        img.style.display = 'none';
-                        document.getElementById(hiddenId).value = '';
-                    };
-                    wrapper.appendChild(btn);
-                }
+                
+                // Actualizamos el botón X para la imagen recién subida
+                addRemoveButtonToImage(img, hiddenId);
             };
             reader.readAsDataURL(file);
+        }
+
+        // Nueva función auxiliar para crear o mostrar el botón X
+        function addRemoveButtonToImage(imgElement, hiddenId) {
+            let container = imgElement.parentElement;
+            
+            // Si no está envuelto en img-container, lo envolvemos
+            if (!container.classList.contains('img-container')) {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'img-container d-inline-block';
+                imgElement.parentNode.insertBefore(wrapper, imgElement);
+                wrapper.appendChild(imgElement);
+                container = wrapper;
+            }
+
+            // Si ya existe el botón, no creamos otro
+            if (container.querySelector('.btn-remove-img')) return;
+
+            const btn = document.createElement('button');
+            btn.innerHTML = '×';
+            btn.className = 'btn-remove-img';
+            btn.type = 'button'; // Importante para que no envíe el formulario
+            btn.onclick = function(e) {
+                e.stopPropagation();
+                imgElement.src = '';
+                imgElement.style.display = 'none';
+                document.getElementById(hiddenId).value = '';
+                btn.remove(); // Quitamos el botón también
+            };
+            container.appendChild(btn);
         }
 
         document.addEventListener('paste', function(e) {
