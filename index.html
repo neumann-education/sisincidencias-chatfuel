@@ -67,10 +67,10 @@
         .drop-zone i { font-size: 30px; color: #94a3b8; margin-bottom: 10px; }
         .img-preview { max-width: 100%; max-height: 250px; border-radius: 8px; margin-top: 15px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); display: none; object-fit: contain; }
 
-        /* Table Styles & Acordion (CORREGIDO PARA BOOTSTRAP 5) */
+        /* Table Styles & Acordion */
         .table { margin-bottom: 0; }
         .table-dark-header th { 
-            background-color: #1e293b !important; /* Fuerza el fondo a sobreescribir Bootstrap */
+            background-color: #1e293b !important; 
             color: #f8fafc !important; 
             font-weight: 600; 
             text-transform: uppercase; 
@@ -99,21 +99,19 @@
         /* Loader */
         .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.9); display: flex; align-items: center; justify-content: center; z-index: 9999; }
         .spinner-container { padding: 30px; border-radius: 15px; background: white; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-         @media (max-width: 1199px) {
-            .modal-dialog.modal-xl {
-                max-width: 96% !important;
-                margin: 1.5rem auto;
-            }
-          }
+        
+        @media (max-width: 1199px) {
+            .modal-dialog.modal-xl { max-width: 96% !important; margin: 1.5rem auto; }
+        }
     </style>
 </head>
 <body>
 
-    <!-- Cargador -->
+    <!-- Cargador bloqueante (Solo se usará al hacer el Login) -->
     <div id="loader" class="loading-overlay hidden">
         <div class="spinner-container text-center">
             <div class="spinner-border text-primary" role="status"></div>
-            <p class="mt-2 fw-bold text-muted">Sincronizando incidencias...</p>
+            <p class="mt-2 fw-bold text-muted">Iniciando sesión...</p>
         </div>
     </div>
 
@@ -161,14 +159,13 @@
                     <p class="text-muted mb-0">Seguimiento de problemas en flujos de Chatfuel.</p>
                 </div>
                 <div class="d-flex gap-2">
-                    <!-- BOTÓN DE ENVIAR ACCESOS -->
                     <button id="btnAccesos" class="btn btn-warning fw-bold text-dark hidden shadow-sm border-0" onclick="openAccessModal()">
                         <i class="fas fa-key me-2"></i>ENVIAR ACCESOS
                     </button>
                     <button id="btnNuevo" class="btn btn-success-custom hidden" onclick="openEdit(-1)">
                         <i class="fas fa-plus me-2"></i>NUEVO REPORTE
                     </button>
-                    </div>
+                </div>
             </div>
 
             <!-- Cards de Resumen -->
@@ -262,9 +259,18 @@
                 <div class="table-responsive">
                     <table class="table table-hover align-middle">
                         <thead class="table-dark-header">
-                            <tr id="tableHeader"></tr>
+                            <tr id="tableHeader">
+                                <th class="ps-4" style="border-top-left-radius: 12px;">ID / MARCA</th>
+                                <th>FECHA SOLICITUD</th>
+                                <th>N° CONTACTO</th>
+                                <th>PROBLEMA</th>
+                                <th class="text-center">ESTADO</th>
+                                <th class="text-end pe-4" style="border-top-right-radius: 12px;">ACCIÓN</th>
+                            </tr>
                         </thead>
-                        <tbody id="tableBody"></tbody>
+                        <tbody id="tableBody">
+                            <!-- Aquí se inyecta el loader de tabla temporalmente -->
+                        </tbody>
                     </table>
                 </div>
                 <div id="paginationControls" class="p-3 border-top bg-light"></div>
@@ -272,7 +278,7 @@
         </div>
     </main>
 
-    <!-- MODAL -->
+    <!-- MODAL EDICIÓN -->
     <div class="modal fade" id="editModal" tabindex="-1" data-bs-backdrop="static">
         <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content border-0 shadow-lg">
@@ -355,36 +361,19 @@
         const recordsPerPage = 10;
         const SESSION_TIMEOUT = 5 * 60 * 60 * 1000;
         
-        // Estructura de Columnas para Incidencias (Total 11)
         const COL = {
-            ID: 0,
-            FECHA_SOL: 1,
-            MARCA: 2,
-            NUMERO_CONTACTO: 3,
-            PROBLEMA: 4,
-            SOLUCION: 5,
-            IMG_INCIDENCIA: 6, // Base64 o URL
-            ESTADO: 7, // Pendiente, Revisado, Rechazado
-            COMENTARIO_SOPORTE: 8,
-            IMG_SOPORTE: 9, // Base64 o URL
-            FECHA_ATENCION: 10,
-            ASESORA_NOMBRE: 11,
-            PLATAFORMA: 12,
-            TIPO: 13
+            ID: 0, FECHA_SOL: 1, MARCA: 2, NUMERO_CONTACTO: 3, PROBLEMA: 4, SOLUCION: 5,
+            IMG_INCIDENCIA: 6, ESTADO: 7, COMENTARIO_SOPORTE: 8, IMG_SOPORTE: 9, 
+            FECHA_ATENCION: 10, ASESORA_NOMBRE: 11, PLATAFORMA: 12, TIPO: 13
         };
         
         /** GESTIÓN DE SESIÓN */
-        function saveSession(data) {
-            localStorage.setItem('incident_session', JSON.stringify({ user: data, loginTime: Date.now() }));
-        }
+        function saveSession(data) { localStorage.setItem('incident_session', JSON.stringify({ user: data, loginTime: Date.now() })); }
         function getSession() {
             const sessionRaw = localStorage.getItem('incident_session');
             if (!sessionRaw) return null;
             const session = JSON.parse(sessionRaw);
-            if (Date.now() - session.loginTime > SESSION_TIMEOUT) {
-                localStorage.removeItem('incident_session');
-                return null;
-            }
+            if (Date.now() - session.loginTime > SESSION_TIMEOUT) { localStorage.removeItem('incident_session'); return null; }
             return session.user;
         }
         function clearSession() { localStorage.removeItem('incident_session'); location.reload(); }
@@ -395,6 +384,7 @@
             const pass = document.getElementById('passInput').value;
             if (!user || !pass) return Swal.fire('Error', 'Ingrese sus credenciales.', 'warning');
             
+            // Aquí el loader principal sí se muestra para indicar que está "Iniciando sesión"
             const res = await callAPI({ action: 'login', user, pass });
             if (res && res.success) {
                 saveSession(res);
@@ -421,17 +411,15 @@
 
             document.getElementById('rolBadge').innerText = `${res.nombre.toUpperCase()} | ${displayRol}`;
             
-            // Asesoras pueden crear reportes
             if (res.rol.startsWith("ASESORA_") || res.rol.startsWith("SOPORTE_")) {
                 document.getElementById('btnNuevo').classList.remove('hidden');
             } else {
                 document.getElementById('btnNuevo').classList.add('hidden');
             }
 
-            // SOPORTE y ADMIN ven los cuadros de Resumen y el Botón de ENVIAR ACCESOS
             if (res.rol === "SOPORTE" || res.rol === "ADMIN") {
                 document.getElementById('statsCards').classList.remove('hidden');
-                document.getElementById('btnAccesos').classList.remove('hidden'); // <--- AHORA ESTÁ AQUÍ
+                document.getElementById('btnAccesos').classList.remove('hidden'); 
             } else {
                 document.getElementById('statsCards').classList.add('hidden');
                 document.getElementById('btnAccesos').classList.add('hidden');
@@ -452,13 +440,21 @@
             loadData();
         }
 
-        /** DATA LOADING */
+        /** DATA LOADING OPTIMIZADO PARA NO BLOQUEAR PANTALLA */
         async function loadData() {
-            // isSilent = true significa que no bloquea la pantalla con el blanco molesto.
-            // Si currentData está vacío, significa que es la primera vez (al iniciar), así que NO es silencioso.
-            const isSilent = currentData.length > 0;
+            // Mostrar estado de carga dentro de la tabla (Súper rápido y no bloquea nada)
+            if (currentData.length === 0) {
+                document.getElementById('tableBody').innerHTML = `
+                <tr>
+                    <td colspan="6" class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status"></div>
+                        <p class="mt-2 text-muted fw-bold mb-0">Obteniendo registros de la base de datos...</p>
+                    </td>
+                </tr>`;
+            }
             
-            const res = await callAPI({ action: 'getData', rol: userData.rol }, isSilent);
+            // "true" fuerza a que el cuadro blanco gigante NO aparezca. Todo corre en segundo plano.
+            const res = await callAPI({ action: 'getData', rol: userData.rol }, true);
             if (res && res.success) {
                 currentData = res.data;
                 renderTable();
@@ -466,16 +462,13 @@
         }
 
         function updateStats(dataToCount) {
-            let total = dataToCount.length;
-            let pendientes = 0, revisados = 0, rechazados = 0;
-        
+            let total = dataToCount.length, pendientes = 0, revisados = 0, rechazados = 0;
             dataToCount.forEach(item => {
                 const f = item.data;
                 if (f[COL.ESTADO] === "Pendiente") pendientes++;
                 else if (f[COL.ESTADO] === "Revisado") revisados++;
                 else if (f[COL.ESTADO] === "Rechazado") rechazados++;
             });
-        
             document.getElementById('stat-total').innerText = total;
             document.getElementById('stat-pendientes').innerText = pendientes;
             document.getElementById('stat-revisados').innerText = revisados;
@@ -484,12 +477,11 @@
 
         function normalizeDate(rawDate) {
             if (!rawDate) return moment.invalid();
-            // Intenta parsear como fecha de Google (ISO) o fecha manual (DD/MM/YYYY)
             let m = moment(rawDate,[moment.ISO_8601, 'DD/MM/YYYY HH:mm:ss', 'DD/MM/YYYY HH:mm', 'DD/MM/YYYY'], true);
-            if (!m.isValid()) m = moment(rawDate); // Fallback
+            if (!m.isValid()) m = moment(rawDate); 
             return m;
         }
-        /** ACORDEÓN LOGICA **/
+
         function toggleDetails(index) {
             const detailRow = document.getElementById(`details-${index}`);
             const icon = document.getElementById(`icon-${index}`);
@@ -504,33 +496,20 @@
                 icon.classList.add('fa-plus-circle', 'text-primary');
             }
         }
-        /** RENDERIZADO DE TABLA */
+
         function renderTable() {
             if (currentData.length === 0) return;
         
             const body = document.getElementById('tableBody');
-            const header = document.getElementById('tableHeader');
         
-            header.innerHTML = `
-                <th class="ps-4" style="border-top-left-radius: 12px;">ID / MARCA</th>
-                <th>FECHA SOLICITUD</th>
-                <th>N° CONTACTO</th>
-                <th>PROBLEMA</th>
-                <th class="text-center">ESTADO</th>
-                <th class="text-end pe-4" style="border-top-right-radius: 12px;">ACCIÓN</th>
-                `;
-        
-            // Filtrado
             let filteredData =[];
             for (let i = 1; i < currentData.length; i++) {
                 const f = currentData[i];
-                
-                // --- 1. FILTRO ESTRICTO POR ROL ---
                 const userRole = userData.rol;
                 const rowBrand = f[COL.MARCA];
                 const rowTipo = f[COL.TIPO];
 
-                if (userRole !== "SOPORTE" && userRole !== "ADMIN") { // "SOPORTE" global ve todo
+                if (userRole !== "SOPORTE" && userRole !== "ADMIN") { 
                     if (userRole === "ASESORA_NACIONAL") {
                         if ((rowBrand !== "JVN" && rowBrand !== "IEMPRESA") || rowTipo !== "Admisión") continue;
                     } else if (userRole.startsWith("ASESORA_")) {
@@ -542,10 +521,8 @@
                     }
                 }
                 
-                // Filtro Fecha
                 if (filterDates.length === 2) {
                     let rowDate = normalizeDate(f[COL.FECHA_SOL]);
-                    // Comprueba si la fecha es válida y si está dentro del rango ignorando la hora
                     if (!rowDate.isValid() || rowDate.isBefore(filterDates[0], 'day') || rowDate.isAfter(filterDates[1], 'day')) continue;
                 }
                 
@@ -564,17 +541,14 @@
             filteredData.sort((a, b) => {
                 let dateA = normalizeDate(a.data[COL.FECHA_SOL]);
                 let dateB = normalizeDate(b.data[COL.FECHA_SOL]);
-                // Si la fecha B es mayor (más nueva), se posicionará arriba.
                 return dateB.valueOf() - dateA.valueOf(); 
             });
 
-            // Paginación
             const totalRecords = filteredData.length;
             const totalPages = Math.ceil(totalRecords / recordsPerPage);
             const start = (currentPage - 1) * recordsPerPage;
             const paginated = filteredData.slice(start, start + recordsPerPage);
         
-            // 4. Generar Filas
             let html = "";
             paginated.forEach(item => {
                 const i = item.index;
@@ -616,12 +590,10 @@
                         </td>
                     </tr>
                     
-                    <!-- Fila Desplegable (Detalles) -->
                     <tr id="details-${i}" class="detail-row hidden">
                         <td colspan="6" class="p-0 border-0">
                             <div class="detail-wrapper p-4">
                                 <div class="row g-4">
-                                    <!-- Caja Reporte -->
                                     <div class="col-md-6">
                                         <div class="detail-card shadow-sm">
                                             <div class="detail-card-header bg-light">
@@ -633,7 +605,7 @@
                                                     <span class="d-block p-2 bg-light border rounded" style="white-space: pre-line;">${f[COL.PROBLEMA] || '---'}</span>
                                                 </div>
                                                 <div>
-                                                    <strong class="text-dark d-block mb-1">Solución Sugerida (Opcional):</strong>
+                                                    <strong class="text-dark d-block mb-1">Solución Sugerida:</strong>
                                                     <span class="d-block p-2 bg-light border rounded" style="white-space: pre-line;">${f[COL.SOLUCION] || 'Sin solución sugerida'}</span>
                                                 </div>
                                                 ${imgIncHtml}
@@ -641,7 +613,6 @@
                                         </div>
                                     </div>
 
-                                    <!-- Caja Resolución -->
                                     <div class="col-md-6">
                                         <div class="detail-card shadow-sm">
                                             <div class="detail-card-header bg-light">
@@ -658,7 +629,6 @@
                                     </div>
                                 </div>
                                 
-                                <!-- Metadatos (Footer de fila) -->
                                 <div class="mt-3 pt-3 border-top d-flex gap-4 flex-wrap small text-muted">
                                     <span><strong class="text-dark">Tipo:</strong> ${f[COL.TIPO] || '---'}</span>
                                     <span><strong class="text-dark">Plataforma:</strong> ${f[COL.PLATAFORMA] || '---'}</span>
@@ -698,7 +668,6 @@
             cont.innerHTML = html;
         }
         
-        /** FILTROS */
         function initFilters() {
             $('#dateRangeFilter').daterangepicker({
                 autoUpdateInput: false,
@@ -723,49 +692,28 @@
             currentPage = 1; renderTable();
         }
 
-        /** MODAL DINÁMICO & LOGICA DE ROLES */
         function getValidImageUrl(url) {
             if (!url || typeof url !== 'string' || url.trim() === "") return "";
-            
-            // Si la imagen es un formato base64 puro (recién pegada), la muestra sin problemas
             if (url.startsWith("data:image")) return url;
-
-            // Extraer el ID único del archivo de Google Drive sin importar el formato viejo
             let fileId = null;
             const idMatch = url.match(/id=([^&]+)/) || url.match(/\/d\/([a-zA-Z0-9-_]+)/);
-            
-            if (idMatch && idMatch[1]) {
-                fileId = idMatch[1];
-            }
-
-            if (fileId) {
-                // TRUCO: Usar el servidor "lh3" de Google para evitar el bloqueo de imágenes rotas (Error 403)
-                return `https://lh3.googleusercontent.com/d/${fileId}`;
-            }
-
+            if (idMatch && idMatch[1]) { fileId = idMatch[1]; }
+            if (fileId) { return `https://lh3.googleusercontent.com/d/${fileId}`; }
             return url;
         }
 
         function openEdit(index) {
             isNewRecord = (index === -1);
             
-            // Definiendo permisos: Creadores (Asesora y Soporte Marca) vs Revisor (Soporte Global)
             const isCreator = userData.rol.startsWith("ASESORA_") || userData.rol.startsWith("SOPORTE_");
             const isSoporteAdmin = userData.rol === "SOPORTE" || userData.rol === "ADMIN";
             
-            // Iniciar Fila a 14 espacios
             let row = isNewRecord ? Array(14).fill("") : [...currentData[index]];
             
             if (isNewRecord && isCreator) {
-                // Si NO es la asesora nacional, su marca viene por defecto en su rol
-                if (userData.rol !== "ASESORA_NACIONAL") {
-                    row[COL.MARCA] = userData.rol.split('_')[1]; // Extrae BGU de ASESORA_BGU o SOPORTE_BGU
-                }
-                
-                // Asignar el Tipo de reporte automáticamente por su rol
+                if (userData.rol !== "ASESORA_NACIONAL") row[COL.MARCA] = userData.rol.split('_')[1]; 
                 if (userData.rol.startsWith("ASESORA_")) row[COL.TIPO] = "Admisión";
                 if (userData.rol.startsWith("SOPORTE_")) row[COL.TIPO] = "Soporte";
-                
                 row[COL.ESTADO] = "Pendiente";
                 row[COL.ASESORA_NOMBRE] = userData.nombre;
             }
@@ -777,13 +725,11 @@
 
             const formContainer = document.getElementById("editForm");
             
-            // Atributos de sólo lectura
             const readCreator = (!isNewRecord && isSoporteAdmin) ? "readonly" : "";
             const disCreator = (!isNewRecord && isSoporteAdmin) ? "disabled" : "";
             const readAdmin = isCreator ? "readonly" : "";
             const disAdmin = isCreator ? "disabled" : "";
 
-            // --- Lógica del selector de Marca ---
             let disMarca = "disabled"; 
             if (isCreator && userData.rol === "ASESORA_NACIONAL" && isNewRecord) disMarca = ""; 
             
@@ -803,7 +749,6 @@
                 <input type="hidden" id="edit-10" value="${row[COL.FECHA_ATENCION] || ''}">
                 <input type="hidden" id="edit-11" value="${row[COL.ASESORA_NOMBRE] || ''}"> 
                 
-                <!-- SECCION CREADOR DEL REPORTE -->
                 <div class="col-md-7">
                     <div class="card border-0 shadow-sm h-100">
                         <div class="card-header bg-white fw-bold text-primary py-3 d-flex justify-content-between align-items-center">
@@ -839,7 +784,7 @@
                                     <textarea id="edit-4" class="form-control" rows="3" placeholder="Detalla qué sucedió..." ${readCreator}>${row[COL.PROBLEMA] || ''}</textarea>
                                 </div>
                                 <div class="col-12">
-                                    <label class="form-label small fw-bold text-muted">Describe la Solución (Opcional)</label>
+                                    <label class="form-label small fw-bold text-muted">Describe la Solución <span class="text-danger">*</span></label>
                                     <textarea id="edit-5" class="form-control" rows="2" placeholder="Qué pasos hiciste para solucionarlo..." ${readCreator}>${row[COL.SOLUCION] || ''}</textarea>
                                 </div>
                                 <div class="col-12">
@@ -860,7 +805,6 @@
                     </div>
                 </div>
 
-                <!-- SECCION SOPORTE -->
                 <div class="col-md-5">
                     <div class="card border-0 shadow-sm h-100">
                         <div class="card-header bg-white fw-bold text-success py-3">
@@ -906,18 +850,15 @@
             if (isSoporteAdmin) bindImageEvents('drop-soporte', 'file-soporte', 'preview-soporte', 'edit-9');
         }
 
-        /** MANEJO DE IMÁGENES (CLICK, DRAG & DROP) */
         function bindImageEvents(zoneId, fileId, previewId, hiddenId) {
             const zone = document.getElementById(zoneId);
             const fileInput = document.getElementById(fileId);
             if(!zone) return;
 
             zone.addEventListener('click', () => fileInput.click());
-            
             fileInput.addEventListener('change', function() {
                 if (this.files && this.files[0]) processImage(this.files[0], previewId, hiddenId);
             });
-
             zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
             zone.addEventListener('dragleave', e => { e.preventDefault(); zone.classList.remove('dragover'); });
             zone.addEventListener('drop', e => {
@@ -933,12 +874,11 @@
             reader.onload = function(e) {
                 document.getElementById(previewId).src = e.target.result;
                 document.getElementById(previewId).style.display = 'block';
-                document.getElementById(hiddenId).value = e.target.result; // Guarda Base64
+                document.getElementById(hiddenId).value = e.target.result; 
             };
             reader.readAsDataURL(file);
         }
 
-        /** CAPTURAR PEGAR (CTRL+V) EN TODO EL DOCUMENTO CUANDO EL MODAL ESTÁ ABIERTO */
         document.addEventListener('paste', function(e) {
             const modal = document.getElementById('editModal');
             if (!modal || !modal.classList.contains('show')) return;
@@ -953,7 +893,6 @@
             }
             if (!file) return;
 
-            // Decidir a qué caja va la imagen según el Rol
             const isCreator = userData.rol.startsWith("ASESORA_");
             const isSoporteAdmin = userData.rol === "SOPORTE" || userData.rol === "ADMIN";
             
@@ -964,7 +903,6 @@
             }
         });
         
-        /** GUARDAR DATOS */
         async function saveData() {
             let rowData = Array(14).fill(""); 
             const isCreator = userData.rol.startsWith("ASESORA_") || userData.rol.startsWith("SOPORTE_");
@@ -986,17 +924,19 @@
             if (isCreator) {
                 if (userData.rol === "ASESORA_NACIONAL" && !rowData[COL.MARCA]) return Swal.fire('Error', 'Debe seleccionar una Marca', 'warning');
                 if (!rowData[COL.PLATAFORMA]) return Swal.fire('Error', 'Debe indicar la Plataforma (Chatfuel / ORA)', 'warning');
-                if (!rowData[COL.NUMERO_CONTACTO] || !rowData[COL.PROBLEMA]) return Swal.fire('Error', 'Debe llenar al menos el N° de Contacto y el Problema', 'warning');
+                
+                // VALIDACIÓN DE SOLUCIÓN OBLIGATORIA AGREGADA AQUÍ
+                if (!rowData[COL.NUMERO_CONTACTO] || !rowData[COL.PROBLEMA] || !rowData[COL.SOLUCION]) {
+                    return Swal.fire('Faltan Datos', 'Debe llenar el N° de Contacto, el Problema y describir la Solución.', 'warning');
+                }
             }
 
             const now = moment().format('DD/MM/YYYY HH:mm:ss');
             if (isNewRecord) rowData[COL.FECHA_SOL] = now;
             if (isSoporteAdmin && statusPrev === "Pendiente" && statusNew !== "Pendiente") rowData[COL.FECHA_ATENCION] = now;
 
-            // 1. CERRAR EL MODAL INMEDIATAMENTE
             bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
 
-            // 2. MOSTRAR UNA ALERTA PEQUEÑA EN LA ESQUINA (NO BLOQUEANTE)
             const Toast = Swal.mixin({
                 toast: true,
                 position: 'bottom-end',
@@ -1004,7 +944,6 @@
             });
             Toast.fire({ icon: 'info', title: 'Guardando incidencia...' });
 
-            // 3. ENVIAR LOS DATOS AL SCRIPT SIN FRENAR LA PANTALLA
             callAPI({ action: 'update', newData: rowData, rol: userData.rol, isNew: isNewRecord }, true).then(res => {
                 if (res && res.success) {
                     Toast.fire({
@@ -1012,15 +951,13 @@
                         title: '¡Guardado con éxito!',
                         timer: 3000
                     });
-                    loadData(); // Refresca la tabla automáticamente sin avisar
+                    loadData(); 
                 } else {
                     Swal.fire('Error', 'Ocurrió un problema al guardar', 'error');
                 }
             });
         }
         
-        /** COMUNICACIÓN API (fetch) */
-        // Se ha añadido la variable silent, para controlar si mostramos la pantalla de carga
         async function callAPI(payload, silent = false) {
             if (!silent) {
                 document.getElementById('loader').classList.remove('hidden');
@@ -1047,7 +984,6 @@
         let listaAsesoras =[];
 
         async function openAccessModal() {
-            // Limpiar formulario
             document.getElementById('acc-correo').value = '';
             document.getElementById('acc-user').value = '';
             document.getElementById('acc-pass').value = '';
@@ -1055,7 +991,6 @@
             
             new bootstrap.Modal('#accessModal').show();
 
-            // Llamar a la base de datos de manera silenciosa para obtener solo Asesoras
             const res = await callAPI({ action: 'getAsesoras' }, true);
             
             if (res && res.success) {
@@ -1079,9 +1014,9 @@
             const index = document.getElementById('acc-select').value;
             if (index !== "") {
                 const a = listaAsesoras[index];
-                document.getElementById('acc-correo').value = a.email; // Jala la Columna E o la A
-                document.getElementById('acc-user').value = a.user;    // Jala la Columna A
-                document.getElementById('acc-pass').value = a.pass;    // Jala la Columna B
+                document.getElementById('acc-correo').value = a.email; 
+                document.getElementById('acc-user').value = a.user;    
+                document.getElementById('acc-pass').value = a.pass;    
             } else {
                 document.getElementById('acc-correo').value = '';
                 document.getElementById('acc-user').value = '';
@@ -1114,7 +1049,7 @@
                 asesora: nombreAsesora,
                 userAccess: user,
                 passAccess: pass
-            }, true); // silent true
+            }, true); 
 
             if (res && res.success) {
                 bootstrap.Modal.getInstance(document.getElementById('accessModal')).hide();
