@@ -403,7 +403,21 @@
             if (!user || !pass) return Swal.fire('Error', 'Ingrese credenciales.', 'warning');
             
             // Muestra un SweetAlert rápido en lugar del cargador gigante de pantalla
-            Swal.fire({ title: 'Validando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            Swal.fire({
+                title: 'Procesando...',
+                text: 'Por favor, espera un momento',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                },
+                customClass: {
+                    popup: 'rounded-4 shadow-lg border-0',
+                    title: 'fw-bold text-primary',
+                },
+                // Esto hace que se vea más "limpio" y elegante
+                background: '#ffffff',
+                iconColor: '#4361ee'
+            });
             
             const res = await callAPI({ action: 'login', user, pass }, true); // true = silent
             
@@ -791,8 +805,8 @@
                                     </select>
                                 </div>
                                 <div class="col-12">
-                                    <label class="form-label small fw-bold text-muted">Número de Contacto</label>
-                                    <input type="text" id="edit-3" class="form-control" placeholder="Ej. +51999999999" value="${row[COL.NUMERO_CONTACTO] || ''}" ${readCreator}>
+                                    <label class="form-label small fw-bold text-muted">Número de Contacto (Sin el "+")</label>
+                                    <input type="text" id="edit-3" class="form-control" placeholder="Ej. 51999999999" value="${row[COL.NUMERO_CONTACTO] || ''}" ${readCreator}>
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label small fw-bold text-muted">Describe el Problema</label>
