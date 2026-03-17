@@ -103,6 +103,24 @@
         @media (max-width: 1199px) {
             .modal-dialog.modal-xl { max-width: 96% !important; margin: 1.5rem auto; }
         }
+
+        /* Estilo para el botón eliminar imagen */
+        .img-container { position: relative; display: inline-block; }
+        .btn-remove-img {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(231, 74, 59, 0.9);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            font-size: 14px;
+            cursor: pointer;
+            z-index: 10;
+        }
+        .btn-remove-img:hover { background: #e74a3b; }
     </style>
 </head>
 <body>
@@ -784,18 +802,22 @@
                                     <label class="form-label small fw-bold text-muted">Describe la Solución <span class="text-danger">*</span></label>
                                     <textarea id="edit-5" class="form-control" rows="2" placeholder="Qué pasos hiciste para solucionarlo..." ${readCreator}>${row[COL.SOLUCION] || ''}</textarea>
                                 </div>
+                                <!-- Esto debe quedar así en tu función openEdit -->
                                 <div class="col-12">
                                     <label class="form-label small fw-bold text-muted">Evidencia del Problema (Imagen)</label>
-                                    <div class="mb-2 small text-muted"><i class="fas fa-keyboard me-1"></i>Puedes presionar <b>Ctrl+V</b> para pegar captura</div>
+                                    <div class="mb-2 small text-muted">Presiona <b>Ctrl+V</b> para pegar</div>
                                     <input type="hidden" id="edit-6" value="${imgIncidencia}">
                                     ${isCreator ? `
                                         <input type="file" id="file-incidencia" class="d-none" accept="image/*">
                                         <div id="drop-incidencia" class="drop-zone" tabindex="0">
                                             <i class="fas fa-cloud-upload-alt"></i>
-                                            <p class="mb-0 text-secondary">Haz clic, arrastra o presiona Ctrl+V aquí</p>
+                                            <p class="mb-0 text-secondary">Clic, arrastra o pega</p>
                                         </div>
                                     ` : ''}
-                                    <img id="preview-incidencia" class="img-preview" src="${imgIncidencia}" style="${imgIncidencia ? 'display:block;' : 'display:none;'}">
+                                    <!-- El div img-container es obligatorio para que el botón de la X se vea bien -->
+                                    <div class="img-container">
+                                        <img id="preview-incidencia" class="img-preview" src="${imgIncidencia}" style="${imgIncidencia ? 'display:block;' : 'display:none;'}">
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -869,9 +891,29 @@
             if (!file.type.match('image.*')) return Swal.fire('Error', 'Solo se permiten archivos de imagen.', 'error');
             const reader = new FileReader();
             reader.onload = function(e) {
-                document.getElementById(previewId).src = e.target.result;
-                document.getElementById(previewId).style.display = 'block';
-                document.getElementById(hiddenId).value = e.target.result; 
+                const img = document.getElementById(previewId);
+                img.src = e.target.result;
+                img.style.display = 'block';
+                document.getElementById(hiddenId).value = e.target.result;
+
+                // Si no existe el botón de borrar, lo creamos
+                let container = img.parentElement;
+                if (!container.classList.contains('img-container')) {
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'img-container';
+                    img.parentNode.insertBefore(wrapper, img);
+                    wrapper.appendChild(img);
+
+                    const btn = document.createElement('button');
+                    btn.innerHTML = '×';
+                    btn.className = 'btn-remove-img';
+                    btn.onclick = function() {
+                        img.src = '';
+                        img.style.display = 'none';
+                        document.getElementById(hiddenId).value = '';
+                    };
+                    wrapper.appendChild(btn);
+                }
             };
             reader.readAsDataURL(file);
         }
