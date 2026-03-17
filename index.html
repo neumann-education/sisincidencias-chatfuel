@@ -382,14 +382,19 @@
         async function attemptLogin() {
             const user = document.getElementById('userInput').value;
             const pass = document.getElementById('passInput').value;
-            if (!user || !pass) return Swal.fire('Error', 'Ingrese sus credenciales.', 'warning');
+            if (!user || !pass) return Swal.fire('Error', 'Ingrese credenciales.', 'warning');
             
-            // Aquí el loader principal sí se muestra para indicar que está "Iniciando sesión"
-            const res = await callAPI({ action: 'login', user, pass });
+            // Muestra un SweetAlert rápido en lugar del cargador gigante de pantalla
+            Swal.fire({ title: 'Validando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            
+            const res = await callAPI({ action: 'login', user, pass }, true); // true = silent
+            
             if (res && res.success) {
+                Swal.close(); // Cierra el mensaje rápido
                 saveSession(res);
                 showDashboard(res);
             } else {
+                Swal.close();
                 document.getElementById('loginError').innerText = res ? res.message : "Error de conexión.";
             }
         }
@@ -442,18 +447,10 @@
 
         /** DATA LOADING OPTIMIZADO PARA NO BLOQUEAR PANTALLA */
         async function loadData() {
-            // Mostrar estado de carga dentro de la tabla (Súper rápido y no bloquea nada)
-            if (currentData.length === 0) {
-                document.getElementById('tableBody').innerHTML = `
-                <tr>
-                    <td colspan="6" class="text-center py-5">
-                        <div class="spinner-border text-primary" role="status"></div>
-                        <p class="mt-2 text-muted fw-bold mb-0">Obteniendo registros de la base de datos...</p>
-                    </td>
-                </tr>`;
-            }
-            
-            // "true" fuerza a que el cuadro blanco gigante NO aparezca. Todo corre en segundo plano.
+           const session = getSession();
+            if (!session) return;
+
+            // Pedimos los datos, pero con un timeout para que no bloquee la UI
             const res = await callAPI({ action: 'getData', rol: userData.rol }, true);
             if (res && res.success) {
                 currentData = res.data;
