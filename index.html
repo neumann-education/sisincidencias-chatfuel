@@ -160,9 +160,15 @@
                     <h4 class="fw-bold mb-1">Panel de Control</h4>
                     <p class="text-muted mb-0">Seguimiento de problemas en flujos de Chatfuel.</p>
                 </div>
-                <button id="btnNuevo" class="btn btn-success-custom hidden" onclick="openEdit(-1)">
-                    <i class="fas fa-plus me-2"></i>NUEVO REPORTE
-                </button>
+                <div class="d-flex gap-2">
+                    <!-- BOTÓN DE ENVIAR ACCESOS -->
+                    <button id="btnAccesos" class="btn btn-warning fw-bold text-dark hidden shadow-sm border-0" onclick="openAccessModal()">
+                        <i class="fas fa-key me-2"></i>ENVIAR ACCESOS
+                    </button>
+                    <button id="btnNuevo" class="btn btn-success-custom hidden" onclick="openEdit(-1)">
+                        <i class="fas fa-plus me-2"></i>NUEVO REPORTE
+                    </button>
+                    </div>
             </div>
 
             <!-- Cards de Resumen -->
@@ -419,6 +425,7 @@
             // Tanto las Asesoras como los Soportes de Marca pueden crear reportes
             if (res.rol.startsWith("ASESORA_") || res.rol.startsWith("SOPORTE_")) {
                 document.getElementById('btnNuevo').classList.remove('hidden');
+                document.getElementById('btnAccesos').classList.remove('hidden');
             } else {
                 // El SOPORTE global solo audita/revisa
                 document.getElementById('btnNuevo').classList.add('hidden');
