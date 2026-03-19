@@ -999,7 +999,17 @@
                 rowData[COL.FECHA_SOL] = now;
             } else {
                 // Si es actualización, MANTENER la fecha de solicitud original
-                rowData[COL.FECHA_SOL] = originalRow[COL.FECHA_SOL];
+                // PERO asegurando que tenga el mismo formato que 'now'
+                let fechaOriginal = originalRow[COL.FECHA_SOL];
+                
+                // Si la fecha original está en formato ISO (contiene T y Z), convertirla
+                if (fechaOriginal && fechaOriginal.includes('T') && fechaOriginal.includes('Z')) {
+                    const fechaMoment = moment(fechaOriginal);
+                    rowData[COL.FECHA_SOL] = fechaMoment.format('DD/MM/YYYY HH:mm:ss');
+                } else {
+                    // Si ya está en el formato correcto, mantenerla igual
+                    rowData[COL.FECHA_SOL] = fechaOriginal;
+                }
             }
             
             // ===== LÓGICA PARA FECHA_ATENCION =====
@@ -1013,12 +1023,26 @@
                     rowData[COL.FECHA_ATENCION] = "";
                 } else {
                     // En otros cambios de estado, mantener la fecha de atención existente
-                    rowData[COL.FECHA_ATENCION] = originalRow[COL.FECHA_ATENCION] || "";
+                    let fechaAtencionOriginal = originalRow[COL.FECHA_ATENCION] || "";
+                    // Asegurar formato correcto si está en ISO
+                    if (fechaAtencionOriginal && fechaAtencionOriginal.includes('T') && fechaAtencionOriginal.includes('Z')) {
+                        const fechaMoment = moment(fechaAtencionOriginal);
+                        rowData[COL.FECHA_ATENCION] = fechaMoment.format('DD/MM/YYYY HH:mm:ss');
+                    } else {
+                        rowData[COL.FECHA_ATENCION] = fechaAtencionOriginal;
+                    }
                 }
             } else {
                 // Si no es SOPORTE/ADMIN o no cambió estado, mantener fecha de atención original
                 if (!isNewRecord && originalRow) {
-                    rowData[COL.FECHA_ATENCION] = originalRow[COL.FECHA_ATENCION] || "";
+                    let fechaAtencionOriginal = originalRow[COL.FECHA_ATENCION] || "";
+                    // Asegurar formato correcto si está en ISO
+                    if (fechaAtencionOriginal && fechaAtencionOriginal.includes('T') && fechaAtencionOriginal.includes('Z')) {
+                        const fechaMoment = moment(fechaAtencionOriginal);
+                        rowData[COL.FECHA_ATENCION] = fechaMoment.format('DD/MM/YYYY HH:mm:ss');
+                    } else {
+                        rowData[COL.FECHA_ATENCION] = fechaAtencionOriginal;
+                    }
                 }
             }
         
