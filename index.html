@@ -970,42 +970,83 @@
             const isCreator = userData.rol.startsWith("ASESORA_") || userData.rol.startsWith("SOPORTE_");
             const isSoporteAdmin = userData.rol === "SOPORTE" || userData.rol === "ADMIN";
             const currentId = document.getElementById('edit-0').value;
-            const statusPrev = isNewRecord ? "" : currentData.find(r => r[0].toString() === currentId)[COL.ESTADO];
+            
+            // Buscar el registro original ANTES de cualquier modificación
+            let originalRow = null;
+            if (!isNewRecord && currentId) {
+                originalRow = currentData.find(r => r[0].toString() === currentId.toString());
+            }
+        
+            // Obtener el estado anterior y nuevo
+            let statusPrev = originalRow ? originalRow[COL.ESTADO] : "";
             const statusNew = document.getElementById('edit-7').value;
-
-             for (let i = 0; i < 14; i++) { 
+        
+            // Recopilar datos del formulario
+            for (let i = 0; i < 14; i++) { 
                 const el = document.getElementById(`edit-${i}`);
                 if (el) {
                     rowData[i] = el.value;
-                } else if (!isNewRecord && currentId) {
-                    const originalRow = currentData.find(r => r[0].toString() === currentId.toString());
-                    if(originalRow) rowData[i] = originalRow[i];
+                } else if (!isNewRecord && originalRow) {
+                    rowData[i] = originalRow[i];
                 }
             }
-
+        
+            const now = moment().format('DD/MM/YYYY HH:mm:ss');
+            
+            // ===== LÓGICA PARA FECHA_SOLICITUD =====
+            if (isNewRecord) {
+                // Si es nuevo, asignar fecha de solicitud
+                rowData[COL.FECHA_SOL] = now;
+            } else {
+                // Si es actualización, MANTENER la fecha de solicitud original
+                rowData[COL.FECHA_SOL] = originalRow[COL.FECHA_SOL];
+            }
+            
+            // ===== LÓGICA PARA FECHA_ATENCION =====
+            if (isSoporteAdmin && statusPrev !== statusNew) {
+                // Solo si es SOPORTE/ADMIN y cambió el estado
+                if (statusPrev === "Pendiente" && (statusNew === "Revisado" || statusNew === "Observado")) {
+                    // Si pasa de Pendiente a Revisado/Observado, asignar fecha de atención
+                    rowData[COL.FECHA_ATENCION] = now;
+                } else if (statusPrev !== "Pendiente" && statusNew === "Pendiente") {
+                    // Si vuelve a Pendiente, limpiar la fecha de atención
+                    rowData[COL.FECHA_ATENCION] = "";
+                } else {
+                    // En otros cambios de estado, mantener la fecha de atención existente
+                    rowData[COL.FECHA_ATENCION] = originalRow[COL.FECHA_ATENCION] || "";
+                }
+            } else {
+                // Si no es SOPORTE/ADMIN o no cambió estado, mantener fecha de atención original
+                if (!isNewRecord && originalRow) {
+                    rowData[COL.FECHA_ATENCION] = originalRow[COL.FECHA_ATENCION] || "";
+                }
+            }
+        
+            // Validaciones para asesoras
             if (isCreator) {
-                if (userData.rol === "ASESORA_NACIONAL" && !rowData[COL.MARCA]) return Swal.fire('Error', 'Debe seleccionar una Marca', 'warning');
-                if (!rowData[COL.PLATAFORMA]) return Swal.fire('Error', 'Debe indicar la Plataforma (Chatfuel / ORA)', 'warning');
-                
-                // VALIDACIÓN DE SOLUCIÓN OBLIGATORIA AGREGADA AQUÍ
+                if (userData.rol === "ASESORA_NACIONAL" && !rowData[COL.MARCA]) {
+                    return Swal.fire('Error', 'Debe seleccionar una Marca', 'warning');
+                }
+                if (!rowData[COL.PLATAFORMA]) {
+                    return Swal.fire('Error', 'Debe indicar la Plataforma (Chatfuel / ORA)', 'warning');
+                }
                 if (!rowData[COL.NUMERO_CONTACTO] || !rowData[COL.PROBLEMA] || !rowData[COL.SOLUCION]) {
                     return Swal.fire('Faltan Datos', 'Debe llenar el N° de Contacto, el Problema y describir la Solución.', 'warning');
                 }
             }
-
-            const now = moment().format('DD/MM/YYYY HH:mm:ss');
-            if (isNewRecord) rowData[COL.FECHA_SOL] = now;
-            if (isSoporteAdmin && statusPrev === "Pendiente" && statusNew !== "Pendiente") rowData[COL.FECHA_ATENCION] = now;
-
+        
+            // Cerrar modal
             bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
-
+        
+            // Mostrar toast de guardando
             const Toast = Swal.mixin({
                 toast: true,
                 position: 'bottom-end',
                 showConfirmButton: false
             });
             Toast.fire({ icon: 'info', title: 'Guardando incidencia...' });
-
+        
+            // Llamar a la API
             callAPI({ action: 'update', newData: rowData, rol: userData.rol, isNew: isNewRecord }, true).then(res => {
                 if (res && res.success) {
                     Toast.fire({
