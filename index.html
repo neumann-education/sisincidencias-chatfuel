@@ -482,7 +482,7 @@
                 const f = item.data;
                 if (f[COL.ESTADO] === "Pendiente") pendientes++;
                 else if (f[COL.ESTADO] === "Revisado") revisados++;
-                else if (f[COL.ESTADO] === "Observado") observado++;
+                else if (f[COL.ESTADO] === "Observado") observados++;
             });
             document.getElementById('stat-total').innerText = total;
             document.getElementById('stat-pendientes').innerText = pendientes;
