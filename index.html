@@ -224,11 +224,11 @@
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <div class="card border-0 shadow-sm bg-danger text-white p-3 h-100" style="cursor: pointer;" onclick="filterByStatus('Rechazado')">
+                    <div class="card border-0 shadow-sm bg-danger text-white p-3 h-100" style="cursor: pointer;" onclick="filterByStatus('Observado')">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <h6 class="mb-1">Rechazados</h6>
-                                <h3 class="fw-bold mb-0" id="stat-rechazados">0</h3>
+                                <h6 class="mb-1">Observados</h6>
+                                <h3 class="fw-bold mb-0" id="stat-observados">0</h3>
                             </div>
                             <i class="fas fa-times-circle fa-2x opacity-50"></i>
                         </div>
@@ -250,7 +250,7 @@
                                 <option value="">Todos</option>
                                 <option value="Pendiente">Pendiente</option>
                                 <option value="Revisado">Revisado</option>
-                                <option value="Rechazado">Rechazado</option>
+                                <option value="Observado">Observado</option>
                             </select>
                         </div>
                         <div class="col-md-2">
@@ -477,17 +477,17 @@
         }
 
         function updateStats(dataToCount) {
-            let total = dataToCount.length, pendientes = 0, revisados = 0, rechazados = 0;
+            let total = dataToCount.length, pendientes = 0, revisados = 0, observado = 0;
             dataToCount.forEach(item => {
                 const f = item.data;
                 if (f[COL.ESTADO] === "Pendiente") pendientes++;
                 else if (f[COL.ESTADO] === "Revisado") revisados++;
-                else if (f[COL.ESTADO] === "Rechazado") rechazados++;
+                else if (f[COL.ESTADO] === "Observado") observado++;
             });
             document.getElementById('stat-total').innerText = total;
             document.getElementById('stat-pendientes').innerText = pendientes;
             document.getElementById('stat-revisados').innerText = revisados;
-            document.getElementById('stat-rechazados').innerText = rechazados;
+            document.getElementById('stat-observados').innerText = observados;
         }
 
         function normalizeDate(rawDate) {
@@ -663,7 +663,7 @@
         function getStatusBadge(status) {
             let cls = 'status-pendiente';
             if(status === 'Revisado') cls = 'status-revisado';
-            if(status === 'Rechazado') cls = 'status-rechazado';
+            if(status === 'Observado') cls = 'status-observado';
             return `<span class="badge-status ${cls}">${status || 'Pendiente'}</span>`;
         }
         
@@ -836,7 +836,7 @@
                                     <select id="edit-7" class="form-select fw-bold" ${disAdmin}>
                                         <option value="Pendiente" ${row[COL.ESTADO]==='Pendiente'?'selected':''}>Pendiente</option>
                                         <option value="Revisado" ${row[COL.ESTADO]==='Revisado'?'selected':''}>Revisado</option>
-                                        <option value="Rechazado" ${row[COL.ESTADO]==='Rechazado'?'selected':''}>Rechazado</option>
+                                        <option value="Observado" ${row[COL.ESTADO]==='Observado'?'selected':''}>Observado</option>
                                     </select>
                                 </div>
                                 <div class="col-12">
