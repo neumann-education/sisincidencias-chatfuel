@@ -501,6 +501,23 @@
             }
         }
 
+        // NUEVA FUNCIÓN: Generar Galería HTML
+        function generarGaleriaHTML(imgString) {
+            if (!imgString || typeof imgString !== 'string' || imgString.trim() === "") return '';
+            const urls = imgString.split('|').map(u => u.trim()).filter(u => u !== "");
+            if (urls.length === 0) return '';
+            
+            let html = `<div class="mt-3 d-flex flex-wrap gap-2">`;
+            urls.forEach(url => {
+                const validUrl = getValidImageUrl(url);
+                html += `<a href="${validUrl}" target="_blank" class="shadow-sm rounded border border-light" style="display:inline-block; overflow:hidden; background:#fff; padding:2px;">
+                            <img src="${validUrl}" style="height: 80px; width: auto; object-fit: cover; transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                         </a>`;
+            });
+            html += `</div>`;
+            return html;
+        }
+
         function renderTable() {
             if (currentData.length === 0) return;
             const body = document.getElementById('tableBody');
@@ -572,8 +589,8 @@
                 const imgInc = getValidImageUrl(f[COL.IMG_INCIDENCIA]);
                 const imgSop = getValidImageUrl(f[COL.IMG_SOPORTE]);
                 
-                const imgIncHtml = imgInc ? `<div class="mt-3"><a href="${imgInc}" target="_blank"><img src="${imgInc}" style="max-height:100px; border-radius:5px; border:1px solid #cbd5e1; padding:2px; background:#fff;"></a></div>` : '';
-                const imgSopHtml = imgSop ? `<div class="mt-3"><a href="${imgSop}" target="_blank"><img src="${imgSop}" style="max-height:100px; border-radius:5px; border:1px solid #cbd5e1; padding:2px; background:#fff;"></a></div>` : '';
+                const imgIncHtml = generarGaleriaHTML(f[COL.IMG_INCIDENCIA]);
+                const imgSopHtml = generarGaleriaHTML(f[COL.IMG_SOPORTE]);
                 
                 html += `
                     <tr class="clickable-row" onclick="toggleDetails(${i})">
@@ -900,20 +917,18 @@
                                     <label class="form-label small fw-bold text-muted">Describe la Solución <span class="text-danger">*</span></label>
                                     <textarea id="edit-5" class="form-control" rows="2" placeholder="Qué pasos hiciste para solucionarlo..." ${readCreator}>${row[COL.SOLUCION] || ''}</textarea>
                                 </div>
-                                <div class="col-12">
+                               <div class="col-12">
                                     <label class="form-label small fw-bold text-muted">Evidencia del Problema (Imagen)</label>
-                                    <div class="mb-2 small text-muted">Presiona <b>Ctrl+V</b> para pegar</div>
-                                    <input type="hidden" id="edit-6" value="${imgIncidencia}">
+                                    <div class="mb-2 small text-muted">Presiona <b>Ctrl+V</b> para pegar múltiples imágenes</div>
+                                    <input type="hidden" id="edit-6" value="${row[COL.IMG_INCIDENCIA] || ''}">
                                     ${isCreator ? `
-                                        <input type="file" id="file-incidencia" class="d-none" accept="image/*">
+                                        <input type="file" id="file-incidencia" class="d-none" accept="image/*" multiple>
                                         <div id="drop-incidencia" class="drop-zone" tabindex="0">
-                                            <i class="fas fa-cloud-upload-alt"></i>
-                                            <p class="mb-0 text-secondary">Clic, arrastra o pega</p>
+                                            <i class="fas fa-images"></i>
+                                            <p class="mb-0 text-secondary">Clic, arrastra o pega imágenes</p>
                                         </div>
                                     ` : ''}
-                                    <div class="img-container">
-                                        <img id="preview-incidencia" class="img-preview" src="${imgIncidencia}" style="${imgIncidencia ? 'display:block;' : 'display:none;'}">
-                                    </div>
+                                    <div id="preview-container-incidencia" class="d-flex flex-wrap gap-2 mt-3"></div>
                                 </div>
                             </div>
                         </div>
@@ -941,16 +956,16 @@
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label small fw-bold text-muted">Evidencia (Imagen)</label>
-                                    <input type="hidden" id="edit-9" value="${imgSoporte}">
+                                    <input type="hidden" id="edit-9" value="${row[COL.IMG_SOPORTE] || ''}">
                                     ${isSoporteAdmin ? `
-                                        <div class="mb-2 small text-muted"><i class="fas fa-keyboard me-1"></i>Presiona <b>Ctrl+V</b> para pegar captura</div>
-                                        <input type="file" id="file-soporte" class="d-none" accept="image/*">
+                                        <div class="mb-2 small text-muted"><i class="fas fa-keyboard me-1"></i>Presiona <b>Ctrl+V</b> para pegar capturas</div>
+                                        <input type="file" id="file-soporte" class="d-none" accept="image/*" multiple>
                                         <div id="drop-soporte" class="drop-zone py-3" tabindex="0">
-                                            <i class="fas fa-cloud-upload-alt fs-4"></i>
-                                            <p class="mb-0 small text-secondary">Clic, arrastra o pega imagen (Ctrl+V)</p>
+                                            <i class="fas fa-images fs-4"></i>
+                                            <p class="mb-0 small text-secondary">Clic, arrastra o pega imágenes (Ctrl+V)</p>
                                         </div>
                                     ` : ''}
-                                    <img id="preview-soporte" class="img-preview" src="${imgSoporte}" style="${imgSoporte ? 'display:block;' : 'display:none;'}">
+                                    <div id="preview-container-soporte" class="d-flex flex-wrap gap-2 mt-3"></div>
                                 </div>
                             </div>
                         </div>
@@ -962,52 +977,121 @@
             
             // Ejecuta lógica de campos dinámicos
             toggleDynamicFields();
-
             new bootstrap.Modal('#editModal').show();
-
-            const imgInc = document.getElementById('preview-incidencia');
-            if (imgInc && imgInc.style.display === 'block') {
-                addRemoveButtonToImage(imgInc, 'edit-6');
-            }
-            const imgSop = document.getElementById('preview-soporte');
-            if (imgSop && imgSop.style.display === 'block') {
-                addRemoveButtonToImage(imgSop, 'edit-9');
-            }
-
-            if (isCreator) bindImageEvents('drop-incidencia', 'file-incidencia', 'preview-incidencia', 'edit-6');
-            if (isSoporteAdmin) bindImageEvents('drop-soporte', 'file-soporte', 'preview-soporte', 'edit-9');
+            
+            // Llenamos los nuevos contenedores si ya existen imágenes
+            populatePreviewContainer('preview-container-incidencia', row[COL.IMG_INCIDENCIA], 'edit-6');
+            populatePreviewContainer('preview-container-soporte', row[COL.IMG_SOPORTE], 'edit-9');
+            
+            // Asignamos eventos para subir múltiples imágenes
+            if (isCreator) bindImageEvents('drop-incidencia', 'file-incidencia', 'preview-container-incidencia', 'edit-6');
+            if (isSoporteAdmin) bindImageEvents('drop-soporte', 'file-soporte', 'preview-container-soporte', 'edit-9');
         }
 
-        function bindImageEvents(zoneId, fileId, previewId, hiddenId) {
+        // NUEVAS FUNCIONES PARA MÚLTIPLES IMÁGENES
+        function bindImageEvents(zoneId, fileId, containerId, hiddenId) {
             const zone = document.getElementById(zoneId);
             const fileInput = document.getElementById(fileId);
             if(!zone) return;
-
+        
             zone.addEventListener('click', () => fileInput.click());
             fileInput.addEventListener('change', function() {
-                if (this.files && this.files[0]) processImage(this.files[0], previewId, hiddenId);
+                if (this.files && this.files.length > 0) {
+                    Array.from(this.files).forEach(file => processImage(file, containerId, hiddenId));
+                }
+                this.value = ''; // Resetea para permitir subir el mismo archivo después si se borra
             });
             zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
             zone.addEventListener('dragleave', e => { e.preventDefault(); zone.classList.remove('dragover'); });
             zone.addEventListener('drop', e => {
                 e.preventDefault();
                 zone.classList.remove('dragover');
-                if (e.dataTransfer.files && e.dataTransfer.files[0]) processImage(e.dataTransfer.files[0], previewId, hiddenId);
+                if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                    Array.from(e.dataTransfer.files).forEach(file => processImage(file, containerId, hiddenId));
+                }
             });
         }
-
-        function processImage(file, previewId, hiddenId) {
+        
+        function processImage(file, containerId, hiddenId) {
             if (!file.type.match('image.*')) return Swal.fire('Error', 'Solo se permiten archivos de imagen.', 'error');
             const reader = new FileReader();
             reader.onload = function(e) {
-                const img = document.getElementById(previewId);
-                img.src = e.target.result;
-                img.style.display = 'block';
-                document.getElementById(hiddenId).value = e.target.result;
-                addRemoveButtonToImage(img, hiddenId);
+                const base64Data = e.target.result;
+                createPreviewImage(base64Data, base64Data, containerId, hiddenId);
             };
             reader.readAsDataURL(file);
         }
+        
+        function createPreviewImage(srcUrl, originalData, containerId, hiddenId) {
+            const container = document.getElementById(containerId);
+            const wrapper = document.createElement('div');
+            wrapper.className = 'img-container d-inline-block position-relative m-0';
+            wrapper.setAttribute('data-img', originalData); // Guardamos su data real para el hidden input
+        
+            const img = document.createElement('img');
+            img.src = srcUrl;
+            img.className = 'img-preview shadow-sm rounded';
+            img.style.display = 'block';
+            img.style.maxHeight = '120px'; // Tamaño ajustado para galería
+            img.style.marginTop = '0px';
+        
+            const btn = document.createElement('button');
+            btn.innerHTML = '×';
+            btn.className = 'btn-remove-img shadow';
+            btn.type = 'button'; 
+            btn.onclick = function(e) {
+                e.stopPropagation();
+                wrapper.remove();
+                updateHiddenInput(containerId, hiddenId); // Actualiza la cadena final al borrar
+            };
+        
+            wrapper.appendChild(img);
+            wrapper.appendChild(btn);
+            container.appendChild(wrapper);
+        
+            updateHiddenInput(containerId, hiddenId); // Actualiza la cadena al agregar
+        }
+        
+        function updateHiddenInput(containerId, hiddenId) {
+            const container = document.getElementById(containerId);
+            const wrappers = container.querySelectorAll('.img-container');
+            const data = Array.from(wrappers).map(w => w.getAttribute('data-img')).join('|');
+            document.getElementById(hiddenId).value = data;
+        }
+        
+        function populatePreviewContainer(containerId, imageString, hiddenId) {
+            const container = document.getElementById(containerId);
+            if (!container || !imageString) return;
+            const urls = imageString.split('|').map(u => u.trim()).filter(u => u !== "");
+            urls.forEach(url => {
+                const validUrl = getValidImageUrl(url);
+                createPreviewImage(validUrl, url, containerId, hiddenId);
+            });
+            // Forzamos actualización por seguridad
+            updateHiddenInput(containerId, hiddenId);
+        }
+        
+        // EVENTO PEGAR (CTRL+V) ACTUALIZADO
+        document.addEventListener('paste', function(e) {
+            const modal = document.getElementById('editModal');
+            if (!modal || !modal.classList.contains('show')) return;
+        
+            const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+            const isCreator = userData.rol.startsWith("ASESORA_") || userData.rol.startsWith("SOPORTE_");
+            const isSoporteAdmin = userData.rol === "SOPORTE" || userData.rol === "ADMIN" || userData.rol === "MARKETING";
+            
+            // Iteramos por si el usuario pega múltiples recortes a la vez
+            for (let i = 0; i < items.length; i++) {
+                if (items[i].kind === 'file') {
+                    const file = items[i].getAsFile();
+                    if (isCreator && document.getElementById('preview-container-incidencia')) {
+                        processImage(file, 'preview-container-incidencia', 'edit-6');
+                    } else if (isSoporteAdmin && document.getElementById('preview-container-soporte')) {
+                        processImage(file, 'preview-container-soporte', 'edit-9');
+                    }
+                }
+            }
+        });
 
         function addRemoveButtonToImage(imgElement, hiddenId) {
             let container = imgElement.parentElement;
@@ -1034,30 +1118,6 @@
             };
             container.appendChild(btn);
         }
-
-        document.addEventListener('paste', function(e) {
-            const modal = document.getElementById('editModal');
-            if (!modal || !modal.classList.contains('show')) return;
-
-            const items = (e.clipboardData || e.originalEvent.clipboardData).items;
-            let file = null;
-            for (let i = 0; i < items.length; i++) {
-                if (items[i].kind === 'file') {
-                    file = items[i].getAsFile();
-                    break;
-                }
-            }
-            if (!file) return;
-
-            const isCreator = userData.rol.startsWith("ASESORA_");
-            const isSoporteAdmin = userData.rol === "SOPORTE" || userData.rol === "ADMIN" || userData.rol === "MARKETING";
-            
-            if (isCreator && document.getElementById('preview-incidencia')) {
-                processImage(file, 'preview-incidencia', 'edit-6');
-            } else if (isSoporteAdmin && document.getElementById('preview-soporte')) {
-                processImage(file, 'preview-soporte', 'edit-9');
-            }
-        });
         
         async function saveData() {
             let rowData = Array(15).fill(""); 
