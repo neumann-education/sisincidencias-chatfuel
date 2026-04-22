@@ -23,7 +23,7 @@
             --danger: #e74a3b;
             --dark: #2b2d42;
             --light: #f8f9fa;
-            --marketing: #e83e8c; /* Color distintivo para Marketing */
+            --marketing: #e83e8c; 
         }
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f4f6f9; color: #333; }
         .hidden { display: none !important; }
@@ -302,7 +302,6 @@
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4 bg-light">
-                    <!-- Formulario dinámico -->
                     <div id="editForm" class="row g-4"></div>
                 </div>
                 <div class="modal-footer bg-white p-3 border-top">
@@ -358,7 +357,6 @@
         const recordsPerPage = 10;
         const SESSION_TIMEOUT = 5 * 60 * 60 * 1000;
         
-        // ¡Se añade la columna 14 para CATEGORIA!
         const COL = {
             ID: 0, FECHA_SOL: 1, MARCA: 2, NUMERO_CONTACTO: 3, PROBLEMA: 4, SOLUCION: 5,
             IMG_INCIDENCIA: 6, ESTADO: 7, COMENTARIO_SOPORTE: 8, IMG_SOPORTE: 9, 
@@ -422,10 +420,8 @@
                 document.getElementById('btnNuevo').classList.add('hidden');
             }
 
-            // Validación de visibilidad de botones y cards para SOPORTE, ADMIN y MARKETING
             if (res.rol === "SOPORTE" || res.rol === "ADMIN" || res.rol === "MARKETING") {
                 document.getElementById('statsCards').classList.remove('hidden');
-                // Marketing no puede dar accesos
                 if (res.rol === "MARKETING") {
                     document.getElementById('btnAccesos').classList.add('hidden');
                 } else {
@@ -507,7 +503,6 @@
                 const rowBrand = f[COL.MARCA];
                 const rowTipo = f[COL.TIPO];
 
-                // SOPORTE, ADMIN y MARKETING pueden ver todo (aplican los filtros estándar)
                 if (userRole !== "SOPORTE" && userRole !== "ADMIN" && userRole !== "MARKETING") { 
                     if (userRole === "ASESORA_NACIONAL") {
                         if ((rowBrand !== "JVN" && rowBrand !== "IEMPRESA") || rowTipo !== "Admisión") continue;
@@ -554,7 +549,6 @@
                 const f = item.data;
                 const brandBadge = f[COL.MARCA] === 'BGU' ? 'bg-primary' : (f[COL.MARCA] === 'IEMPRESA' ? 'bg-success' : 'bg-dark');
 
-                // Lógica visual del Badge de Categoría
                 const isMarketing = f[COL.CATEGORIA] === 'Marketing / Consulta Externa';
                 const catBadgeClass = isMarketing ? 'bg-pink text-white' : 'bg-info text-dark';
                 const catStyle = isMarketing ? 'background-color: var(--marketing) !important;' : '';
@@ -712,24 +706,53 @@
             return url;
         }
 
-        // LÓGICA DE UX: Muestra/Oculta el campo "Solución" según la Categoría
-        function toggleSolucion() {
+        // NUEVA FUNCIÓN PARA CONTROLAR AMBOS COMPORTAMIENTOS DINÁMICOS
+        function toggleDynamicFields() {
             const cat = document.getElementById('edit-14').value;
             const solContainer = document.getElementById('container-solucion');
             const solInput = document.getElementById('edit-5');
-
+            
+            // Campos de Problema
+            const probText = document.getElementById('edit-4-text');
+            const probSelect = document.getElementById('edit-4-select');
+            
             if(cat === 'Marketing / Consulta Externa') {
+                // Configura contenedor de Solución
                 solContainer.style.height = '0px';
                 solContainer.style.opacity = '0';
                 setTimeout(() => solContainer.classList.add('hidden'), 300);
                 solInput.value = 'No aplica (Derivado a Marketing)';
+                
+                // Configura contenedor de Problema
+                probText.classList.add('hidden');
+                probSelect.classList.remove('hidden');
+                toggleOtrosProblema(); // Verifica si debe mostrar el textarea extra
             } else {
+                // Muestra contenedor de Solución
                 solContainer.classList.remove('hidden');
                 setTimeout(() => {
                     solContainer.style.height = 'auto';
                     solContainer.style.opacity = '1';
                 }, 10);
                 if(solInput.value === 'No aplica (Derivado a Marketing)') solInput.value = '';
+                
+                // Configura contenedor de Problema clásico
+                probText.classList.remove('hidden');
+                probSelect.classList.add('hidden');
+                document.getElementById('edit-4-otros').classList.add('hidden');
+            }
+        }
+
+        // FUNCIÓN PARA MOSTRAR LA CAJA "OTROS" SI SE SELECCIONA EN MARKETING
+        function toggleOtrosProblema() {
+            const probSelect = document.getElementById('edit-4-select');
+            const probOtros = document.getElementById('edit-4-otros');
+            if (probSelect.value === 'Otros') {
+                probOtros.classList.remove('hidden');
+                setTimeout(() => probOtros.style.opacity = '1', 10);
+            } else {
+                probOtros.classList.add('hidden');
+                probOtros.style.opacity = '0';
             }
         }
 
@@ -737,10 +760,8 @@
             isNewRecord = (index === -1);
             
             const isCreator = userData.rol.startsWith("ASESORA_") || userData.rol.startsWith("SOPORTE_");
-            // Marketing está a nivel de Admin para resolución
             const isSoporteAdmin = userData.rol === "SOPORTE" || userData.rol === "ADMIN" || userData.rol === "MARKETING"; 
             
-            // Incrementado a 15 por la nueva columna CATEGORIA
             let row = isNewRecord ? Array(15).fill("") : [...currentData[index]];
             
             if (isNewRecord && isCreator) {
@@ -776,6 +797,22 @@
                                  <option value="JVN" ${row[COL.MARCA]==='JVN'?'selected':''}>JVN</option>`;
             }
 
+            // Opciones de Marketing predefinidas
+            const mktOptions =[
+                "Piensa que somos banco/financiera (pide préstamos)",
+                "Piensa que brindamos tratamiento médico/salud",
+                "Pregunta por un curso que no es de la publicidad",
+                "Dice que hizo clic en otra publicidad",
+                "Se ha confundido de empresa / nos confundimos"
+            ];
+            
+            // Lógica para saber qué valor cargar en Problema al abrir un ticket existente
+            let probTextVal = row[COL.PROBLEMA] || '';
+            let isMkt = row[COL.CATEGORIA] === 'Marketing / Consulta Externa';
+            let isOtrosMkt = isMkt && probTextVal !== '' && !mktOptions.includes(probTextVal);
+            let selectVal = isMkt ? (isOtrosMkt ? "Otros" : probTextVal) : "";
+            let otrosVal = isOtrosMkt ? probTextVal : "";
+
             let html = `
                 <input type="hidden" id="edit-0" value="${row[COL.ID] || ''}">
                 <input type="hidden" id="edit-1" value="${row[COL.FECHA_SOL] || ''}">
@@ -810,7 +847,7 @@
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label small fw-bold text-muted text-primary">Categoría <span class="text-danger">*</span></label>
-                                    <select id="edit-14" class="form-select border-primary" ${disCreator} onchange="toggleSolucion()">
+                                    <select id="edit-14" class="form-select border-primary" ${disCreator} onchange="toggleDynamicFields()">
                                         <option value="">Seleccione...</option>
                                         <option value="Incidencia de Bot" ${row[COL.CATEGORIA]==='Incidencia de Bot'?'selected':''}>Incidencia de Bot</option>
                                         <option value="Marketing / Consulta Externa" ${row[COL.CATEGORIA]==='Marketing / Consulta Externa'?'selected':''}>Marketing / Consulta Externa</option>
@@ -820,11 +857,32 @@
                                     <label class="form-label small fw-bold text-muted">Número de Contacto (Sin el "+")</label>
                                     <input type="text" id="edit-3" class="form-control" placeholder="Ej. 51999999999" value="${row[COL.NUMERO_CONTACTO] || ''}" ${readCreator}>
                                 </div>
-                                <div class="col-12">
-                                    <label class="form-label small fw-bold text-muted">Describe el Problema</label>
-                                    <textarea id="edit-4" class="form-control" rows="3" placeholder="Detalla qué sucedió..." ${readCreator}>${row[COL.PROBLEMA] || ''}</textarea>
+                                
+                                <!-- CONTENEDOR DINÁMICO DE PROBLEMA -->
+                                <div class="col-12" id="container-problema">
+                                    <label class="form-label small fw-bold text-muted">Describe el Problema <span class="text-danger">*</span></label>
+                                    
+                                    <!-- INPUT OCULTO QUE GUARDARÁ EL DATO FINAL PARA LA COLUMNA 4 -->
+                                    <input type="hidden" id="edit-4" value="">
+                                    
+                                    <!-- Vista para Bot -->
+                                    <textarea id="edit-4-text" class="form-control" rows="3" placeholder="Detalla qué sucedió..." ${readCreator}>${!isMkt ? probTextVal : ''}</textarea>
+                                    
+                                    <!-- Vista para Marketing -->
+                                    <select id="edit-4-select" class="form-select hidden" ${disCreator} onchange="toggleOtrosProblema()">
+                                        <option value="">Seleccione el motivo...</option>
+                                        <option value="Piensa que somos banco/financiera (pide préstamos)" ${selectVal === 'Piensa que somos banco/financiera (pide préstamos)' ? 'selected' : ''}>Piensa que somos banco/financiera (pide préstamos)</option>
+                                        <option value="Piensa que brindamos tratamiento médico/salud" ${selectVal === 'Piensa que brindamos tratamiento médico/salud' ? 'selected' : ''}>Piensa que brindamos tratamiento médico/salud</option>
+                                        <option value="Pregunta por un curso que no es de la publicidad" ${selectVal === 'Pregunta por un curso que no es de la publicidad' ? 'selected' : ''}>Pregunta por un curso que no es de la publicidad</option>
+                                        <option value="Dice que hizo clic en otra publicidad" ${selectVal === 'Dice que hizo clic en otra publicidad' ? 'selected' : ''}>Dice que hizo clic en otra publicidad</option>
+                                        <option value="Se ha confundido de empresa / nos confundimos" ${selectVal === 'Se ha confundido de empresa / nos confundimos' ? 'selected' : ''}>Se ha confundido de empresa / nos confundimos</option>
+                                        <option value="Otros" ${selectVal === 'Otros' ? 'selected' : ''}>Otros (Especificar)</option>
+                                    </select>
+                                    
+                                    <!-- Caja de texto si eligen "Otros" en Marketing -->
+                                    <textarea id="edit-4-otros" class="form-control mt-2 hidden fade-box" rows="2" placeholder="Especifique el problema..." ${readCreator}>${otrosVal}</textarea>
                                 </div>
-                                <!-- Caja dinámica para Solución -->
+                                
                                 <div class="col-12 fade-box" id="container-solucion">
                                     <label class="form-label small fw-bold text-muted">Describe la Solución <span class="text-danger">*</span></label>
                                     <textarea id="edit-5" class="form-control" rows="2" placeholder="Qué pasos hiciste para solucionarlo..." ${readCreator}>${row[COL.SOLUCION] || ''}</textarea>
@@ -889,8 +947,8 @@
             
             formContainer.innerHTML = html;
             
-            // Ejecutamos la lógica visual de la Solución una vez insertado el HTML
-            toggleSolucion();
+            // Ejecuta lógica de campos dinámicos
+            toggleDynamicFields();
 
             new bootstrap.Modal('#editModal').show();
 
@@ -989,7 +1047,7 @@
         });
         
         async function saveData() {
-            let rowData = Array(15).fill(""); // Aumentado a 15
+            let rowData = Array(15).fill(""); 
             const isCreator = userData.rol.startsWith("ASESORA_") || userData.rol.startsWith("SOPORTE_");
             const isSoporteAdmin = userData.rol === "SOPORTE" || userData.rol === "ADMIN" || userData.rol === "MARKETING";
             const currentId = document.getElementById('edit-0').value;
@@ -1002,12 +1060,29 @@
             let statusPrev = originalRow ? originalRow[COL.ESTADO] : "";
             const statusNew = document.getElementById('edit-7').value;
         
-            for (let i = 0; i < 15; i++) { // Bucle hasta 15
+            // Lógica mágica que unifica lo de Marketing en la columna de Problema de siempre
+            const catField = document.getElementById('edit-14');
+            const catVal = catField ? catField.value : '';
+            
+            if (document.getElementById('edit-4-text')) {
+                if (catVal === 'Marketing / Consulta Externa') {
+                    const probSel = document.getElementById('edit-4-select').value;
+                    if (probSel === 'Otros') {
+                        document.getElementById('edit-4').value = document.getElementById('edit-4-otros').value;
+                    } else {
+                        document.getElementById('edit-4').value = probSel;
+                    }
+                } else {
+                    document.getElementById('edit-4').value = document.getElementById('edit-4-text').value;
+                }
+            }
+
+            for (let i = 0; i < 15; i++) {
                 const el = document.getElementById(`edit-${i}`);
                 if (el) {
                     rowData[i] = el.value;
                 } else if (!isNewRecord && originalRow) {
-                    rowData[i] = originalRow[i]; // Mantiene la data existente
+                    rowData[i] = originalRow[i]; 
                 }
             }
         
@@ -1051,7 +1126,7 @@
                 }
             }
         
-            // Validaciones Estrictas basadas en la Categoría
+            // Validaciones
             if (isCreator) {
                 if (userData.rol === "ASESORA_NACIONAL" && !rowData[COL.MARCA]) {
                     return Swal.fire('Error', 'Debe seleccionar una Marca', 'warning');
@@ -1066,8 +1141,13 @@
                 if (rowData[COL.CATEGORIA] === 'Incidencia de Bot' && (!rowData[COL.NUMERO_CONTACTO] || !rowData[COL.PROBLEMA] || !rowData[COL.SOLUCION])) {
                     return Swal.fire('Faltan Datos', 'Para incidentes del Bot, debe llenar el N° de Contacto, el Problema y describir la Solución.', 'warning');
                 }
-                if (rowData[COL.CATEGORIA] === 'Marketing / Consulta Externa' && (!rowData[COL.NUMERO_CONTACTO] || !rowData[COL.PROBLEMA])) {
-                    return Swal.fire('Faltan Datos', 'Para temas de Marketing, debe llenar el N° de Contacto y el Problema.', 'warning');
+                if (rowData[COL.CATEGORIA] === 'Marketing / Consulta Externa') {
+                    if (!rowData[COL.NUMERO_CONTACTO]) {
+                        return Swal.fire('Faltan Datos', 'Debe llenar el N° de Contacto.', 'warning');
+                    }
+                    if (!rowData[COL.PROBLEMA]) {
+                        return Swal.fire('Faltan Datos', 'Debe seleccionar o especificar el motivo del Problema de Marketing.', 'warning');
+                    }
                 }
             }
         
