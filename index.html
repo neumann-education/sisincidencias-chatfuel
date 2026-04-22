@@ -258,15 +258,6 @@
                                 <option value="JVN">JVN</option>
                             </select>
                         </div>
-                        <!-- NUEVO FILTRO DE CATEGORÍA -->
-                        <div class="col-md-2">
-                            <label class="form-label small fw-bold">Categoría</label>
-                            <select id="categoryFilter" class="form-select" onchange="currentPage=1;renderTable()">
-                                <option value="">Todas</option>
-                                <option value="Incidencia de Bot">Incidencia de Bot</option>
-                                <option value="Marketing / Consulta Externa">Marketing / Consulta Externa</option>
-                            </select>
-                        </div>
                         <div class="col-md-5">
                             <label class="form-label small fw-bold">Búsqueda Rápida</label>
                             <div class="input-group">
@@ -528,10 +519,6 @@
                     let rowDate = normalizeDate(f[COL.FECHA_SOL]);
                     if (!rowDate.isValid() || rowDate.isBefore(filterDates[0], 'day') || rowDate.isAfter(filterDates[1], 'day')) continue;
                 }
-
-                // Añade esto donde obtienes los valores de los otros filtros (sFilter, bFilter, etc.)
-                const cFilter = document.getElementById('categoryFilter').value;
-                if (cFilter && f[COL.CATEGORIA] !== cFilter) continue;
                 
                 const sFilter = document.getElementById('statusFilter').value;
                 if (sFilter && f[COL.ESTADO] !== sFilter) continue;
@@ -704,7 +691,6 @@
             document.getElementById('nameFilter').value = "";
             document.getElementById('statusFilter').value = "";
             document.getElementById('brandFilter').value = "";
-            document.getElementById('categoryFilter').value = "";
             $('#dateRangeFilter').val('');
             filterDates =[];
             currentPage = 1; renderTable();
@@ -720,43 +706,53 @@
             return url;
         }
 
-        /** LÓGICA INTELIGENTE DE CATEGORIZACIÓN AUTOMÁTICA **/
+        // NUEVA FUNCIÓN PARA CONTROLAR AMBOS COMPORTAMIENTOS DINÁMICOS
         function toggleDynamicFields() {
-            const probSelectVal = document.getElementById('edit-4-select').value;
+            const cat = document.getElementById('edit-14').value;
             const solContainer = document.getElementById('container-solucion');
             const solInput = document.getElementById('edit-5');
-            const probTextContainer = document.getElementById('container-prob-text');
-            const catHidden = document.getElementById('edit-14');
             
-            // Si elige "BOT", categorizar como BOT y mostrar campos de error
-            if(probSelectVal === 'Incidencia de BOT (Error de flujo, botones o información)') {
-                catHidden.value = 'Incidencia de Bot';
+            // Campos de Problema
+            const probText = document.getElementById('edit-4-text');
+            const probSelect = document.getElementById('edit-4-select');
+            
+            if(cat === 'Marketing / Consulta Externa') {
+                // Configura contenedor de Solución
+                solContainer.style.height = '0px';
+                solContainer.style.opacity = '0';
+                setTimeout(() => solContainer.classList.add('hidden'), 300);
+                solInput.value = 'No aplica (Derivado a Marketing)';
                 
-                // Mostrar descripción de error
-                probTextContainer.classList.remove('hidden');
-                setTimeout(() => probTextContainer.style.opacity = '1', 10);
-                
-                // Mostrar Solución
+                // Configura contenedor de Problema
+                probText.classList.add('hidden');
+                probSelect.classList.remove('hidden');
+                toggleOtrosProblema(); // Verifica si debe mostrar el textarea extra
+            } else {
+                // Muestra contenedor de Solución
                 solContainer.classList.remove('hidden');
                 setTimeout(() => {
                     solContainer.style.height = 'auto';
                     solContainer.style.opacity = '1';
                 }, 10);
                 if(solInput.value === 'No aplica (Derivado a Marketing)') solInput.value = '';
-            } 
-            // Si elige cualquier otra opción, es MARKETING
-            else if (probSelectVal !== "") {
-                catHidden.value = 'Marketing / Consulta Externa';
                 
-                // Ocultar descripción de error
-                probTextContainer.classList.add('hidden');
-                probTextContainer.style.opacity = '0';
-                
-                // Ocultar Solución
-                solContainer.style.height = '0px';
-                solContainer.style.opacity = '0';
-                setTimeout(() => solContainer.classList.add('hidden'), 300);
-                solInput.value = 'No aplica (Derivado a Marketing)';
+                // Configura contenedor de Problema clásico
+                probText.classList.remove('hidden');
+                probSelect.classList.add('hidden');
+                document.getElementById('edit-4-otros').classList.add('hidden');
+            }
+        }
+
+        // FUNCIÓN PARA MOSTRAR LA CAJA "OTROS" SI SE SELECCIONA EN MARKETING
+        function toggleOtrosProblema() {
+            const probSelect = document.getElementById('edit-4-select');
+            const probOtros = document.getElementById('edit-4-otros');
+            if (probSelect.value === 'Otros') {
+                probOtros.classList.remove('hidden');
+                setTimeout(() => probOtros.style.opacity = '1', 10);
+            } else {
+                probOtros.classList.add('hidden');
+                probOtros.style.opacity = '0';
             }
         }
 
@@ -774,7 +770,6 @@
                 if (userData.rol.startsWith("SOPORTE_")) row[COL.TIPO] = "Soporte";
                 row[COL.ESTADO] = "Pendiente";
                 row[COL.ASESORA_NOMBRE] = userData.nombre;
-                row[COL.CATEGORIA] = ""; // Inicia vacío para que el sistema decida
             }
         
             document.getElementById("modalTitle").innerHTML = isNewRecord ? '<i class="fas fa-bug me-2"></i>Reportar Incidencia' : '<i class="fas fa-edit me-2"></i>Detalle de Incidencia';
@@ -802,6 +797,7 @@
                                  <option value="JVN" ${row[COL.MARCA]==='JVN'?'selected':''}>JVN</option>`;
             }
 
+            // Opciones de Marketing predefinidas
             const mktOptions =[
                 "Piensa que somos banco/financiera (pide préstamos)",
                 "Piensa que brindamos tratamiento médico/salud",
@@ -810,28 +806,18 @@
                 "Se ha confundido de empresa / nos confundimos"
             ];
             
-            let probOriginal = row[COL.PROBLEMA] || '';
-            let catOriginal = row[COL.CATEGORIA] || '';
-            
-            // Lógica para pre-cargar el selector si ya existe el registro
-            let selectVal = "";
-            let textVal = "";
-            
-            if (!isNewRecord) {
-                if (catOriginal === 'Incidencia de Bot') {
-                    selectVal = "Incidencia de BOT (Error de flujo, botones o información)";
-                    textVal = probOriginal;
-                } else {
-                    selectVal = probOriginal;
-                }
-            }
+            // Lógica para saber qué valor cargar en Problema al abrir un ticket existente
+            let probTextVal = row[COL.PROBLEMA] || '';
+            let isMkt = row[COL.CATEGORIA] === 'Marketing / Consulta Externa';
+            let isOtrosMkt = isMkt && probTextVal !== '' && !mktOptions.includes(probTextVal);
+            let selectVal = isMkt ? (isOtrosMkt ? "Otros" : probTextVal) : "";
+            let otrosVal = isOtrosMkt ? probTextVal : "";
 
             let html = `
                 <input type="hidden" id="edit-0" value="${row[COL.ID] || ''}">
                 <input type="hidden" id="edit-1" value="${row[COL.FECHA_SOL] || ''}">
                 <input type="hidden" id="edit-10" value="${row[COL.FECHA_ATENCION] || ''}">
                 <input type="hidden" id="edit-11" value="${row[COL.ASESORA_NOMBRE] || ''}"> 
-                <input type="hidden" id="edit-14" value="${row[COL.CATEGORIA] || ''}"> 
                 
                 <div class="col-md-7">
                     <div class="card border-0 shadow-sm h-100">
@@ -841,17 +827,17 @@
                         </div>
                         <div class="card-body">
                             <div class="row g-3">
-                                <div class="col-md-4">
+                                <div class="col-md-6">
                                     <label class="form-label small fw-bold text-muted">Marca</label>
                                     <select id="edit-2" class="form-select" ${disMarca}>
                                         ${optionsMarca}
                                     </select>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-6">
                                     <label class="form-label small fw-bold text-muted">Tipo</label>
                                     <input type="text" id="edit-13" class="form-control" value="${row[COL.TIPO] || ''}" readonly>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-6">
                                     <label class="form-label small fw-bold text-muted">Plataforma</label>
                                     <select id="edit-12" class="form-select" ${disCreator}>
                                         <option value="">Seleccione...</option>
@@ -859,39 +845,50 @@
                                         <option value="ORA" ${row[COL.PLATAFORMA]==='ORA'?'selected':''}>ORA</option>
                                     </select>
                                 </div>
-
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-muted text-primary">Categoría <span class="text-danger">*</span></label>
+                                    <select id="edit-14" class="form-select border-primary" ${disCreator} onchange="toggleDynamicFields()">
+                                        <option value="">Seleccione...</option>
+                                        <option value="Incidencia de Bot" ${row[COL.CATEGORIA]==='Incidencia de Bot'?'selected':''}>Incidencia de Bot</option>
+                                        <option value="Marketing / Consulta Externa" ${row[COL.CATEGORIA]==='Marketing / Consulta Externa'?'selected':''}>Marketing / Consulta Externa</option>
+                                    </select>
+                                </div>
                                 <div class="col-12">
                                     <label class="form-label small fw-bold text-muted">Número de Contacto (Sin el "+")</label>
                                     <input type="text" id="edit-3" class="form-control" placeholder="Ej. 51999999999" value="${row[COL.NUMERO_CONTACTO] || ''}" ${readCreator}>
                                 </div>
                                 
-                                <div class="col-12">
-                                    <label class="form-label small fw-bold text-muted text-primary">¿Qué sucedió? <span class="text-danger">*</span></label>
-                                    <select id="edit-4-select" class="form-select border-primary fw-bold" ${disCreator} onchange="toggleDynamicFields()">
-                                        <option value="">Seleccione el problema...</option>
+                                <!-- CONTENEDOR DINÁMICO DE PROBLEMA -->
+                                <div class="col-12" id="container-problema">
+                                    <label class="form-label small fw-bold text-muted">Describe el Problema <span class="text-danger">*</span></label>
+                                    
+                                    <!-- INPUT OCULTO QUE GUARDARÁ EL DATO FINAL PARA LA COLUMNA 4 -->
+                                    <input type="hidden" id="edit-4" value="">
+                                    
+                                    <!-- Vista para Bot -->
+                                    <textarea id="edit-4-text" class="form-control" rows="3" placeholder="Detalla qué sucedió..." ${readCreator}>${!isMkt ? probTextVal : ''}</textarea>
+                                    
+                                    <!-- Vista para Marketing -->
+                                    <select id="edit-4-select" class="form-select hidden" ${disCreator} onchange="toggleOtrosProblema()">
+                                        <option value="">Seleccione el motivo...</option>
                                         <option value="Piensa que somos banco/financiera (pide préstamos)" ${selectVal === 'Piensa que somos banco/financiera (pide préstamos)' ? 'selected' : ''}>Piensa que somos banco/financiera (pide préstamos)</option>
                                         <option value="Piensa que brindamos tratamiento médico/salud" ${selectVal === 'Piensa que brindamos tratamiento médico/salud' ? 'selected' : ''}>Piensa que brindamos tratamiento médico/salud</option>
                                         <option value="Pregunta por un curso que no es de la publicidad" ${selectVal === 'Pregunta por un curso que no es de la publicidad' ? 'selected' : ''}>Pregunta por un curso que no es de la publicidad</option>
                                         <option value="Dice que hizo clic en otra publicidad" ${selectVal === 'Dice que hizo clic en otra publicidad' ? 'selected' : ''}>Dice que hizo clic en otra publicidad</option>
                                         <option value="Se ha confundido de empresa / nos confundimos" ${selectVal === 'Se ha confundido de empresa / nos confundimos' ? 'selected' : ''}>Se ha confundido de empresa / nos confundimos</option>
-                                        <option value="Incidencia de BOT (Error de flujo, botones o información)" ${selectVal === 'Incidencia de BOT (Error de flujo, botones o información)' ? 'selected' : ''}>Otro: Incidencia de BOT (Error de flujo o información)</option>
+                                        <option value="Otros" ${selectVal === 'Otros' ? 'selected' : ''}>Otros (Especificar)</option>
                                     </select>
-                                </div>
-
-                                <div class="col-12 hidden fade-box" id="container-prob-text">
-                                    <label class="form-label small fw-bold text-muted">Detalla el error del Bot</label>
-                                    <textarea id="edit-4-text" class="form-control" rows="3" placeholder="Especifique qué botón falló o qué información dio mal..." ${readCreator}>${textVal}</textarea>
+                                    
+                                    <!-- Caja de texto si eligen "Otros" en Marketing -->
+                                    <textarea id="edit-4-otros" class="form-control mt-2 hidden fade-box" rows="2" placeholder="Especifique el problema..." ${readCreator}>${otrosVal}</textarea>
                                 </div>
                                 
-                                <!-- INPUT OCULTO PARA LA COLUMNA 4 FINAL -->
-                                <input type="hidden" id="edit-4" value="${probOriginal}">
-
                                 <div class="col-12 fade-box" id="container-solucion">
                                     <label class="form-label small fw-bold text-muted">Describe la Solución <span class="text-danger">*</span></label>
                                     <textarea id="edit-5" class="form-control" rows="2" placeholder="Qué pasos hiciste para solucionarlo..." ${readCreator}>${row[COL.SOLUCION] || ''}</textarea>
                                 </div>
                                 <div class="col-12">
-                                    <label class="form-label small fw-bold text-muted">Evidencia (Imagen)</label>
+                                    <label class="form-label small fw-bold text-muted">Evidencia del Problema (Imagen)</label>
                                     <div class="mb-2 small text-muted">Presiona <b>Ctrl+V</b> para pegar</div>
                                     <input type="hidden" id="edit-6" value="${imgIncidencia}">
                                     ${isCreator ? `
@@ -930,7 +927,7 @@
                                     <textarea id="edit-8" class="form-control" rows="4" placeholder="Observaciones de la revisión..." ${readAdmin}>${row[COL.COMENTARIO_SOPORTE] || ''}</textarea>
                                 </div>
                                 <div class="col-12">
-                                    <label class="form-label small fw-bold text-muted">Evidencia de Soporte</label>
+                                    <label class="form-label small fw-bold text-muted">Evidencia (Imagen)</label>
                                     <input type="hidden" id="edit-9" value="${imgSoporte}">
                                     ${isSoporteAdmin ? `
                                         <div class="mb-2 small text-muted"><i class="fas fa-keyboard me-1"></i>Presiona <b>Ctrl+V</b> para pegar captura</div>
@@ -950,15 +947,19 @@
             
             formContainer.innerHTML = html;
             
-            // Ejecutar lógica inicial según la data cargada
+            // Ejecuta lógica de campos dinámicos
             toggleDynamicFields();
 
             new bootstrap.Modal('#editModal').show();
 
             const imgInc = document.getElementById('preview-incidencia');
-            if (imgInc && imgInc.style.display === 'block') { addRemoveButtonToImage(imgInc, 'edit-6'); }
+            if (imgInc && imgInc.style.display === 'block') {
+                addRemoveButtonToImage(imgInc, 'edit-6');
+            }
             const imgSop = document.getElementById('preview-soporte');
-            if (imgSop && imgSop.style.display === 'block') { addRemoveButtonToImage(imgSop, 'edit-9'); }
+            if (imgSop && imgSop.style.display === 'block') {
+                addRemoveButtonToImage(imgSop, 'edit-9');
+            }
 
             if (isCreator) bindImageEvents('drop-incidencia', 'file-incidencia', 'preview-incidencia', 'edit-6');
             if (isSoporteAdmin) bindImageEvents('drop-soporte', 'file-soporte', 'preview-soporte', 'edit-9');
@@ -968,6 +969,7 @@
             const zone = document.getElementById(zoneId);
             const fileInput = document.getElementById(fileId);
             if(!zone) return;
+
             zone.addEventListener('click', () => fileInput.click());
             fileInput.addEventListener('change', function() {
                 if (this.files && this.files[0]) processImage(this.files[0], previewId, hiddenId);
@@ -1003,7 +1005,9 @@
                 wrapper.appendChild(imgElement);
                 container = wrapper;
             }
+
             if (container.querySelector('.btn-remove-img')) return;
+
             const btn = document.createElement('button');
             btn.innerHTML = '×';
             btn.className = 'btn-remove-img';
@@ -1021,6 +1025,7 @@
         document.addEventListener('paste', function(e) {
             const modal = document.getElementById('editModal');
             if (!modal || !modal.classList.contains('show')) return;
+
             const items = (e.clipboardData || e.originalEvent.clipboardData).items;
             let file = null;
             for (let i = 0; i < items.length; i++) {
@@ -1030,8 +1035,10 @@
                 }
             }
             if (!file) return;
+
             const isCreator = userData.rol.startsWith("ASESORA_");
             const isSoporteAdmin = userData.rol === "SOPORTE" || userData.rol === "ADMIN" || userData.rol === "MARKETING";
+            
             if (isCreator && document.getElementById('preview-incidencia')) {
                 processImage(file, 'preview-incidencia', 'edit-6');
             } else if (isSoporteAdmin && document.getElementById('preview-soporte')) {
@@ -1053,14 +1060,21 @@
             let statusPrev = originalRow ? originalRow[COL.ESTADO] : "";
             const statusNew = document.getElementById('edit-7').value;
         
-            // PROCESAMIENTO FINAL DEL PROBLEMA (COLUMNA 4)
-            const probSelect = document.getElementById('edit-4-select').value;
-            const catHiddenVal = document.getElementById('edit-14').value;
+            // Lógica mágica que unifica lo de Marketing en la columna de Problema de siempre
+            const catField = document.getElementById('edit-14');
+            const catVal = catField ? catField.value : '';
             
-            if (catHiddenVal === 'Incidencia de Bot') {
-                document.getElementById('edit-4').value = document.getElementById('edit-4-text').value;
-            } else {
-                document.getElementById('edit-4').value = probSelect;
+            if (document.getElementById('edit-4-text')) {
+                if (catVal === 'Marketing / Consulta Externa') {
+                    const probSel = document.getElementById('edit-4-select').value;
+                    if (probSel === 'Otros') {
+                        document.getElementById('edit-4').value = document.getElementById('edit-4-otros').value;
+                    } else {
+                        document.getElementById('edit-4').value = probSel;
+                    }
+                } else {
+                    document.getElementById('edit-4').value = document.getElementById('edit-4-text').value;
+                }
             }
 
             for (let i = 0; i < 15; i++) {
@@ -1114,26 +1128,45 @@
         
             // Validaciones
             if (isCreator) {
-                if (userData.rol === "ASESORA_NACIONAL" && !rowData[COL.MARCA]) return Swal.fire('Error', 'Debe seleccionar una Marca', 'warning');
-                if (!rowData[COL.PLATAFORMA]) return Swal.fire('Error', 'Debe indicar la Plataforma (Chatfuel / ORA)', 'warning');
-                if (!probSelect) return Swal.fire('Faltan Datos', 'Debe indicar qué sucedió en el menú desplegable.', 'warning');
+                if (userData.rol === "ASESORA_NACIONAL" && !rowData[COL.MARCA]) {
+                    return Swal.fire('Error', 'Debe seleccionar una Marca', 'warning');
+                }
+                if (!rowData[COL.PLATAFORMA]) {
+                    return Swal.fire('Error', 'Debe indicar la Plataforma (Chatfuel / ORA)', 'warning');
+                }
+                if (!rowData[COL.CATEGORIA]) {
+                    return Swal.fire('Faltan Datos', 'Debe seleccionar una Categoría para la incidencia.', 'warning');
+                }
 
-                if (rowData[COL.CATEGORIA] === 'Incidencia de Bot') {
-                    if (!rowData[COL.NUMERO_CONTACTO] || !rowData[COL.PROBLEMA] || !rowData[COL.SOLUCION]) {
-                        return Swal.fire('Faltan Datos', 'Para incidentes del Bot, debe llenar el N° de Contacto, detallar el problema y la solución.', 'warning');
+                if (rowData[COL.CATEGORIA] === 'Incidencia de Bot' && (!rowData[COL.NUMERO_CONTACTO] || !rowData[COL.PROBLEMA] || !rowData[COL.SOLUCION])) {
+                    return Swal.fire('Faltan Datos', 'Para incidentes del Bot, debe llenar el N° de Contacto, el Problema y describir la Solución.', 'warning');
+                }
+                if (rowData[COL.CATEGORIA] === 'Marketing / Consulta Externa') {
+                    if (!rowData[COL.NUMERO_CONTACTO]) {
+                        return Swal.fire('Faltan Datos', 'Debe llenar el N° de Contacto.', 'warning');
                     }
-                } else {
-                    if (!rowData[COL.NUMERO_CONTACTO]) return Swal.fire('Faltan Datos', 'Debe llenar el N° de Contacto.', 'warning');
+                    if (!rowData[COL.PROBLEMA]) {
+                        return Swal.fire('Faltan Datos', 'Debe seleccionar o especificar el motivo del Problema de Marketing.', 'warning');
+                    }
                 }
             }
         
             bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
-            const Toast = Swal.mixin({ toast: true, position: 'bottom-end', showConfirmButton: false });
+        
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'bottom-end',
+                showConfirmButton: false
+            });
             Toast.fire({ icon: 'info', title: 'Guardando incidencia...' });
         
             callAPI({ action: 'update', newData: rowData, rol: userData.rol, isNew: isNewRecord }, true).then(res => {
                 if (res && res.success) {
-                    Toast.fire({ icon: 'success', title: '¡Guardado con éxito!', timer: 3000 });
+                    Toast.fire({
+                        icon: 'success',
+                        title: '¡Guardado con éxito!',
+                        timer: 3000
+                    });
                     loadData(); 
                 } else {
                     Swal.fire('Error', 'Ocurrió un problema al guardar', 'error');
@@ -1142,28 +1175,42 @@
         }
         
         async function callAPI(payload, silent = false) {
-            if (!silent) document.getElementById('loader').classList.remove('hidden');
+            if (!silent) {
+                document.getElementById('loader').classList.remove('hidden');
+            }
             try {
-                const response = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
+                const response = await fetch(API_URL, { 
+                    method: 'POST', 
+                    body: JSON.stringify(payload) 
+                });
                 const res = await response.json();
-                if (!silent) document.getElementById('loader').classList.add('hidden');
+                
+                if (!silent) {
+                    document.getElementById('loader').classList.add('hidden');
+                }
                 return res;
             } catch (e) {
-                if (!silent) document.getElementById('loader').classList.add('hidden');
-                Swal.fire('Error', 'No se pudo conectar con el servidor.', 'error');
+                if (!silent) {
+                    document.getElementById('loader').classList.add('hidden');
+                }
+                Swal.fire('Error', 'No se pudo conectar con el servidor. Revise su conexión o URL del script.', 'error');
             }
         }
 
         let listaAsesoras =[];
-        async function openAccessModal() {
+
+         async function openAccessModal() {
             const select = document.getElementById('acc-select');
             select.innerHTML = '<option value="">Cargando...</option>';
             new bootstrap.Modal('#accessModal').show();
+
             const res = await callAPI({ action: 'getAsesoras' }, true);
             if (res && res.success) {
                 listaAsesoras = res.data;
                 let options = '';
-                listaAsesoras.forEach((a, index) => { options += `<option value="${index}">${a.nombre} - ${a.email}</option>`; });
+                listaAsesoras.forEach((a, index) => {
+                    options += `<option value="${index}">${a.nombre} - ${a.email}</option>`;
+                });
                 select.innerHTML = options;
             }
         }
@@ -1171,10 +1218,20 @@
         async function sendAccess() {
             const select = document.getElementById('acc-select');
             const indices = Array.from(select.selectedOptions).map(opt => opt.value);
+
             if (indices.length === 0) return Swal.fire('Error', 'Selecciona al menos una asesora.', 'warning');
+
             const seleccionados = indices.map(i => listaAsesoras[i]);
-            Swal.fire({ title: 'Enviando correos...', text: `Enviando a ${seleccionados.length} asesoras...`, allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+            Swal.fire({
+                title: 'Enviando correos...',
+                text: `Enviando a ${seleccionados.length} asesoras...`,
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
+
             const res = await callAPI({ action: 'sendAccess', listaAsesoras: seleccionados }, true);
+
             if (res && res.success) {
                 bootstrap.Modal.getInstance(document.getElementById('accessModal')).hide();
                 Swal.fire('¡Éxito!', 'Correos enviados correctamente.', 'success');
