@@ -715,7 +715,7 @@
             const catHidden = document.getElementById('edit-14');
             
             // Si elige "BOT", categorizar como BOT y mostrar campos de error
-            if(probSelectVal === 'INCIDENCIA DE BOT (Error de flujo, botones o información)') {
+            if(probSelectVal === 'Incidencia de BOT (Error de flujo, botones o información)') {
                 catHidden.value = 'Incidencia de Bot';
                 
                 // Mostrar descripción de error
@@ -805,7 +805,7 @@
             
             if (!isNewRecord) {
                 if (catOriginal === 'Incidencia de Bot') {
-                    selectVal = "INCIDENCIA DE BOT (Error de flujo, botones o información)";
+                    selectVal = "Incidencia de BOT (Error de flujo, botones o información)";
                     textVal = probOriginal;
                 } else {
                     selectVal = probOriginal;
@@ -860,7 +860,7 @@
                                         <option value="Pregunta por un curso que no es de la publicidad" ${selectVal === 'Pregunta por un curso que no es de la publicidad' ? 'selected' : ''}>Pregunta por un curso que no es de la publicidad</option>
                                         <option value="Dice que hizo clic en otra publicidad" ${selectVal === 'Dice que hizo clic en otra publicidad' ? 'selected' : ''}>Dice que hizo clic en otra publicidad</option>
                                         <option value="Se ha confundido de empresa / nos confundimos" ${selectVal === 'Se ha confundido de empresa / nos confundimos' ? 'selected' : ''}>Se ha confundido de empresa / nos confundimos</option>
-                                        <option value="INCIDENCIA DE BOT (Error de flujo, botones o información)" ${selectVal === 'INCIDENCIA DE BOT (Error de flujo, botones o información)' ? 'selected' : ''}>⚠️ INCIDENCIA DE BOT (Error de flujo o información)</option>
+                                        <option value="Incidencia de BOT (Error de flujo, botones o información)" ${selectVal === 'Incidencia de BOT (Error de flujo, botones o información)' ? 'selected' : ''}>⚠️ Incidencia de BOT (Error de flujo o información)</option>
                                     </select>
                                 </div>
 
