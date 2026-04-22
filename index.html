@@ -827,17 +827,17 @@
                         </div>
                         <div class="card-body">
                             <div class="row g-3">
-                                <div class="col-md-3">
+                                <div class="col-md-6">
                                     <label class="form-label small fw-bold text-muted">Marca</label>
                                     <select id="edit-2" class="form-select" ${disMarca}>
                                         ${optionsMarca}
                                     </select>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-6">
                                     <label class="form-label small fw-bold text-muted">Tipo</label>
                                     <input type="text" id="edit-13" class="form-control" value="${row[COL.TIPO] || ''}" readonly>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-6">
                                     <label class="form-label small fw-bold text-muted">Plataforma</label>
                                     <select id="edit-12" class="form-select" ${disCreator}>
                                         <option value="">Seleccione...</option>
@@ -845,7 +845,7 @@
                                         <option value="ORA" ${row[COL.PLATAFORMA]==='ORA'?'selected':''}>ORA</option>
                                     </select>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-6">
                                     <label class="form-label small fw-bold text-muted text-primary">Categoría <span class="text-danger">*</span></label>
                                     <select id="edit-14" class="form-select border-primary" ${disCreator} onchange="toggleDynamicFields()">
                                         <option value="">Seleccione...</option>
