@@ -258,6 +258,15 @@
                                 <option value="JVN">JVN</option>
                             </select>
                         </div>
+                        <!-- NUEVO FILTRO DE CATEGORÍA -->
+                        <div class="col-md-2">
+                            <label class="form-label small fw-bold">Categoría</label>
+                            <select id="categoryFilter" class="form-select" onchange="currentPage=1;renderTable()">
+                                <option value="">Todas</option>
+                                <option value="Incidencia de Bot">Incidencia de Bot</option>
+                                <option value="Marketing / Consulta Externa">Marketing / Consulta Externa</option>
+                            </select>
+                        </div>
                         <div class="col-md-5">
                             <label class="form-label small fw-bold">Búsqueda Rápida</label>
                             <div class="input-group">
@@ -519,6 +528,10 @@
                     let rowDate = normalizeDate(f[COL.FECHA_SOL]);
                     if (!rowDate.isValid() || rowDate.isBefore(filterDates[0], 'day') || rowDate.isAfter(filterDates[1], 'day')) continue;
                 }
+
+                // Añade esto donde obtienes los valores de los otros filtros (sFilter, bFilter, etc.)
+                const cFilter = document.getElementById('categoryFilter').value;
+                if (cFilter && f[COL.CATEGORIA] !== cFilter) continue;
                 
                 const sFilter = document.getElementById('statusFilter').value;
                 if (sFilter && f[COL.ESTADO] !== sFilter) continue;
@@ -691,6 +704,7 @@
             document.getElementById('nameFilter').value = "";
             document.getElementById('statusFilter').value = "";
             document.getElementById('brandFilter').value = "";
+            document.getElementById('categoryFilter').value = "";
             $('#dateRangeFilter').val('');
             filterDates =[];
             currentPage = 1; renderTable();
