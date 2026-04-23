@@ -1,157 +1,428 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Incidencias Chatfuel</title>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛠️</text></svg>">
+    <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛠️</text></svg>">
     <!-- Fonts & Icons -->
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <!-- Frameworks -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
-    
+
     <style>
         :root {
-            --primary: #4361ee;
-            --secondary: #3f37c9;
-            --success: #1cc88a;
-            --warning: #f6c23e;
-            --danger: #e74a3b;
-            --dark: #2b2d42;
-            --light: #f8f9fa;
-            --marketing: #e83e8c; 
+            --primary: #4f46e5;
+            --primary-soft: rgba(79, 70, 229, 0.1);
+            --secondary: #f8fafc;
+            --success: #10b981;
+            --success-soft: #ecfdf5;
+            --warning: #f59e0b;
+            --warning-soft: #fffbeb;
+            --danger: #ef4444;
+            --danger-soft: #fef2f2;
+            --dark: #0f172a;
+            --light: #ffffff;
+            --border: #f1f5f9;
+            --bg-app: #fcfcfd;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+            --radius-lg: 12px;
+            --glass: rgba(255, 255, 255, 0.8);
+            --glass-border: rgba(255, 255, 255, 0.3);
         }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f4f6f9; color: #333; }
+
+        body {
+            font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-app);
+            color: var(--text-main);
+            -webkit-font-smoothing: antialiased;
+            letter-spacing: -0.01em;
+        }
+
         .hidden { display: none !important; }
-        
+
         /* Auth */
-        .auth-wrapper { 
-            height: 100vh; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            background: linear-gradient(-45deg, #4361ee, #3a0ca3, #4cc9f0, #7209b7);
-            background-size: 400% 400%;
-            animation: gradientBG 12s ease infinite;
+        .auth-wrapper {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--bg-app);
         }
-        
-        @keyframes gradientBG {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+
+        .auth-card {
+            background: #fff;
+            padding: 40px;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 380px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
         }
-        .auth-card { background: #fff; padding: 40px; border-radius: 20px; width: 100%; max-width: 400px; }
-        .logo-circle { width: 60px; height: 60px; background: rgba(67, 97, 238, 0.1); color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto; }
-        
+
+        .logo-circle {
+            width: 48px;
+            height: 48px;
+            background: var(--bg-app);
+            color: var(--dark);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            margin: 0 auto;
+            border: 1px solid var(--border);
+        }
+
         /* Nav & Layout */
-        .top-nav { background: #fff; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
-        .nav-brand { font-size: 20px; color: var(--dark); }
-        .nav-brand i { color: var(--primary); }
-        .user-badge { background: rgba(67, 97, 238, 0.1); color: var(--primary); padding: 8px 15px; border-radius: 20px; font-size: 14px; font-weight: 600; }
-        .btn-logout { background: #fee2e2; color: #ef4444; border: none; padding: 8px 12px; border-radius: 10px; transition: 0.3s; }
-        .btn-logout:hover { background: #ef4444; color: #fff; }
-        
+        .top-nav {
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-brand {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .user-badge {
+            background: var(--secondary);
+            color: var(--dark);
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .btn-logout {
+            background: #fff;
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .btn-logout:hover {
+            background: var(--secondary);
+            color: var(--dark);
+        }
+
         /* Buttons & Cards */
-        .btn-primary-custom { background: var(--primary); color: #fff; border: none; border-radius: 10px; font-weight: 600; transition: 0.3s; }
-        .btn-primary-custom:hover { background: var(--secondary); color: #fff; }
-        .btn-success-custom { background: var(--success); color: #fff; border: none; border-radius: 10px; font-weight: 600; transition: 0.3s; }
-        .btn-success-custom:hover { background: #17a673; color: #fff; }
-        .table-card { background: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #cbd5e1; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .btn-primary-custom {
+            background: var(--primary);
+            color: #fff;
+            border: 1px solid transparent;
+            border-radius: 6px;
+            font-weight: 500;
+            padding: 10px 20px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
 
-        /* Drop Zone para Imágenes */
-        .drop-zone { border: 2px dashed #cbd5e1; border-radius: 10px; padding: 25px 15px; text-align: center; background: #f8fafc; cursor: pointer; transition: 0.3s; position: relative; }
-        .drop-zone:hover, .drop-zone.dragover { border-color: var(--primary); background: #eff6ff; }
-        .drop-zone i { font-size: 30px; color: #94a3b8; margin-bottom: 10px; }
-        .img-preview { max-width: 100%; max-height: 250px; border-radius: 8px; margin-top: 15px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); display: none; object-fit: contain; }
+        .btn-primary-custom:hover {
+            background: #27272a;
+        }
 
-        /* Table Styles & Acordion */
-        .table { margin-bottom: 0; }
-        .table-dark-header th { 
-            background-color: #1e293b !important; 
-            color: #f8fafc !important; 
-            font-weight: 600; 
-            text-transform: uppercase; 
-            font-size: 13px; 
-            letter-spacing: 0.5px; 
-            border-bottom: 2px solid #0f172a !important; 
-            padding: 15px 10px;
+        .btn-success-custom {
+            background: var(--primary);
+            color: #fff;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            font-weight: 700;
+            padding: 10px 20px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px var(--primary-soft);
+        }
+
+        .btn-success-custom:hover {
+            background: var(--dark);
+            transform: translateY(-1px);
+        }
+
+        .table-card, .filter-card {
+            background: #fff;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
         }
         
-        .clickable-row { cursor: pointer; transition: 0.2s; border-bottom: 1px solid #e2e8f0; }
-        .clickable-row:hover { background-color: #f1f5f9 !important; }
-        .transition-icon { transition: transform 0.3s ease; }
+        .card { border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); border: 1px solid var(--border); }
+
+        .stat-card {
+            padding: 24px;
+            border-radius: var(--radius-lg);
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 1px solid transparent;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            margin-bottom: 16px;
+        }
+
+        /* Drop Zone */
+        .drop-zone {
+            border: 1px dashed var(--border);
+            border-radius: 8px;
+            padding: 30px 15px;
+            text-align: center;
+            background: #fff;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .drop-zone:hover, .drop-zone.dragover {
+            border-color: var(--text-muted);
+            background: var(--secondary);
+        }
+
+        .drop-zone i {
+            font-size: 24px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .img-preview {
+            max-width: 100%;
+            max-height: 250px;
+            border-radius: 4px;
+            margin-top: 15px;
+            border: 1px solid var(--border);
+            display: none;
+            object-fit: contain;
+        }
+
+        /* Table Styles */
+        .table { margin-bottom: 0; }
+
+        .table-dark-header th {
+            background-color: var(--primary-soft) !important;
+            color: var(--primary) !important;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 10px;
+            letter-spacing: 0.08em;
+            border-bottom: 1px solid var(--border) !important;
+            border-top: none !important;
+            padding: 16px 16px;
+        }
+
+        .cursor-pointer { cursor: pointer; user-select: none; }
+        .hover-header:hover { background-color: rgba(79, 70, 229, 0.15) !important; transition: background-color 0.2s; }
+
+        .avatar-circle {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--primary-soft);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .clickable-row {
+            cursor: pointer;
+            transition: all 0.2s;
+            border-bottom: 1px solid var(--border);
+            background-color: #fff;
+        }
+
+        .clickable-row:hover {
+            background-color: var(--secondary) !important;
+        }
         
-        /* Contenedor del Desplegable */
-        .detail-row.hidden { display: none !important; }
-        .detail-wrapper { background-color: #f8fafc; border-bottom: 2px solid #cbd5e1; box-shadow: inset 0 4px 6px -4px rgba(0, 0, 0, 0.1); }
-        .detail-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; height: 100%; }
-        .detail-card-header { font-size: 12px; font-weight: 700; color: #64748b; padding: 12px 15px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; }
+        .clickable-row td {
+            vertical-align: middle;
+            padding: 12px;
+            font-size: 13px;
+        }
+
+        /* Detail Modal */
+        .modal-content {
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
         
-        /* Badges */
-        .badge-status { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
-        .status-pendiente { background: #fef08a; color: #854d0e; }
-        .status-revisado { background: #bbf7d0; color: #166534; }
-        .status-rechazado { background: #fecaca; color: #991b1b; }
-        
-        /* Animación suave para campos dinámicos */
-        .fade-box { transition: all 0.3s ease-in-out; overflow: hidden; }
-        
+        .modal-header {
+            border-bottom: 1px solid var(--border);
+            background: #fff;
+        }
+
+        .detail-card {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            height: 100%;
+        }
+
+        .detail-card-header {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-main);
+            padding: 12px 16px;
+            background: var(--secondary);
+            border-bottom: 1px solid var(--border);
+        }
+
+        /* Soft Highlight Tags */
+        .tag {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+        }
+        .tag-blue { background: #eff6ff; color: #1e40af; border: 1px solid #dbeafe; }
+        .tag-green { background: #f0fdf4; color: #166534; border: 1px solid #dcfce7; }
+        .tag-purple { background: #faf5ff; color: #6b21a8; border: 1px solid #f3e8ff; }
+        .tag-amber { background: #fffbeb; color: #92400e; border: 1px solid #fef3c7; }
+        .tag-pink { background: #fdf2f8; color: #9d174d; border: 1px solid #fce7f3; }
+        .tag-gray { background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; }
+        .tag-red { background: #fef2f2; color: #991b1b; border: 1px solid #fee2e2; }
+        .tag-emerald { background: #ecfdf5; color: #065f46; border: 1px solid #d1fae5; }
+
         /* Loader */
-        .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.9); display: flex; align-items: center; justify-content: center; z-index: 9999; }
-        .spinner-container { padding: 30px; border-radius: 15px; background: white; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        
+        .loading-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .spinner-container {
+            padding: 30px;
+            border-radius: 8px;
+            background: transparent;
+        }
+
         @media (max-width: 1199px) {
             .modal-dialog.modal-xl { max-width: 96% !important; margin: 1.5rem auto; }
         }
 
-        /* Estilo para el botón eliminar imagen */
-        .img-container { position: relative; display: inline-block; margin-top: 10px; }
+        /* Minimal form fields */
+        .form-control, .form-select {
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            padding: 10px 14px;
+            font-size: 13px;
+            box-shadow: none;
+            transition: all 0.2s;
+            background: #fff;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px var(--primary-soft);
+            background: #fff;
+        }
+        
+        .img-container {
+            position: relative;
+            display: inline-block;
+            margin-top: 10px;
+        }
+
         .btn-remove-img {
             position: absolute;
-            top: -5px; right: -5px;
-            background: #e74a3b;
-            color: white; border: none; border-radius: 50%;
-            width: 25px; height: 25px; font-size: 16px;
-            line-height: 20px; cursor: pointer; z-index: 10;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            top: -6px; right: -6px;
+            background: var(--text-main);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            width: 20px; height: 20px;
+            font-size: 14px; line-height: 18px;
+            cursor: pointer; z-index: 10;
         }
-        .btn-remove-img:hover { background: #e74a3b; }
     </style>
 </head>
+
 <body>
 
     <div id="loader" class="loading-overlay hidden">
         <div class="spinner-container text-center">
             <div class="spinner-border text-primary" role="status"></div>
-            <p class="mt-2 fw-bold text-muted">Iniciando sesión...</p>
+            <p class="mt-2 fw-bold" style="color: var(--primary);">Validando usuario...</p>
         </div>
     </div>
 
     <!-- LOGIN -->
     <section id="loginSection" class="auth-wrapper hidden">
-        <div class="auth-card shadow-lg">
-            <div class="auth-header text-center">
-                <div class="logo-circle mb-3"><i class="fas fa-bug"></i></div>
-                <h2 class="fw-bold">Reporte de Incidencias</h2>
-                <p class="text-muted">Incidencias Chatfuel-ORAIA Multi-Marca</p>
+        <div class="auth-card">
+            <div class="auth-header text-center mb-5">
+                <div class="logo-circle mb-4 shadow-sm" style="background: var(--primary); color: white; border: none; width: 64px; height: 64px; font-size: 28px;">
+                    <i class="fas fa-terminal"></i>
+                </div>
+                <h2 style="color: var(--dark); font-size: 24px; font-weight: 800; letter-spacing: -0.02em;">Bienvenido</h2>
+                <p class="text-muted" style="font-size: 14px;">Gestor Premium de Incidencias</p>
             </div>
-            <div class="auth-body mt-4">
-                <div class="form-floating mb-3">
-                    <input type="text" id="userInput" class="form-control" placeholder="Usuario" onkeypress="if(event.key==='Enter') attemptLogin()">
-                    <label><i class="fas fa-user me-2"></i>Usuario</label>
+            <div class="auth-body">
+                <div class="mb-4">
+                    <label class="form-label text-muted small fw-bold text-uppercase" style="font-size: 10px; letter-spacing: 0.05em;">Usuario</label>
+                    <input type="text" id="userInput" class="form-control form-control-lg fw-semibold" style="font-size: 15px;"
+                        onkeypress="if(event.key==='Enter') attemptLogin()">
                 </div>
-                <div class="form-floating mb-4">
-                    <input type="password" id="passInput" class="form-control" placeholder="Contraseña" onkeypress="if(event.key==='Enter') attemptLogin()">
-                    <label><i class="fas fa-lock me-2"></i>Contraseña</label>
+                <div class="mb-5">
+                    <label class="form-label text-muted small fw-bold text-uppercase" style="font-size: 10px; letter-spacing: 0.05em;">Contraseña</label>
+                    <input type="password" id="passInput" class="form-control form-control-lg"
+                        onkeypress="if(event.key==='Enter') attemptLogin()">
                 </div>
-                <button class="btn btn-primary-custom w-100 py-3" onclick="attemptLogin()">
-                    INGRESAR <i class="fas fa-arrow-right ms-2"></i>
+                <button class="btn btn-primary w-100 py-3 fw-bold shadow-lg" style="border-radius: 12px; font-size: 14px; letter-spacing: 0.02em;" onclick="attemptLogin()">
+                    Iniciar Sesión
                 </button>
-                <div id="loginError" class="text-danger mt-3 text-center small"></div>
+                <div id="loginError" class="text-danger mt-4 text-center small fw-bold"></div>
             </div>
         </div>
     </section>
@@ -175,8 +446,10 @@
                     <p class="text-muted mb-0">Seguimiento de problemas en flujos de Chatfuel.</p>
                 </div>
                 <div class="d-flex gap-2">
-                    <button id="btnAccesos" class="btn btn-warning fw-bold text-dark hidden shadow-sm border-0" onclick="openAccessModal()">
-                        <i class="fas fa-key me-2"></i>ENVIAR ACCESOS
+                    <button id="btnAccesos" class="btn btn-light fw-bold text-muted hidden shadow-sm border"
+                        style="font-size: 11px; padding: 10px 16px; border-radius: 8px;"
+                        onclick="openAccessModal()">
+                        <i class="fas fa-key me-2"></i>ACCESOS
                     </button>
                     <button id="btnNuevo" class="btn btn-success-custom hidden" onclick="openEdit(-1)">
                         <i class="fas fa-plus me-2"></i>NUEVO REPORTE
@@ -187,91 +460,86 @@
             <!-- Cards de Resumen -->
             <div class="row g-3 mb-4 hidden" id="statsCards">
                 <div class="col-md-3">
-                    <div class="card border-0 shadow-sm bg-primary text-white p-3 h-100" style="cursor: pointer;" onclick="clearFilters()">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="mb-1">Total Incidencias</h6>
-                                <h3 class="fw-bold mb-0" id="stat-total">0</h3>
-                            </div>
-                            <i class="fas fa-clipboard-list fa-2x opacity-50"></i>
+                    <div class="stat-card bg-white border-light" onclick="clearFilters()">
+                        <div class="stat-icon bg-primary text-white">
+                            <i class="fas fa-clipboard-list"></i>
                         </div>
+                        <h6 class="text-muted mb-1 small fw-bold text-uppercase">Total Incidencias</h6>
+                        <h3 class="fw-bold mb-0 text-dark" id="stat-total">0</h3>
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <div class="card border-0 shadow-sm bg-warning text-dark p-3 h-100" style="cursor: pointer;" onclick="filterByStatus('Pendiente')">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="mb-1">Pendientes</h6>
-                                <h3 class="fw-bold mb-0" id="stat-pendientes">0</h3>
-                            </div>
-                            <i class="fas fa-clock fa-2x opacity-50"></i>
+                    <div class="stat-card bg-white border-light" onclick="filterByStatus('Pendiente')">
+                        <div class="stat-icon" style="background: var(--warning-soft); color: var(--warning);">
+                            <i class="fas fa-clock"></i>
                         </div>
+                        <h6 class="text-muted mb-1 small fw-bold text-uppercase">Pendientes</h6>
+                        <h3 class="fw-bold mb-0 text-dark" id="stat-pendientes">0</h3>
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <div class="card border-0 shadow-sm bg-success text-white p-3 h-100" style="cursor: pointer;" onclick="filterByStatus('Revisado')">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="mb-1">Revisados</h6>
-                                <h3 class="fw-bold mb-0" id="stat-revisados">0</h3>
-                            </div>
-                            <i class="fas fa-check-circle fa-2x opacity-50"></i>
+                    <div class="stat-card bg-white border-light" onclick="filterByStatus('Revisado')">
+                        <div class="stat-icon" style="background: var(--success-soft); color: var(--success);">
+                            <i class="fas fa-check-circle"></i>
                         </div>
+                        <h6 class="text-muted mb-1 small fw-bold text-uppercase">Revisados</h6>
+                        <h3 class="fw-bold mb-0 text-dark" id="stat-revisados">0</h3>
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <div class="card border-0 shadow-sm bg-danger text-white p-3 h-100" style="cursor: pointer;" onclick="filterByStatus('Observado')">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="mb-1">Observados</h6>
-                                <h3 class="fw-bold mb-0" id="stat-observados">0</h3>
-                            </div>
-                            <i class="fas fa-times-circle fa-2x opacity-50"></i>
+                    <div class="stat-card bg-white border-light" onclick="filterByStatus('Observado')">
+                        <div class="stat-icon" style="background: var(--danger-soft); color: var(--danger);">
+                            <i class="fas fa-times-circle"></i>
                         </div>
+                        <h6 class="text-muted mb-1 small fw-bold text-uppercase">Observados</h6>
+                        <h3 class="fw-bold mb-0 text-dark" id="stat-observados">0</h3>
                     </div>
                 </div>
             </div>
 
             <!-- Filtros Avanzados -->
-            <div class="card filter-card border-0 shadow-sm mb-4">
-                <div class="card-body">
-                    <div class="row g-3">
+            <div class="filter-card border-0 shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <div class="row g-4 align-items-end">
                         <div class="col-md-3">
-                            <label class="form-label small fw-bold">Rango de Fecha</label>
-                            <input type="text" id="dateRangeFilter" class="form-control" placeholder="📅 Fecha solicitud..." readonly>
+                            <label class="form-label small fw-bold text-muted text-uppercase mb-2" style="font-size: 10px; letter-spacing: 0.05em;">Rango de Fecha</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-white border-end-0"><i class="far fa-calendar text-muted"></i></span>
+                                <input type="text" id="dateRangeFilter" class="form-control border-start-0 ps-0" placeholder="Filtrar por fecha..." readonly>
+                            </div>
                         </div>
                         <div class="col-md-2">
-                            <label class="form-label small fw-bold">Estado</label>
-                            <select id="statusFilter" class="form-select" onchange="currentPage=1;renderTable()">
-                                <option value="">Todos</option>
+                            <label class="form-label small fw-bold text-muted text-uppercase mb-2" style="font-size: 10px; letter-spacing: 0.05em;">Estado</label>
+                            <select id="statusFilter" class="form-select form-select-sm" onchange="currentPage=1;renderTable()">
+                                <option value="">Todos los Estados</option>
                                 <option value="Pendiente">Pendiente</option>
                                 <option value="Revisado">Revisado</option>
                                 <option value="Observado">Observado</option>
                             </select>
                         </div>
                         <div class="col-md-2">
-                            <label class="form-label small fw-bold">Marca</label>
-                            <select id="brandFilter" class="form-select" onchange="currentPage=1;renderTable()">
-                                <option value="">Todas</option>
+                            <label class="form-label small fw-bold text-muted text-uppercase mb-2" style="font-size: 10px; letter-spacing: 0.05em;">Marca</label>
+                            <select id="brandFilter" class="form-select form-select-sm" onchange="currentPage=1;renderTable()">
+                                <option value="">Todas las Marcas</option>
                                 <option value="BGU">BGU</option>
                                 <option value="IEMPRESA">IEMPRESA</option>
                                 <option value="JVN">JVN</option>
                             </select>
                         </div>
-                        <div class="col-md-2">
-                            <label class="form-label small fw-bold">Categoría</label>
-                            <select id="categoryFilter" class="form-select" onchange="currentPage=1;renderTable()">
-                                <option value="">Todas</option>
-                                <option value="Incidencia de Bot">Incidencia de Bot</option>
-                                <option value="Marketing / Consulta Externa">Marketing / Consulta Externa</option>
+                        <div class="col-md-2 hidden" id="viewModeContainer">
+                            <label class="form-label small fw-bold text-primary text-uppercase mb-2" style="font-size: 10px; letter-spacing: 0.05em;">Modo de Vista</label>
+                            <select id="viewModeFilter" class="form-select form-select-sm" style="border-color: var(--primary);" onchange="currentPage=1;renderTable()">
+                                <option value="mine">Mis tickets</option>
+                                <option value="all">Sede completa</option>
                             </select>
                         </div>
-                        <div class="col-md-5">
-                            <label class="form-label small fw-bold">Búsqueda Rápida</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
-                                <input type="text" id="nameFilter" class="form-control" placeholder="ID, Contacto o Problema..." oninput="currentPage=1;renderTable()">
-                                <button class="btn btn-outline-secondary" onclick="clearFilters()"><i class="fas fa-times"></i></button>
+                        <div class="col-md-3 flex-grow-1">
+                            <label class="form-label small fw-bold text-muted text-uppercase mb-2" style="font-size: 10px; letter-spacing: 0.05em;">Búsqueda Rápida</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
+                                <input type="text" id="nameFilter" class="form-control border-start-0 ps-0"
+                                    placeholder="Buscar por ID, Contacto o Problema..." oninput="currentPage=1;renderTable()">
+                                <button class="btn btn-outline-light border text-muted" onclick="clearFilters()"><i class="fas fa-times"></i></button>
                             </div>
                         </div>
                     </div>
@@ -284,12 +552,11 @@
                     <table class="table table-hover align-middle">
                         <thead class="table-dark-header">
                             <tr id="tableHeader">
-                                <th class="ps-4" style="border-top-left-radius: 12px;">ID / INFO</th>
-                                <th>FECHA SOLICITUD</th>
-                                <th>N° CONTACTO</th>
-                                <th>PROBLEMA</th>
-                                <th class="text-center">ESTADO</th>
-                                <th class="text-end pe-4" style="border-top-right-radius: 12px;">ACCIÓN</th>
+                                <th id="th-col-1" class="ps-4 cursor-pointer hover-header" onclick="setSort(1)">FECHA / MARCA <span><i class="fas fa-sort-down ms-1" style="color:var(--primary); opacity:1;"></i></span></th>
+                                <th id="th-col-11" class="cursor-pointer hover-header" onclick="setSort(11)">RESPONSABLE <span><i class="fas fa-sort text-muted ms-1" style="opacity:0.3"></i></span></th>
+                                <th id="th-col-3" class="cursor-pointer hover-header" onclick="setSort(3)">CONTACTO <span><i class="fas fa-sort text-muted ms-1" style="opacity:0.3"></i></span></th>
+                                <th id="th-col-7" class="text-center cursor-pointer hover-header" onclick="setSort(7)">ESTADO <span><i class="fas fa-sort text-muted ms-1" style="opacity:0.3"></i></span></th>
+                                <th class="text-end pe-4">DETALLE</th>
                             </tr>
                         </thead>
                         <tbody id="tableBody">
@@ -301,20 +568,26 @@
         </div>
     </main>
 
-    <!-- MODAL EDICIÓN -->
+    <!-- MODAL VISTA / EDICIÓN (REPORTE) -->
     <div class="modal fade" id="editModal" tabindex="-1" data-bs-backdrop="static">
         <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-            <div class="modal-content border-0 shadow-lg">
-                <div class="modal-header bg-dark text-white p-4">
-                    <h5 class="modal-title fw-bold" id="modalTitle">Detalle de Incidencia</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            <div class="modal-content">
+                <div class="modal-header px-4 py-3" style="background-color: #fff; border-bottom: 1px solid var(--border);">
+                    <div>
+                        <h5 class="modal-title fw-bold mb-0" id="modalTitle" style="color: var(--dark); font-size: 18px;">Vista de Incidencia</h5>
+                        <p class="text-muted small mb-0" id="modalSubtitle">Detalles completos del reporte seleccionado</p>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body p-4 bg-light">
-                    <div id="editForm" class="row g-4"></div>
+                <div class="modal-body p-0" style="background-color: var(--bg-app);">
+                    <div id="editForm" class="row g-0"></div>
                 </div>
-                <div class="modal-footer bg-white p-3 border-top">
-                    <button type="button" class="btn btn-link text-decoration-none text-dark fw-bold" data-bs-dismiss="modal">Cerrar</button>
-                    <button type="button" class="btn btn-primary-custom px-4" onclick="saveData()"><i class="fas fa-save me-2"></i>Guardar Cambios</button>
+                <div class="modal-footer bg-white px-4 py-3 border-top">
+                    <button type="button" class="btn btn-link text-decoration-none text-muted fw-bold small"
+                        data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-primary px-4 fw-bold" style="border-radius: 8px; font-size: 13px;" onclick="saveData()">
+                        <i class="fas fa-save me-2"></i>Guardar Cambios
+                    </button>
                 </div>
             </div>
         </div>
@@ -329,18 +602,22 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4 bg-light">
-                    <p class="small text-muted mb-3">Mantén presionado <b>Ctrl</b> (o Cmd en Mac) para seleccionar varias asesoras.</p>
+                    <p class="small text-muted mb-3">Mantén presionado <b>Ctrl</b> (o Cmd en Mac) para seleccionar
+                        varias asesoras.</p>
                     <div class="mb-3">
                         <label class="form-label small fw-bold text-dark">Seleccionar Asesoras</label>
                         <select id="acc-select" class="form-select border-warning" multiple style="height: 200px;">
                             <option value="">Cargando asesoras...</option>
                         </select>
                     </div>
-                    <div class="alert alert-info small py-2">Se enviarán los correos a los destinatarios registrados en la base de datos.</div>
+                    <div class="alert alert-info small py-2">Se enviarán los correos a los destinatarios registrados en
+                        la base de datos.</div>
                 </div>
                 <div class="modal-footer bg-white p-3 border-top">
-                    <button type="button" class="btn btn-link text-decoration-none text-dark fw-bold" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-warning fw-bold px-4 text-dark" onclick="sendAccess()"><i class="fas fa-envelope me-2"></i>Enviar a Seleccionados</button>
+                    <button type="button" class="btn btn-link text-decoration-none text-dark fw-bold"
+                        data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-warning fw-bold px-4 text-dark" onclick="sendAccess()"><i
+                            class="fas fa-envelope me-2"></i>Enviar a Seleccionados</button>
                 </div>
             </div>
         </div>
@@ -352,25 +629,28 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
-    
+
     <script>
         /** CONFIGURACIÓN Y VARIABLES */
         const API_URL = 'https://script.google.com/macros/s/AKfycbzMdhZWmgZj8BuN8td1qdfEbcIP4GDRft0kpGubUupwb8zdH57P01tRYmOZI-c7JIR9/exec';
-        
+
         let userData = { rol: "", nombre: "" };
-        let currentData =[];
+        let currentData = [];
         let isNewRecord = false;
-        let filterDates =[]; 
+        let filterDates = [];
         let currentPage = 1;
         const recordsPerPage = 10;
         const SESSION_TIMEOUT = 5 * 60 * 60 * 1000;
         
+        let currentSortCol = 1; // COL.FECHA_SOL
+        let currentSortDesc = true;
+
         const COL = {
             ID: 0, FECHA_SOL: 1, MARCA: 2, NUMERO_CONTACTO: 3, PROBLEMA: 4, SOLUCION: 5,
-            IMG_INCIDENCIA: 6, ESTADO: 7, COMENTARIO_SOPORTE: 8, IMG_SOPORTE: 9, 
+            IMG_INCIDENCIA: 6, ESTADO: 7, COMENTARIO_SOPORTE: 8, IMG_SOPORTE: 9,
             FECHA_ATENCION: 10, ASESORA_NOMBRE: 11, PLATAFORMA: 12, TIPO: 13, CATEGORIA: 14
         };
-        
+
         function saveSession(data) { localStorage.setItem('incident_session', JSON.stringify({ user: data, loginTime: Date.now() })); }
         function getSession() {
             const sessionRaw = localStorage.getItem('incident_session');
@@ -380,21 +660,21 @@
             return session.user;
         }
         function clearSession() { localStorage.removeItem('incident_session'); location.reload(); }
-        
+
         async function attemptLogin() {
             const user = document.getElementById('userInput').value;
             const pass = document.getElementById('passInput').value;
             if (!user || !pass) return Swal.fire('Error', 'Ingrese credenciales.', 'warning');
-            
+
             Swal.fire({
-                title: 'Procesando...', text: 'Por favor, espera un momento', allowOutsideClick: false,
+                title: 'Validando usuario...', text: 'Por favor, espera un momento', allowOutsideClick: false,
                 didOpen: () => { Swal.showLoading(); },
                 customClass: { popup: 'rounded-4 shadow-lg border-0', title: 'fw-bold text-primary', },
-                background: '#ffffff', iconColor: '#4361ee'
+                background: '#ffffff', iconColor: 'var(--primary)'
             });
-            
+
             const res = await callAPI({ action: 'login', user, pass }, true);
-            
+
             if (res && res.success) {
                 Swal.close();
                 saveSession(res);
@@ -404,64 +684,95 @@
                 document.getElementById('loginError').innerText = res ? res.message : "Error de conexión.";
             }
         }
-        
-        window.onload = function() {
+
+        window.onload = function () {
             const user = getSession();
             if (user) showDashboard(user);
             else document.getElementById('loginSection').classList.remove('hidden');
         };
-        
+
         function showDashboard(res) {
             userData = res;
             document.getElementById('loginSection').classList.add('hidden');
             document.getElementById('mainSection').classList.remove('hidden');
-            
+
             let displayRol = res.rol;
-            if(res.rol.includes("ASESORA")) displayRol = "ASESORA";
-            if(res.rol.startsWith("SOPORTE_")) displayRol = "SOPORTE MARCA";
+            if (res.rol.includes("ASESORA")) displayRol = "ASESORA";
+            if (res.rol.startsWith("SOPORTE_")) displayRol = "SOPORTE MARCA";
 
             document.getElementById('rolBadge').innerText = `${res.nombre.toUpperCase()} | ${displayRol}`;
-            
+
             if (res.rol.startsWith("ASESORA_") || res.rol.startsWith("SOPORTE_")) {
                 document.getElementById('btnNuevo').classList.remove('hidden');
             } else {
                 document.getElementById('btnNuevo').classList.add('hidden');
             }
 
-            if (res.rol === "SOPORTE" || res.rol === "ADMIN" || res.rol === "MARKETING") {
-                document.getElementById('statsCards').classList.remove('hidden');
-                if (res.rol === "MARKETING") {
-                    document.getElementById('btnAccesos').classList.add('hidden');
-                } else {
-                    document.getElementById('btnAccesos').classList.remove('hidden');
-                }
+            // Mostrar statsCards para todos (las estadísticas se calculan sobre la data ya filtrada de cada usuario)
+            document.getElementById('statsCards').classList.remove('hidden');
+            
+            if (res.rol === "SOPORTE" || res.rol === "ADMIN") {
+                document.getElementById('btnAccesos').classList.remove('hidden');
             } else {
-                document.getElementById('statsCards').classList.add('hidden');
                 document.getElementById('btnAccesos').classList.add('hidden');
             }
 
             const brandContainer = document.getElementById('brandFilter').closest('.col-md-2');
             const brandSelect = document.getElementById('brandFilter');
-            
+            const viewModeContainer = document.getElementById('viewModeContainer');
+
+            // Logica predeterminada: Ocultar selector de vista
+            viewModeContainer.classList.add('hidden');
+
             if ((res.rol.startsWith("ASESORA_") || res.rol.startsWith("SOPORTE_")) && res.rol !== "ASESORA_NACIONAL") {
-                brandContainer.classList.add('hidden'); 
+                brandContainer.classList.add('hidden');
+                
+                // Mostrar modo de vista para asesoras normales
+                if (res.rol.startsWith("ASESORA_")) {
+                    viewModeContainer.classList.remove('hidden');
+                    document.getElementById('viewModeFilter').value = 'mine'; // Default to mine
+                }
             } else if (res.rol === "ASESORA_NACIONAL") {
                 brandSelect.innerHTML = `<option value="">Todas (JVN / IEMPRESA)</option><option value="IEMPRESA">IEMPRESA</option><option value="JVN">JVN</option>`;
             } else {
                 brandSelect.innerHTML = `<option value="">Todas las Marcas</option><option value="BGU">BGU</option><option value="IEMPRESA">IEMPRESA</option><option value="JVN">JVN</option>`;
             }
-            
+
             initFilters();
             loadData();
         }
 
         async function loadData() {
-           const session = getSession();
+            const session = getSession();
             if (!session) return;
+            
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="text-center" style="padding: 6rem 0;">
+                        <div class="d-inline-flex flex-column align-items-center">
+                            <div class="spinner-border text-primary mb-3" role="status" style="width: 2.5rem; height: 2.5rem; border-width: 0.2em; opacity: 0.8;"></div>
+                            <h6 class="fw-bold text-dark mb-1" style="font-size: 15px; letter-spacing: 0.05em;">Sincronizando incidencias...</h6>
+                            <p class="text-muted small mb-0" style="font-size: 12px;">Conectando con la base de datos central</p>
+                        </div>
+                    </td>
+                </tr>
+            `;
+
             const res = await callAPI({ action: 'getData', rol: userData.rol }, true);
             if (res && res.success) {
                 currentData = res.data;
                 renderTable();
+            } else {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-danger">
+                            <i class="fas fa-exclamation-triangle mb-2" style="font-size: 24px;"></i>
+                            <h6 class="fw-bold">Error al cargar datos</h6>
+                            <p class="small mb-0 text-muted">Asegúrate de tener conexión a internet o recarga la página.</p>
+                        </td>
+                    </tr>
+                `;
             }
         }
 
@@ -481,32 +792,19 @@
 
         function normalizeDate(rawDate) {
             if (!rawDate) return moment.invalid();
-            let m = moment(rawDate,[moment.ISO_8601, 'DD/MM/YYYY HH:mm:ss', 'DD/MM/YYYY HH:mm', 'DD/MM/YYYY'], true);
-            if (!m.isValid()) m = moment(rawDate); 
+            let m = moment(rawDate, [moment.ISO_8601, 'DD/MM/YYYY HH:mm:ss', 'DD/MM/YYYY HH:mm', 'DD/MM/YYYY'], true);
+            if (!m.isValid()) m = moment(rawDate);
             return m;
         }
 
-        function toggleDetails(index) {
-            const detailRow = document.getElementById(`details-${index}`);
-            const icon = document.getElementById(`icon-${index}`);
-            
-            if (detailRow.classList.contains('hidden')) {
-                detailRow.classList.remove('hidden');
-                icon.classList.remove('fa-plus-circle', 'text-primary');
-                icon.classList.add('fa-minus-circle', 'text-danger');
-            } else {
-                detailRow.classList.add('hidden');
-                icon.classList.remove('fa-minus-circle', 'text-danger');
-                icon.classList.add('fa-plus-circle', 'text-primary');
-            }
-        }
+        // Modal is handling detail viewing directly
 
         // NUEVA FUNCIÓN: Generar Galería HTML
         function generarGaleriaHTML(imgString) {
             if (!imgString || typeof imgString !== 'string' || imgString.trim() === "") return '';
             const urls = imgString.split('|').map(u => u.trim()).filter(u => u !== "");
             if (urls.length === 0) return '';
-            
+
             let html = `<div class="mt-3 d-flex flex-wrap gap-2">`;
             urls.forEach(url => {
                 const validUrl = getValidImageUrl(url);
@@ -518,195 +816,213 @@
             return html;
         }
 
+        function getInitials(name) {
+            if (!name || name === 'Sin registrar') return 'SR';
+            const parts = name.trim().split(' ');
+            if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+            return (parts[0][0] + parts[1][0]).toUpperCase();
+        }
+
+        function setSort(col) {
+            if (currentSortCol === col) {
+                currentSortDesc = !currentSortDesc;
+            } else {
+                currentSortCol = col;
+                currentSortDesc = (col === 1); // Defaults to desc for Date, asc for others
+            }
+            currentPage = 1;
+            renderTable();
+        }
+
+        function updateSortIcons() {
+            const headers = document.querySelectorAll('#tableHeader th.cursor-pointer');
+            headers.forEach(th => {
+                const icon = th.querySelector('i.fas');
+                if (icon) {
+                    icon.className = 'fas fa-sort text-muted ms-1';
+                    icon.style.opacity = '0.3';
+                    icon.style.color = '';
+                }
+            });
+
+            const activeTh = document.getElementById(`th-col-${currentSortCol}`);
+            if (activeTh) {
+                const activeIcon = activeTh.querySelector('i.fas');
+                if (activeIcon) {
+                    activeIcon.className = currentSortDesc ? 'fas fa-sort-down ms-1' : 'fas fa-sort-up ms-1';
+                    activeIcon.style.opacity = '1';
+                    activeIcon.style.color = 'var(--primary)';
+                }
+            }
+        }
+
         function renderTable() {
             if (currentData.length === 0) return;
             const body = document.getElementById('tableBody');
-            let filteredData =[];
+            let filteredData = [];
             for (let i = 1; i < currentData.length; i++) {
                 const f = currentData[i];
                 const userRole = userData.rol;
                 const rowBrand = f[COL.MARCA];
                 const rowTipo = f[COL.TIPO];
 
-                if (userRole !== "SOPORTE" && userRole !== "ADMIN" && userRole !== "MARKETING") { 
+                if (userRole !== "SOPORTE" && userRole !== "ADMIN" && userRole !== "MARKETING") {
                     if (userRole === "ASESORA_NACIONAL") {
                         if ((rowBrand !== "JVN" && rowBrand !== "IEMPRESA") || rowTipo !== "Admisión") continue;
                     } else if (userRole.startsWith("ASESORA_")) {
                         const allowedBrand = userRole.replace("ASESORA_", "");
+                        // 1. Regla de Oro: JAMAS podrá ver tickets de otra marca. Aislamiento estricto BGU con BGU, JVN con JVN, etc.
                         if (rowBrand !== allowedBrand || rowTipo !== "Admisión") continue;
+                        
+                        // 2. Control de Nivel de Vista: Míos vs Todos los de mi marca.
+                        const viewMode = document.getElementById('viewModeFilter') ? document.getElementById('viewModeFilter').value : 'all';
+                        if (viewMode === 'mine') {
+                            const ticketAsesora = String(f[COL.ASESORA_NOMBRE] || '').trim().toLowerCase();
+                            const loggedAsesora = String(userData.nombre || '').trim().toLowerCase();
+                            if (ticketAsesora !== loggedAsesora) continue;
+                        }
                     } else if (userRole.startsWith("SOPORTE_")) {
                         const allowedBrand = userRole.replace("SOPORTE_", "");
                         if (rowBrand !== allowedBrand || rowTipo !== "Soporte") continue;
                     }
                 }
-                
+
                 if (filterDates.length === 2) {
                     let rowDate = normalizeDate(f[COL.FECHA_SOL]);
                     if (!rowDate.isValid() || rowDate.isBefore(filterDates[0], 'day') || rowDate.isAfter(filterDates[1], 'day')) continue;
                 }
 
                 // Añade esto donde obtienes los valores de los otros filtros (sFilter, bFilter, etc.)
-                const cFilter = document.getElementById('categoryFilter').value;
-                if (cFilter && f[COL.CATEGORIA] !== cFilter) continue;
-                
+                const cFilterEl = document.getElementById('categoryFilter');
+                if (cFilterEl && cFilterEl.value && f[COL.CATEGORIA] !== cFilterEl.value) continue;
+
                 const sFilter = document.getElementById('statusFilter').value;
                 if (sFilter && f[COL.ESTADO] !== sFilter) continue;
-                
+
                 const bFilter = document.getElementById('brandFilter').value;
                 if (bFilter && f[COL.MARCA] !== bFilter) continue;
-                
+
                 const q = document.getElementById('nameFilter').value.toLowerCase();
-                if (q && !([f[COL.ID], f[COL.NUMERO_CONTACTO], f[COL.PROBLEMA]].some(t => String(t).toLowerCase().includes(q)))) continue;
-        
+                if (q && !([f[COL.ID], f[COL.NUMERO_CONTACTO], f[COL.PROBLEMA], f[COL.ASESORA_NOMBRE]].some(t => String(t).toLowerCase().includes(q)))) continue;
+
                 filteredData.push({ index: i, data: f });
             }
 
             filteredData.sort((a, b) => {
-                let dateA = normalizeDate(a.data[COL.FECHA_SOL]);
-                let dateB = normalizeDate(b.data[COL.FECHA_SOL]);
-                return dateB.valueOf() - dateA.valueOf(); 
+                let valA = a.data[currentSortCol];
+                let valB = b.data[currentSortCol];
+                
+                // Numbers
+                if (currentSortCol === COL.ID || currentSortCol === COL.NUMERO_CONTACTO) {
+                    let numA = parseFloat(valA) || 0;
+                    let numB = parseFloat(valB) || 0;
+                    return currentSortDesc ? numB - numA : numA - numB;
+                }
+
+                // Dates
+                if (currentSortCol === COL.FECHA_SOL || currentSortCol === COL.FECHA_ATENCION) {
+                    let dateA = normalizeDate(valA);
+                    let dateB = normalizeDate(valB);
+                    return currentSortDesc ? dateB.valueOf() - dateA.valueOf() : dateA.valueOf() - dateB.valueOf();
+                }
+
+                // Text
+                valA = String(valA || '').toLowerCase();
+                valB = String(valB || '').toLowerCase();
+                if (valA < valB) return currentSortDesc ? 1 : -1;
+                if (valA > valB) return currentSortDesc ? -1 : 1;
+                return 0;
             });
 
             const totalRecords = filteredData.length;
             const totalPages = Math.ceil(totalRecords / recordsPerPage);
             const start = (currentPage - 1) * recordsPerPage;
             const paginated = filteredData.slice(start, start + recordsPerPage);
-        
+
             let html = "";
             paginated.forEach(item => {
                 const i = item.index;
                 const f = item.data;
-                const brandBadge = f[COL.MARCA] === 'BGU' ? 'bg-primary' : (f[COL.MARCA] === 'IEMPRESA' ? 'bg-success' : 'bg-dark');
+                
+                let brandTag = 'tag-gray';
+                if(f[COL.MARCA] === 'BGU') brandTag = 'tag-blue';
+                if(f[COL.MARCA] === 'IEMPRESA') brandTag = 'tag-green';
+                if(f[COL.MARCA] === 'JVN') brandTag = 'tag-purple';
 
                 const isMarketing = f[COL.CATEGORIA] === 'Marketing / Consulta Externa';
-                const catBadgeClass = isMarketing ? 'bg-pink text-white' : 'bg-info text-dark';
-                const catStyle = isMarketing ? 'background-color: var(--marketing) !important;' : '';
-                const catDisplay = f[COL.CATEGORIA] ? `<span class="badge ${catBadgeClass}" style="font-size: 10px; ${catStyle}">${f[COL.CATEGORIA]}</span>` : '';
+                const catTag = isMarketing ? 'tag-pink' : 'tag-amber';
+                const catDisplay = f[COL.CATEGORIA] ? `<span class="tag ${catTag}">${f[COL.CATEGORIA]}</span>` : '';
 
                 let parsedDate = normalizeDate(f[COL.FECHA_SOL]);
                 let displayDate = parsedDate.isValid() ? parsedDate.format('DD/MM/YYYY HH:mm') : '---';
+                let savingStyle = f._isSaving ? 'opacity: 0.6; pointer-events: none; filter: grayscale(10%); background-color: var(--bg-app);' : '';
+                let savingBadge = f._isSaving ? `<i class="fas fa-spinner fa-spin text-primary ms-2" title="Guardando..."></i>` : '';
 
-                const imgInc = getValidImageUrl(f[COL.IMG_INCIDENCIA]);
-                const imgSop = getValidImageUrl(f[COL.IMG_SOPORTE]);
-                
-                const imgIncHtml = generarGaleriaHTML(f[COL.IMG_INCIDENCIA]);
-                const imgSopHtml = generarGaleriaHTML(f[COL.IMG_SOPORTE]);
-                
                 html += `
-                    <tr class="clickable-row" onclick="toggleDetails(${i})">
+                    <tr class="clickable-row" onclick="openEdit(${i})" style="${savingStyle}">
                         <td class="ps-4">
-                            <div class="d-flex align-items-center">
-                                <i id="icon-${i}" class="fas fa-plus-circle fs-5 text-primary me-3 transition-icon"></i>
-                            <div>
-                            <div class="fw-bold text-primary small">${f[COL.ID]}</div>
-                            <div class="d-flex flex-wrap gap-1 mt-1">
-                                <span class="badge ${brandBadge}" style="font-size: 10px">${f[COL.MARCA]}</span>
-                                <span class="badge bg-secondary" style="font-size: 10px">${f[COL.PLATAFORMA] || 'N/A'}</span>
-                                ${catDisplay}
-                            </div>
-                            <div class="mt-1" style="font-size: 11px; color: #64748b;">
-                                <i class="fas fa-user me-1"></i>${f[COL.ASESORA_NOMBRE] || 'Sin registrar'}
+                            <div class="d-flex flex-column align-items-start gap-2 py-1">
+                                <span class="badge text-dark rounded-pill fw-semibold" style="background-color: var(--bg-app); border: 1px solid var(--border); font-size: 10.5px; padding: 4px 10px;">
+                                    <i class="far fa-calendar-alt me-1" style="color: var(--text-muted);"></i>${displayDate} ${savingBadge}
+                                </span>
+                                <div class="d-flex gap-1">
+                                    <span class="tag tag-gray border shadow-sm">#${f[COL.ID]}</span>
+                                    <span class="tag ${brandTag} shadow-sm border-0">${f[COL.MARCA]}</span>
+                                </div>
                             </div>
                         </td>
-                        <td class="small text-muted fw-semibold">
-                            <i class="far fa-calendar-alt me-1"></i>${displayDate}
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="avatar-circle">${getInitials(f[COL.ASESORA_NOMBRE])}</div>
+                                <span class="fw-semibold" style="font-size: 12px; color: var(--text-muted);">${f[COL.ASESORA_NOMBRE] || 'Sin registrar'}</span>
+                            </div>
                         </td>
-                        <td><code class="bg-light p-1 rounded text-dark">${f[COL.NUMERO_CONTACTO]}</code></td>
-                        <td><div class="text-truncate" style="max-width: 200px" title="${f[COL.PROBLEMA]}">${f[COL.PROBLEMA]}</div></td>
+                        <td>
+                            <span class="fw-medium" style="font-size: 13px; color: var(--text-main);">${f[COL.NUMERO_CONTACTO]}</span>
+                        </td>
                         <td class="text-center">${getStatusBadge(f[COL.ESTADO])}</td>
                         <td class="text-end pe-4">
-                            <button class="btn btn-sm btn-outline-primary shadow-sm border-0" onclick="event.stopPropagation(); openEdit(${i})" title="Editar Incidencia">
-                                <i class="fas fa-edit"></i>
+                            <button class="btn btn-sm btn-light fw-bold" style="font-size: 11px; border: 1px solid var(--border);" onclick="event.stopPropagation(); openEdit(${i})">
+                                ABRIR
                             </button>
-                        </td>
-                    </tr>
-                    
-                    <tr id="details-${i}" class="detail-row hidden">
-                        <td colspan="6" class="p-0 border-0">
-                            <div class="detail-wrapper p-4">
-                                <div class="row g-4">
-                                    <div class="col-md-6">
-                                        <div class="detail-card shadow-sm">
-                                            <div class="detail-card-header bg-light">
-                                                <i class="fas fa-comment-dots me-2 text-primary"></i> REPORTE (ADMISIÓN)
-                                            </div>
-                                            <div class="p-3 text-muted" style="font-size: 13px;">
-                                                <div class="mb-3">
-                                                    <strong class="text-dark d-block mb-1">Problema Reportado:</strong>
-                                                    <span class="d-block p-2 bg-light border rounded" style="white-space: pre-line;">${f[COL.PROBLEMA] || '---'}</span>
-                                                </div>
-                                                ${!isMarketing ? `
-                                                <div>
-                                                    <strong class="text-dark d-block mb-1">Solución Sugerida:</strong>
-                                                    <span class="d-block p-2 bg-light border rounded" style="white-space: pre-line;">${f[COL.SOLUCION] || 'Sin solución sugerida'}</span>
-                                                </div>` : ''}
-                                                ${imgIncHtml}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-6">
-                                        <div class="detail-card shadow-sm">
-                                            <div class="detail-card-header bg-light">
-                                                <i class="fas fa-check-double me-2 text-success"></i> RESOLUCIÓN (${isMarketing ? 'MARKETING' : 'SOPORTE'})
-                                            </div>
-                                            <div class="p-3 text-muted" style="font-size: 13px;">
-                                                <div class="mb-3">
-                                                    <strong class="text-dark d-block mb-1">Comentarios de Resolución:</strong>
-                                                    <span class="d-block p-2 bg-light border rounded" style="white-space: pre-line;">${f[COL.COMENTARIO_SOPORTE] || 'Aún no revisado o sin comentarios'}</span>
-                                                </div>
-                                                ${imgSopHtml}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="mt-3 pt-3 border-top d-flex gap-4 flex-wrap small text-muted">
-                                    <span><strong class="text-dark">Tipo:</strong> ${f[COL.TIPO] || '---'}</span>
-                                    <span><strong class="text-dark">Categoría:</strong> ${f[COL.CATEGORIA] || 'Bot'}</span>
-                                    <span><strong class="text-dark">Plataforma:</strong> ${f[COL.PLATAFORMA] || '---'}</span>
-                                    <span><strong class="text-dark">Asesora Creación:</strong> ${f[COL.ASESORA_NOMBRE] || '---'}</span>
-                                    <span><strong class="text-dark">Fecha Creación:</strong> ${displayDate}</span>
-                                    <span><strong class="text-dark">Fecha Atención:</strong> ${f[COL.FECHA_ATENCION] || 'Pendiente'}</span>
-                                </div>
-                            </div>
                         </td>
                     </tr>`;
             });
             body.innerHTML = html;
             updateStats(filteredData);
-            renderPagination(totalRecords, totalPages);            
+            renderPagination(totalRecords, totalPages);
+            updateSortIcons();
         }
 
         function getStatusBadge(status) {
-            let cls = 'status-pendiente';
-            if(status === 'Revisado') cls = 'status-revisado';
-            if(status === 'Observado') cls = 'status-observado';
-            return `<span class="badge-status ${cls}">${status || 'Pendiente'}</span>`;
+            let cls = 'tag-amber';
+            if (status === 'Revisado') cls = 'tag-emerald';
+            if (status === 'Observado' || status === 'Rechazado') cls = 'tag-red';
+            return `<span class="tag ${cls}">${status || 'Pendiente'}</span>`;
         }
-        
+
         function renderPagination(total, pages) {
             const cont = document.getElementById('paginationControls');
             if (pages <= 1) { cont.innerHTML = ''; return; }
             let html = `<div class="d-flex justify-content-between align-items-center">
                 <span class="small text-muted">Mostrando ${total} registros</span>
                 <ul class="pagination pagination-sm mb-0">
-                    <li class="page-item ${currentPage===1?'disabled':''}"><a class="page-link" href="#" onclick="currentPage--;renderTable()">Anterior</a></li>`;
-            for(let i=1; i<=pages; i++) {
-                html += `<li class="page-item ${currentPage===i?'active':''}"><a class="page-link" href="#" onclick="currentPage=${i};renderTable()">${i}</a></li>`;
+                    <li class="page-item ${currentPage === 1 ? 'disabled' : ''}"><a class="page-link" href="#" onclick="currentPage--;renderTable()">Anterior</a></li>`;
+            for (let i = 1; i <= pages; i++) {
+                html += `<li class="page-item ${currentPage === i ? 'active' : ''}"><a class="page-link" href="#" onclick="currentPage=${i};renderTable()">${i}</a></li>`;
             }
-            html += `<li class="page-item ${currentPage===pages?'disabled':''}"><a class="page-link" href="#" onclick="currentPage++;renderTable()">Siguiente</a></li>
+            html += `<li class="page-item ${currentPage === pages ? 'disabled' : ''}"><a class="page-link" href="#" onclick="currentPage++;renderTable()">Siguiente</a></li>
                 </ul>
             </div>`;
             cont.innerHTML = html;
         }
-        
+
         function initFilters() {
             $('#dateRangeFilter').daterangepicker({
                 autoUpdateInput: false,
                 locale: { format: 'DD/MM/YYYY', cancelLabel: 'Limpiar', applyLabel: 'Aplicar' }
             });
-            $('#dateRangeFilter').on('apply.daterangepicker', function(ev, picker) {
+            $('#dateRangeFilter').on('apply.daterangepicker', function (ev, picker) {
                 $(this).val(picker.startDate.format('DD/MM/YYYY') + ' - ' + picker.endDate.format('DD/MM/YYYY'));
                 filterDates = [picker.startDate, picker.endDate];
                 currentPage = 1; renderTable();
@@ -717,12 +1033,12 @@
             currentPage = 1; renderTable();
         }
         function clearFilters() {
-            document.getElementById('nameFilter').value = "";
-            document.getElementById('statusFilter').value = "";
-            document.getElementById('brandFilter').value = "";
-            document.getElementById('categoryFilter').value = "";
+            if(document.getElementById('nameFilter')) document.getElementById('nameFilter').value = "";
+            if(document.getElementById('statusFilter')) document.getElementById('statusFilter').value = "";
+            if(document.getElementById('brandFilter')) document.getElementById('brandFilter').value = "";
+            if(document.getElementById('categoryFilter')) document.getElementById('categoryFilter').value = "";
             $('#dateRangeFilter').val('');
-            filterDates =[];
+            filterDates = [];
             currentPage = 1; renderTable();
         }
 
@@ -741,18 +1057,18 @@
             const cat = document.getElementById('edit-14').value;
             const solContainer = document.getElementById('container-solucion');
             const solInput = document.getElementById('edit-5');
-            
+
             // Campos de Problema
             const probText = document.getElementById('edit-4-text');
             const probSelect = document.getElementById('edit-4-select');
-            
-            if(cat === 'Marketing / Consulta Externa') {
+
+            if (cat === 'Marketing / Consulta Externa') {
                 // Configura contenedor de Solución
                 solContainer.style.height = '0px';
                 solContainer.style.opacity = '0';
                 setTimeout(() => solContainer.classList.add('hidden'), 300);
                 solInput.value = 'No aplica (Derivado a Marketing)';
-                
+
                 // Configura contenedor de Problema
                 probText.classList.add('hidden');
                 probSelect.classList.remove('hidden');
@@ -764,8 +1080,8 @@
                     solContainer.style.height = 'auto';
                     solContainer.style.opacity = '1';
                 }, 10);
-                if(solInput.value === 'No aplica (Derivado a Marketing)') solInput.value = '';
-                
+                if (solInput.value === 'No aplica (Derivado a Marketing)') solInput.value = '';
+
                 // Configura contenedor de Problema clásico
                 probText.classList.remove('hidden');
                 probSelect.classList.add('hidden');
@@ -788,54 +1104,54 @@
 
         function openEdit(index) {
             isNewRecord = (index === -1);
-            
+
             const isCreator = userData.rol.startsWith("ASESORA_") || userData.rol.startsWith("SOPORTE_");
-            const isSoporteAdmin = userData.rol === "SOPORTE" || userData.rol === "ADMIN" || userData.rol === "MARKETING"; 
-            
+            const isSoporteAdmin = userData.rol === "SOPORTE" || userData.rol === "ADMIN" || userData.rol === "MARKETING";
+
             let row = isNewRecord ? Array(15).fill("") : [...currentData[index]];
-            
+
             if (isNewRecord && isCreator) {
-                if (userData.rol !== "ASESORA_NACIONAL") row[COL.MARCA] = userData.rol.split('_')[1]; 
+                if (userData.rol !== "ASESORA_NACIONAL") row[COL.MARCA] = userData.rol.split('_')[1];
                 if (userData.rol.startsWith("ASESORA_")) row[COL.TIPO] = "Admisión";
                 if (userData.rol.startsWith("SOPORTE_")) row[COL.TIPO] = "Soporte";
                 row[COL.ESTADO] = "Pendiente";
                 row[COL.ASESORA_NOMBRE] = userData.nombre;
             }
-        
-            document.getElementById("modalTitle").innerHTML = isNewRecord ? '<i class="fas fa-bug me-2"></i>Reportar Incidencia' : '<i class="fas fa-edit me-2"></i>Detalle de Incidencia';
-            
+
+            document.getElementById("modalTitle").innerHTML = isNewRecord ? '<i class="far fa-file-alt me-2 text-primary"></i> Nuevo Reporte de Incidencia' : '<i class="far fa-eye me-2 text-primary"></i> Detalle / Edición de Reporte';
+
             const imgIncidencia = getValidImageUrl(row[COL.IMG_INCIDENCIA]);
             const imgSoporte = getValidImageUrl(row[COL.IMG_SOPORTE]);
 
             const formContainer = document.getElementById("editForm");
-            
+
             const readCreator = (!isNewRecord && isSoporteAdmin) ? "readonly" : "";
             const disCreator = (!isNewRecord && isSoporteAdmin) ? "disabled" : "";
             const readAdmin = isCreator ? "readonly" : "";
             const disAdmin = isCreator ? "disabled" : "";
 
-            let disMarca = "disabled"; 
-            if (isCreator && userData.rol === "ASESORA_NACIONAL" && isNewRecord) disMarca = ""; 
-            
+            let disMarca = "disabled";
+            if (isCreator && userData.rol === "ASESORA_NACIONAL" && isNewRecord) disMarca = "";
+
             let optionsMarca = `<option value="">Seleccione...</option>`;
             if (userData.rol === "ASESORA_NACIONAL") {
-                optionsMarca += `<option value="IEMPRESA" ${row[COL.MARCA]==='IEMPRESA'?'selected':''}>IEMPRESA</option>
-                                 <option value="JVN" ${row[COL.MARCA]==='JVN'?'selected':''}>JVN</option>`;
+                optionsMarca += `<option value="IEMPRESA" ${row[COL.MARCA] === 'IEMPRESA' ? 'selected' : ''}>IEMPRESA</option>
+                                 <option value="JVN" ${row[COL.MARCA] === 'JVN' ? 'selected' : ''}>JVN</option>`;
             } else {
-                optionsMarca += `<option value="BGU" ${row[COL.MARCA]==='BGU'?'selected':''}>BGU</option>
-                                 <option value="IEMPRESA" ${row[COL.MARCA]==='IEMPRESA'?'selected':''}>IEMPRESA</option>
-                                 <option value="JVN" ${row[COL.MARCA]==='JVN'?'selected':''}>JVN</option>`;
+                optionsMarca += `<option value="BGU" ${row[COL.MARCA] === 'BGU' ? 'selected' : ''}>BGU</option>
+                                 <option value="IEMPRESA" ${row[COL.MARCA] === 'IEMPRESA' ? 'selected' : ''}>IEMPRESA</option>
+                                 <option value="JVN" ${row[COL.MARCA] === 'JVN' ? 'selected' : ''}>JVN</option>`;
             }
 
             // Opciones de Marketing predefinidas
-            const mktOptions =[
+            const mktOptions = [
                 "Piensa que somos banco/financiera (pide préstamos)",
                 "Piensa que brindamos tratamiento médico/salud",
                 "Pregunta por un curso que no es de la publicidad",
                 "Dice que hizo clic en otra publicidad",
                 "Se ha confundido de empresa / nos confundimos"
             ];
-            
+
             // Lógica para saber qué valor cargar en Problema al abrir un ticket existente
             let probTextVal = row[COL.PROBLEMA] || '';
             let isMkt = row[COL.CATEGORIA] === 'Marketing / Consulta Externa';
@@ -843,64 +1159,143 @@
             let selectVal = isMkt ? (isOtrosMkt ? "Otros" : probTextVal) : "";
             let otrosVal = isOtrosMkt ? probTextVal : "";
 
+            let staticTags = ``;
+            let marcaInput = '';
+            let tipoInput = '';
+
+            // Si es creador (asesora/soporte marca) y su rol ya define la marca (disMarca === "disabled")
+            if (isCreator && disMarca === "disabled") {
+                staticTags += `<span class="tag tag-gray me-2 shadow-sm border"><i class="fas fa-building me-1"></i> ${row[COL.MARCA]}</span>`;
+                marcaInput = `<input type="hidden" id="edit-2" value="${row[COL.MARCA]}">`;
+            } else {
+                marcaInput = `
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small fw-bold text-uppercase" style="font-size: 10px;">Marca Solicitante</label>
+                        <select id="edit-2" class="form-select form-select-sm fw-semibold" ${disMarca}>
+                            ${optionsMarca}
+                        </select>
+                    </div>`;
+            }
+
+            // Tipo es siempre automático para creadores
+            if (isCreator) {
+                staticTags += `<span class="tag tag-gray me-2 shadow-sm border"><i class="fas fa-briefcase me-1"></i> GESTIÓN: ${row[COL.TIPO] || 'General'}</span>`;
+                tipoInput = `<input type="hidden" id="edit-13" value="${row[COL.TIPO]}">`;
+            } else {
+                tipoInput = `
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small fw-bold text-uppercase" style="font-size: 10px;">Tipo de Gestión</label>
+                        <input type="text" id="edit-13" class="form-control form-control-sm fw-semibold bg-light" value="${row[COL.TIPO] || ''}" readonly>
+                    </div>`;
+            }
+
+            let panelSoporteHTML = '';
+            
+            if (isCreator && (isNewRecord || row[COL.ESTADO] === 'Pendiente')) {
+                panelSoporteHTML = `
+                    <div class="col-md-5 bg-light d-flex flex-column align-items-center justify-content-center p-5 text-center">
+                        <i class="fas fa-clock mb-3" style="font-size: 48px; color: var(--border);"></i>
+                        <h6 class="fw-bold text-dark mb-2" style="font-size: 14px;">Módulo de Soporte</h6>
+                        <p class="text-muted small mb-0" style="font-size: 12px; line-height: 1.5;">
+                            ${isNewRecord 
+                                ? 'Al registrar tu incidencia, nuestro equipo le dará atención y podrás ver la resolución en este panel.'
+                                : 'Nuestro equipo de soporte está procesando tu incidencia. Recibirás tu respuesta aquí pronto.'
+                            }
+                        </p>
+                        <input type="hidden" id="edit-7" value="${row[COL.ESTADO] || 'Pendiente'}">
+                        <input type="hidden" id="edit-8" value="">
+                        <input type="hidden" id="edit-9" value="">
+                    </div>
+                `;
+            } else {
+                panelSoporteHTML = `
+                    <div class="col-md-5 bg-white">
+                        <div class="p-4">
+                            <div class="d-flex align-items-center mb-4">
+                                <div class="bg-success-soft text-success rounded-pill px-3 py-1 small fw-bold text-uppercase" style="font-size: 10px;">
+                                    <i class="fas fa-check-double me-1"></i> Resolución Soporte
+                                </div>
+                            </div>
+                            
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <label class="form-label text-muted small fw-bold text-uppercase" style="font-size: 10px;">Estado de Resolución</label>
+                                    <select id="edit-7" class="form-select fw-bold" style="border-width: 2px;" ${disAdmin}>
+                                        <option value="Pendiente" ${row[COL.ESTADO] === 'Pendiente' ? 'selected' : ''}>⏳ Pendiente</option>
+                                        <option value="Revisado" ${row[COL.ESTADO] === 'Revisado' ? 'selected' : ''}>✅ Completado</option>
+                                        <option value="Observado" ${row[COL.ESTADO] === 'Observado' ? 'selected' : ''}>❌ Observado</option>
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label text-muted small fw-bold text-uppercase" style="font-size: 10px;">Respuesta al Asesor</label>
+                                    <textarea id="edit-8" class="form-control" rows="6" style="background-color: var(--success-soft); border-color: var(--success-soft); font-size: 13px;" placeholder="Comentarios de resolución..." ${readAdmin}>${row[COL.COMENTARIO_SOPORTE] || ''}</textarea>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label text-muted small fw-bold text-uppercase" style="font-size: 10px;"><i class="far fa-images me-1"></i> Evidencia Solución</label>
+                                    <input type="hidden" id="edit-9" value="${row[COL.IMG_SOPORTE] || ''}">
+                                    ${isSoporteAdmin ? `
+                                        <input type="file" id="file-soporte" class="d-none" accept="image/*" multiple>
+                                        <div id="drop-soporte" class="drop-zone py-3" style="border-style: solid; background-color: var(--success-soft); border-color: var(--success-soft);">
+                                            <i class="fas fa-camera text-success mb-1"></i>
+                                            <p class="mb-0 text-success" style="font-size: 11px;">Clic o Ctrl+V para capturas</p>
+                                        </div>
+                                    ` : ''}
+                                    <div id="preview-container-soporte" class="d-flex flex-wrap gap-2 mt-2"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
             let html = `
                 <input type="hidden" id="edit-0" value="${row[COL.ID] || ''}">
                 <input type="hidden" id="edit-1" value="${row[COL.FECHA_SOL] || ''}">
                 <input type="hidden" id="edit-10" value="${row[COL.FECHA_ATENCION] || ''}">
                 <input type="hidden" id="edit-11" value="${row[COL.ASESORA_NOMBRE] || ''}"> 
                 
-                <div class="col-md-7">
-                    <div class="card border-0 shadow-sm h-100">
-                        <div class="card-header bg-white fw-bold text-primary py-3 d-flex justify-content-between align-items-center">
-                            <div><i class="fas fa-user-tie me-2"></i>Datos del Reporte</div>
-                            <span class="badge bg-light text-dark border"><i class="fas fa-user me-1"></i> ${row[COL.ASESORA_NOMBRE] || 'Sin asignar'}</span>
+                <div class="col-md-7 border-end" style="border-color: var(--border) !important;">
+                    <div class="p-4">
+                        <div class="d-flex align-items-center mb-4 flex-wrap">
+                            <div class="bg-primary-soft text-primary rounded-pill px-3 py-1 small fw-bold text-uppercase mb-2 me-3" style="font-size: 10px;">
+                                <i class="far fa-file-alt me-1"></i> Información del Ticket
+                            </div>
+                            <div class="mb-2 d-flex align-items-center">
+                                ${staticTags}
+                            </div>
                         </div>
-                        <div class="card-body">
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label class="form-label small fw-bold text-muted">Marca</label>
-                                    <select id="edit-2" class="form-select" ${disMarca}>
-                                        ${optionsMarca}
-                                    </select>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label small fw-bold text-muted">Tipo</label>
-                                    <input type="text" id="edit-13" class="form-control" value="${row[COL.TIPO] || ''}" readonly>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label small fw-bold text-muted">Plataforma</label>
-                                    <select id="edit-12" class="form-select" ${disCreator}>
-                                        <option value="">Seleccione...</option>
-                                        <option value="Chatfuel" ${row[COL.PLATAFORMA]==='Chatfuel'?'selected':''}>Chatfuel</option>
-                                        <option value="ORA" ${row[COL.PLATAFORMA]==='ORA'?'selected':''}>ORA</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label small fw-bold text-muted text-primary">Categoría <span class="text-danger">*</span></label>
-                                    <select id="edit-14" class="form-select border-primary" ${disCreator} onchange="toggleDynamicFields()">
-                                        <option value="">Seleccione...</option>
-                                        <option value="Incidencia de Bot" ${row[COL.CATEGORIA]==='Incidencia de Bot'?'selected':''}>Incidencia de Bot</option>
-                                        <option value="Marketing / Consulta Externa" ${row[COL.CATEGORIA]==='Marketing / Consulta Externa'?'selected':''}>Marketing / Consulta Externa</option>
-                                    </select>
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label small fw-bold text-muted">Número de Contacto (Sin el "+")</label>
-                                    <input type="text" id="edit-3" class="form-control" placeholder="Ej. 51999999999" value="${row[COL.NUMERO_CONTACTO] || ''}" ${readCreator}>
-                                </div>
-                                
-                                <!-- CONTENEDOR DINÁMICO DE PROBLEMA -->
-                                <div class="col-12" id="container-problema">
-                                    <label class="form-label small fw-bold text-muted">Describe el Problema <span class="text-danger">*</span></label>
-                                    
-                                    <!-- INPUT OCULTO QUE GUARDARÁ EL DATO FINAL PARA LA COLUMNA 4 -->
+                        
+                        <div class="row g-3">
+                            ${marcaInput}
+                            ${tipoInput}
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small fw-bold text-uppercase" style="font-size: 10px;">Plataforma</label>
+                                <select id="edit-12" class="form-select form-select-sm fw-semibold" ${disCreator}>
+                                    <option value="">Seleccione...</option>
+                                    <option value="Chatfuel" ${row[COL.PLATAFORMA] === 'Chatfuel' ? 'selected' : ''}>Chatfuel</option>
+                                    <option value="ORA" ${row[COL.PLATAFORMA] === 'ORA' ? 'selected' : ''}>ORA</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-primary small fw-bold text-uppercase" style="font-size: 10px;">Categoría de Incidencia</label>
+                                <select id="edit-14" class="form-select form-select-sm fw-semibold border-primary-subtle" style="background-color: var(--primary-soft);" ${disCreator} onchange="toggleDynamicFields()">
+                                    <option value="">Seleccione...</option>
+                                    <option value="Incidencia de Bot" ${row[COL.CATEGORIA] === 'Incidencia de Bot' ? 'selected' : ''}>Incidencia de Bot</option>
+                                    <option value="Marketing / Consulta Externa" ${row[COL.CATEGORIA] === 'Marketing / Consulta Externa' ? 'selected' : ''}>Marketing / Consulta Externa</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label text-muted small fw-bold text-uppercase" style="font-size: 10px;">Número de Contacto</label>
+                                <input type="text" id="edit-3" class="form-control fw-bold" placeholder="Dato del celular..." value="${row[COL.NUMERO_CONTACTO] || ''}" ${readCreator}>
+                            </div>
+                            
+                            <div class="col-12" id="container-problema">
+                                <div class="bg-light p-3 rounded-3 border">
+                                    <label class="form-label d-block fw-bold text-dark mb-2" style="font-size: 12px;">Descripción del Problema</label>
                                     <input type="hidden" id="edit-4" value="">
-                                    
-                                    <!-- Vista para Bot -->
-                                    <textarea id="edit-4-text" class="form-control" rows="3" placeholder="Detalla qué sucedió..." ${readCreator}>${!isMkt ? probTextVal : ''}</textarea>
-                                    
-                                    <!-- Vista para Marketing -->
+                                    <textarea id="edit-4-text" class="form-control" rows="3" placeholder="Detalle lo sucedido..." ${readCreator}>${!isMkt ? probTextVal : ''}</textarea>
                                     <select id="edit-4-select" class="form-select hidden" ${disCreator} onchange="toggleOtrosProblema()">
-                                        <option value="">Seleccione el motivo...</option>
+                                        <option value="">Seleccione motivo...</option>
                                         <option value="Piensa que somos banco/financiera (pide préstamos)" ${selectVal === 'Piensa que somos banco/financiera (pide préstamos)' ? 'selected' : ''}>Piensa que somos banco/financiera (pide préstamos)</option>
                                         <option value="Piensa que brindamos tratamiento médico/salud" ${selectVal === 'Piensa que brindamos tratamiento médico/salud' ? 'selected' : ''}>Piensa que brindamos tratamiento médico/salud</option>
                                         <option value="Pregunta por un curso que no es de la publicidad" ${selectVal === 'Pregunta por un curso que no es de la publicidad' ? 'selected' : ''}>Pregunta por un curso que no es de la publicidad</option>
@@ -908,81 +1303,45 @@
                                         <option value="Se ha confundido de empresa / nos confundimos" ${selectVal === 'Se ha confundido de empresa / nos confundimos' ? 'selected' : ''}>Se ha confundido de empresa / nos confundimos</option>
                                         <option value="Otros" ${selectVal === 'Otros' ? 'selected' : ''}>Otros (Especificar)</option>
                                     </select>
-                                    
-                                    <!-- Caja de texto si eligen "Otros" en Marketing -->
-                                    <textarea id="edit-4-otros" class="form-control mt-2 hidden fade-box" rows="2" placeholder="Especifique el problema..." ${readCreator}>${otrosVal}</textarea>
+                                    <textarea id="edit-4-otros" class="form-control mt-2 hidden" rows="2" placeholder="Especifique..." ${readCreator}>${otrosVal}</textarea>
                                 </div>
-                                
-                                <div class="col-12 fade-box" id="container-solucion">
-                                    <label class="form-label small fw-bold text-muted">Describe la Solución <span class="text-danger">*</span></label>
-                                    <textarea id="edit-5" class="form-control" rows="2" placeholder="Qué pasos hiciste para solucionarlo..." ${readCreator}>${row[COL.SOLUCION] || ''}</textarea>
-                                </div>
-                               <div class="col-12">
-                                    <label class="form-label small fw-bold text-muted">Evidencia del Problema (Imagen)</label>
-                                    <div class="mb-2 small text-muted">Presiona <b>Ctrl+V</b> para pegar múltiples imágenes</div>
-                                    <input type="hidden" id="edit-6" value="${row[COL.IMG_INCIDENCIA] || ''}">
-                                    ${isCreator ? `
-                                        <input type="file" id="file-incidencia" class="d-none" accept="image/*" multiple>
-                                        <div id="drop-incidencia" class="drop-zone" tabindex="0">
-                                            <i class="fas fa-images"></i>
-                                            <p class="mb-0 text-secondary">Clic, arrastra o pega imágenes</p>
-                                        </div>
-                                    ` : ''}
-                                    <div id="preview-container-incidencia" class="d-flex flex-wrap gap-2 mt-3"></div>
-                                </div>
+                            </div>
+                            
+                            <div class="col-12" id="container-solucion">
+                                <label class="form-label text-muted small fw-bold text-uppercase" style="font-size: 10px;">Solución Sugerida</label>
+                                <textarea id="edit-5" class="form-control" rows="2" placeholder="Acciones realizadas..." ${readCreator}>${row[COL.SOLUCION] || ''}</textarea>
+                            </div>
+                            
+                            <div class="col-12">
+                                <label class="form-label text-muted small fw-bold text-uppercase" style="font-size: 10px;"><i class="far fa-images me-1"></i> Evidencia</label>
+                                <input type="hidden" id="edit-6" value="${row[COL.IMG_INCIDENCIA] || ''}">
+                                ${isCreator ? `
+                                    <input type="file" id="file-incidencia" class="d-none" accept="image/*" multiple>
+                                    <div id="drop-incidencia" class="drop-zone py-3" style="border-style: solid; background-color: var(--secondary);">
+                                        <i class="fas fa-paperclip text-muted mb-1"></i>
+                                        <p class="mb-0 text-muted" style="font-size: 11px;">Clic o Ctrl+V para adjuntar</p>
+                                    </div>
+                                ` : ''}
+                                <div id="preview-container-incidencia" class="d-flex flex-wrap gap-2 mt-2"></div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-md-5">
-                    <div class="card border-0 shadow-sm h-100">
-                        <div class="card-header bg-white fw-bold text-success py-3">
-                            <i class="fas fa-tools me-2"></i>Resolución
-                        </div>
-                        <div class="card-body">
-                            <div class="row g-3">
-                                <div class="col-12">
-                                    <label class="form-label small fw-bold text-muted">Estado</label>
-                                    <select id="edit-7" class="form-select fw-bold" ${disAdmin}>
-                                        <option value="Pendiente" ${row[COL.ESTADO]==='Pendiente'?'selected':''}>Pendiente</option>
-                                        <option value="Revisado" ${row[COL.ESTADO]==='Revisado'?'selected':''}>Revisado</option>
-                                        <option value="Observado" ${row[COL.ESTADO]==='Observado'?'selected':''}>Observado</option>
-                                    </select>
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label small fw-bold text-muted">Comentarios de Resolución</label>
-                                    <textarea id="edit-8" class="form-control" rows="4" placeholder="Observaciones de la revisión..." ${readAdmin}>${row[COL.COMENTARIO_SOPORTE] || ''}</textarea>
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label small fw-bold text-muted">Evidencia (Imagen)</label>
-                                    <input type="hidden" id="edit-9" value="${row[COL.IMG_SOPORTE] || ''}">
-                                    ${isSoporteAdmin ? `
-                                        <div class="mb-2 small text-muted"><i class="fas fa-keyboard me-1"></i>Presiona <b>Ctrl+V</b> para pegar capturas</div>
-                                        <input type="file" id="file-soporte" class="d-none" accept="image/*" multiple>
-                                        <div id="drop-soporte" class="drop-zone py-3" tabindex="0">
-                                            <i class="fas fa-images fs-4"></i>
-                                            <p class="mb-0 small text-secondary">Clic, arrastra o pega imágenes (Ctrl+V)</p>
-                                        </div>
-                                    ` : ''}
-                                    <div id="preview-container-soporte" class="d-flex flex-wrap gap-2 mt-3"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                ${panelSoporteHTML}
             `;
-            
+
+
             formContainer.innerHTML = html;
-            
+
             // Ejecuta lógica de campos dinámicos
             toggleDynamicFields();
             new bootstrap.Modal('#editModal').show();
-            
+
             // Llenamos los nuevos contenedores si ya existen imágenes
             populatePreviewContainer('preview-container-incidencia', row[COL.IMG_INCIDENCIA], 'edit-6');
             populatePreviewContainer('preview-container-soporte', row[COL.IMG_SOPORTE], 'edit-9');
-            
+
             // Asignamos eventos para subir múltiples imágenes
             if (isCreator) bindImageEvents('drop-incidencia', 'file-incidencia', 'preview-container-incidencia', 'edit-6');
             if (isSoporteAdmin) bindImageEvents('drop-soporte', 'file-soporte', 'preview-container-soporte', 'edit-9');
@@ -992,10 +1351,10 @@
         function bindImageEvents(zoneId, fileId, containerId, hiddenId) {
             const zone = document.getElementById(zoneId);
             const fileInput = document.getElementById(fileId);
-            if(!zone) return;
-        
+            if (!zone) return;
+
             zone.addEventListener('click', () => fileInput.click());
-            fileInput.addEventListener('change', function() {
+            fileInput.addEventListener('change', function () {
                 if (this.files && this.files.length > 0) {
                     Array.from(this.files).forEach(file => processImage(file, containerId, hiddenId));
                 }
@@ -1011,54 +1370,74 @@
                 }
             });
         }
-        
+
         function processImage(file, containerId, hiddenId) {
             if (!file.type.match('image.*')) return Swal.fire('Error', 'Solo se permiten archivos de imagen.', 'error');
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = function (e) {
                 const base64Data = e.target.result;
                 createPreviewImage(base64Data, base64Data, containerId, hiddenId);
             };
             reader.readAsDataURL(file);
         }
-        
+
         function createPreviewImage(srcUrl, originalData, containerId, hiddenId) {
             const container = document.getElementById(containerId);
             const wrapper = document.createElement('div');
             wrapper.className = 'img-container d-inline-block position-relative m-0';
             wrapper.setAttribute('data-img', originalData); // Guardamos su data real para el hidden input
-        
+
             const img = document.createElement('img');
             img.src = srcUrl;
             img.className = 'img-preview shadow-sm rounded';
             img.style.display = 'block';
             img.style.maxHeight = '120px'; // Tamaño ajustado para galería
             img.style.marginTop = '0px';
-        
+            img.style.cursor = 'pointer';
+            img.title = 'Clic para ver vista previa';
+
+            img.onclick = function(e) {
+                e.stopPropagation();
+                Swal.fire({
+                    imageUrl: srcUrl,
+                    imageAlt: 'Vista previa de evidencia',
+                    showConfirmButton: false,
+                    showCloseButton: true,
+                    width: 'auto',
+                    padding: '1em',
+                    background: 'transparent',
+                    backdrop: `rgba(15, 23, 42, 0.9)`,
+                    customClass: {
+                        image: 'rounded-3 shadow-lg m-0',
+                        closeButton: 'btn btn-light bg-white text-dark rounded-circle shadow-sm m-2'
+                    }
+                });
+            };
+
             const btn = document.createElement('button');
             btn.innerHTML = '×';
             btn.className = 'btn-remove-img shadow';
-            btn.type = 'button'; 
-            btn.onclick = function(e) {
+            btn.type = 'button';
+            btn.onclick = function (e) {
                 e.stopPropagation();
                 wrapper.remove();
                 updateHiddenInput(containerId, hiddenId); // Actualiza la cadena final al borrar
             };
-        
+
             wrapper.appendChild(img);
             wrapper.appendChild(btn);
             container.appendChild(wrapper);
-        
+
             updateHiddenInput(containerId, hiddenId); // Actualiza la cadena al agregar
         }
-        
+
         function updateHiddenInput(containerId, hiddenId) {
             const container = document.getElementById(containerId);
             const wrappers = container.querySelectorAll('.img-container');
             const data = Array.from(wrappers).map(w => w.getAttribute('data-img')).join('|');
             document.getElementById(hiddenId).value = data;
         }
-        
+
         function populatePreviewContainer(containerId, imageString, hiddenId) {
             const container = document.getElementById(containerId);
             if (!container || !imageString) return;
@@ -1070,16 +1449,16 @@
             // Forzamos actualización por seguridad
             updateHiddenInput(containerId, hiddenId);
         }
-        
+
         // EVENTO PEGAR (CTRL+V) ACTUALIZADO
-        document.addEventListener('paste', function(e) {
+        document.addEventListener('paste', function (e) {
             const modal = document.getElementById('editModal');
             if (!modal || !modal.classList.contains('show')) return;
-        
+
             const items = (e.clipboardData || e.originalEvent.clipboardData).items;
             const isCreator = userData.rol.startsWith("ASESORA_") || userData.rol.startsWith("SOPORTE_");
             const isSoporteAdmin = userData.rol === "SOPORTE" || userData.rol === "ADMIN" || userData.rol === "MARKETING";
-            
+
             // Iteramos por si el usuario pega múltiples recortes a la vez
             for (let i = 0; i < items.length; i++) {
                 if (items[i].kind === 'file') {
@@ -1108,35 +1487,35 @@
             const btn = document.createElement('button');
             btn.innerHTML = '×';
             btn.className = 'btn-remove-img';
-            btn.type = 'button'; 
-            btn.onclick = function(e) {
+            btn.type = 'button';
+            btn.onclick = function (e) {
                 e.stopPropagation();
                 imgElement.src = '';
                 imgElement.style.display = 'none';
                 document.getElementById(hiddenId).value = '';
-                btn.remove(); 
+                btn.remove();
             };
             container.appendChild(btn);
         }
-        
+
         async function saveData() {
-            let rowData = Array(15).fill(""); 
+            let rowData = Array(15).fill("");
             const isCreator = userData.rol.startsWith("ASESORA_") || userData.rol.startsWith("SOPORTE_");
             const isSoporteAdmin = userData.rol === "SOPORTE" || userData.rol === "ADMIN" || userData.rol === "MARKETING";
             const currentId = document.getElementById('edit-0').value;
-            
+
             let originalRow = null;
             if (!isNewRecord && currentId) {
                 originalRow = currentData.find(r => r[0].toString() === currentId.toString());
             }
-        
+
             let statusPrev = originalRow ? originalRow[COL.ESTADO] : "";
             const statusNew = document.getElementById('edit-7').value;
-        
+
             // Lógica mágica que unifica lo de Marketing en la columna de Problema de siempre
             const catField = document.getElementById('edit-14');
             const catVal = catField ? catField.value : '';
-            
+
             if (document.getElementById('edit-4-text')) {
                 if (catVal === 'Marketing / Consulta Externa') {
                     const probSel = document.getElementById('edit-4-select').value;
@@ -1155,12 +1534,12 @@
                 if (el) {
                     rowData[i] = el.value;
                 } else if (!isNewRecord && originalRow) {
-                    rowData[i] = originalRow[i]; 
+                    rowData[i] = originalRow[i];
                 }
             }
-        
+
             const now = moment().format('DD/MM/YYYY HH:mm:ss');
-            
+
             if (isNewRecord) {
                 rowData[COL.FECHA_SOL] = now;
             } else {
@@ -1172,7 +1551,7 @@
                     rowData[COL.FECHA_SOL] = fechaOriginal;
                 }
             }
-            
+
             if (isSoporteAdmin && statusPrev !== statusNew) {
                 if (statusPrev === "Pendiente" && (statusNew === "Revisado" || statusNew === "Observado")) {
                     rowData[COL.FECHA_ATENCION] = now;
@@ -1198,7 +1577,7 @@
                     }
                 }
             }
-        
+
             // Validaciones
             if (isCreator) {
                 if (userData.rol === "ASESORA_NACIONAL" && !rowData[COL.MARCA]) {
@@ -1223,16 +1602,29 @@
                     }
                 }
             }
-        
+
             bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
-        
+
+            // === UPDATE OPTIMISTA (Mejora UX) ===
+            if (isNewRecord) {
+                rowData[COL.ID] = "⌛"; // Provisional placeholder
+                rowData._isSaving = true;
+                currentData.splice(1, 0, rowData); // Ponemos arriba de la lista
+            } else {
+                if (originalRow) {
+                    for(let i = 0; i < 15; i++) originalRow[i] = rowData[i];
+                    originalRow._isSaving = true;
+                }
+            }
+            renderTable(); // Mostrar la "sombra" inmediatamente al usuario
+
             const Toast = Swal.mixin({
                 toast: true,
                 position: 'bottom-end',
                 showConfirmButton: false
             });
-            Toast.fire({ icon: 'info', title: 'Guardando incidencia...' });
-        
+            Toast.fire({ icon: 'info', title: 'Sincronizando con la nube...', timer: 5000 });
+
             callAPI({ action: 'update', newData: rowData, rol: userData.rol, isNew: isNewRecord }, true).then(res => {
                 if (res && res.success) {
                     Toast.fire({
@@ -1240,24 +1632,24 @@
                         title: '¡Guardado con éxito!',
                         timer: 3000
                     });
-                    loadData(); 
+                    loadData();
                 } else {
                     Swal.fire('Error', 'Ocurrió un problema al guardar', 'error');
                 }
             });
         }
-        
+
         async function callAPI(payload, silent = false) {
             if (!silent) {
                 document.getElementById('loader').classList.remove('hidden');
             }
             try {
-                const response = await fetch(API_URL, { 
-                    method: 'POST', 
-                    body: JSON.stringify(payload) 
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
                 });
                 const res = await response.json();
-                
+
                 if (!silent) {
                     document.getElementById('loader').classList.add('hidden');
                 }
@@ -1270,9 +1662,9 @@
             }
         }
 
-        let listaAsesoras =[];
+        let listaAsesoras = [];
 
-         async function openAccessModal() {
+        async function openAccessModal() {
             const select = document.getElementById('acc-select');
             select.innerHTML = '<option value="">Cargando...</option>';
             new bootstrap.Modal('#accessModal').show();
@@ -1314,4 +1706,5 @@
         }
     </script>
 </body>
+
 </html>
