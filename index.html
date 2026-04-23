@@ -500,46 +500,62 @@
             <!-- Filtros Avanzados -->
             <div class="filter-card border-0 shadow-sm mb-4">
                 <div class="card-body p-4">
-                    <div class="row g-4 align-items-end">
-                        <div class="col-md-3">
+                    <div class="row g-3 align-items-end mb-3">
+                        <div class="col-lg-3 col-md-6">
                             <label class="form-label small fw-bold text-muted text-uppercase mb-2" style="font-size: 10px; letter-spacing: 0.05em;">Rango de Fecha</label>
                             <div class="input-group input-group-sm">
                                 <span class="input-group-text bg-white border-end-0"><i class="far fa-calendar text-muted"></i></span>
                                 <input type="text" id="dateRangeFilter" class="form-control border-start-0 ps-0" placeholder="Filtrar por fecha..." readonly>
                             </div>
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-lg-2 col-md-6">
                             <label class="form-label small fw-bold text-muted text-uppercase mb-2" style="font-size: 10px; letter-spacing: 0.05em;">Estado</label>
                             <select id="statusFilter" class="form-select form-select-sm" onchange="currentPage=1;renderTable()">
-                                <option value="">Todos los Estados</option>
+                                <option value="">Todos</option>
                                 <option value="Pendiente">Pendiente</option>
                                 <option value="Revisado">Revisado</option>
                                 <option value="Observado">Observado</option>
                             </select>
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-lg-2 col-md-6" id="brandContainer">
                             <label class="form-label small fw-bold text-muted text-uppercase mb-2" style="font-size: 10px; letter-spacing: 0.05em;">Marca</label>
-                            <select id="brandFilter" class="form-select form-select-sm" onchange="currentPage=1;renderTable()">
-                                <option value="">Todas las Marcas</option>
+                            <select id="brandFilter" class="form-select form-select-sm" onchange="currentPage=1;document.getElementById('asesoraFilter').value='';updateAsesoras();renderTable()">
+                                <option value="">Todas</option>
                                 <option value="BGU">BGU</option>
                                 <option value="IEMPRESA">IEMPRESA</option>
                                 <option value="JVN">JVN</option>
                             </select>
                         </div>
-                        <div class="col-md-2 hidden" id="viewModeContainer">
-                            <label class="form-label small fw-bold text-primary text-uppercase mb-2" style="font-size: 10px; letter-spacing: 0.05em;">Modo de Vista</label>
+                        <div class="col-lg-2 col-md-6 hidden" id="asesoraContainer">
+                            <label class="form-label small fw-bold text-muted text-uppercase mb-2" style="font-size: 10px; letter-spacing: 0.05em;">Responsable</label>
+                            <select id="asesoraFilter" class="form-select form-select-sm" onchange="currentPage=1;renderTable()">
+                                <option value="">Todos</option>
+                            </select>
+                        </div>
+                        <div class="col-lg-2 col-md-6 hidden" id="viewModeContainer">
+                            <label class="form-label small fw-bold text-primary text-uppercase mb-2" style="font-size: 10px; letter-spacing: 0.05em;">Vista</label>
                             <select id="viewModeFilter" class="form-select form-select-sm" style="border-color: var(--primary);" onchange="currentPage=1;renderTable()">
                                 <option value="mine">Mis tickets</option>
                                 <option value="all">Sede completa</option>
                             </select>
                         </div>
-                        <div class="col-md-3 flex-grow-1">
+                        <div class="col-lg-3 col-md-6">
+                            <label class="form-label small fw-bold text-muted text-uppercase mb-2" style="font-size: 10px; letter-spacing: 0.05em;">Categoría</label>
+                            <select id="categoryFilter" class="form-select form-select-sm" onchange="currentPage=1;renderTable()">
+                                <option value="">Todas las Categorías</option>
+                                <option value="Incidencia de Bot">Incidencia de Bot</option>
+                                <option value="Marketing / Consulta Externa">Marketing / Consulta Externa</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row g-3 align-items-end">
+                        <div class="col-12">
                             <label class="form-label small fw-bold text-muted text-uppercase mb-2" style="font-size: 10px; letter-spacing: 0.05em;">Búsqueda Rápida</label>
                             <div class="input-group input-group-sm">
                                 <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
-                                <input type="text" id="nameFilter" class="form-control border-start-0 ps-0"
-                                    placeholder="Buscar por ID, Contacto o Problema..." oninput="currentPage=1;renderTable()">
-                                <button class="btn btn-outline-light border text-muted" onclick="clearFilters()"><i class="fas fa-times"></i></button>
+                                <input type="text" id="nameFilter" class="form-control border-start-0 ps-0" placeholder="Buscar por ID, Responsable, Contacto o Problema..." oninput="currentPage=1;renderTable()">
+                                <button class="btn btn-outline-light border text-muted" title="Limpiar todos los filtros" onclick="clearFilters()"><i class="fas fa-times"></i></button>
                             </div>
                         </div>
                     </div>
@@ -713,11 +729,13 @@
             
             if (res.rol === "SOPORTE" || res.rol === "ADMIN") {
                 document.getElementById('btnAccesos').classList.remove('hidden');
+                document.getElementById('asesoraContainer').classList.remove('hidden');
             } else {
                 document.getElementById('btnAccesos').classList.add('hidden');
+                document.getElementById('asesoraContainer').classList.add('hidden');
             }
 
-            const brandContainer = document.getElementById('brandFilter').closest('.col-md-2');
+            const brandContainer = document.getElementById('brandContainer');
             const brandSelect = document.getElementById('brandFilter');
             const viewModeContainer = document.getElementById('viewModeContainer');
 
@@ -762,6 +780,7 @@
             const res = await callAPI({ action: 'getData', rol: userData.rol }, true);
             if (res && res.success) {
                 currentData = res.data;
+                updateAsesoras();
                 renderTable();
             } else {
                 tbody.innerHTML = `
@@ -773,6 +792,34 @@
                         </td>
                     </tr>
                 `;
+            }
+        }
+
+        function updateAsesoras() {
+            const bFilter = document.getElementById('brandFilter').value;
+            let asesoras = new Set();
+            if (currentData && currentData.length > 1) {
+                for (let i = 1; i < currentData.length; i++) {
+                    const f = currentData[i];
+                    if (!bFilter || f[COL.MARCA] === bFilter) {
+                        const name = String(f[COL.ASESORA_NOMBRE] || '').trim();
+                        if (name && name !== 'Sin registrar') asesoras.add(name);
+                    }
+                }
+            }
+            
+            const select = document.getElementById('asesoraFilter');
+            if (!select) return;
+            
+            const currentVal = select.value;
+            let html = '<option value="">Todos los Responsables</option>';
+            Array.from(asesoras).sort().forEach(a => {
+                html += `<option value="${a}">${a}</option>`;
+            });
+            select.innerHTML = html;
+            
+            if (Array.from(asesoras).includes(currentVal)) {
+                select.value = currentVal;
             }
         }
 
@@ -901,6 +948,9 @@
 
                 const bFilter = document.getElementById('brandFilter').value;
                 if (bFilter && f[COL.MARCA] !== bFilter) continue;
+                
+                const aFilterEl = document.getElementById('asesoraFilter');
+                if (aFilterEl && aFilterEl.value && String(f[COL.ASESORA_NOMBRE]).trim() !== aFilterEl.value) continue;
 
                 const q = document.getElementById('nameFilter').value.toLowerCase();
                 if (q && !([f[COL.ID], f[COL.NUMERO_CONTACTO], f[COL.PROBLEMA], f[COL.ASESORA_NOMBRE]].some(t => String(t).toLowerCase().includes(q)))) continue;
@@ -1027,6 +1077,11 @@
                 filterDates = [picker.startDate, picker.endDate];
                 currentPage = 1; renderTable();
             });
+            $('#dateRangeFilter').on('cancel.daterangepicker', function(ev, picker) {
+                $(this).val('');
+                filterDates = [];
+                currentPage = 1; renderTable();
+            });
         }
         function filterByStatus(status) {
             document.getElementById('statusFilter').value = status;
@@ -1037,9 +1092,12 @@
             if(document.getElementById('statusFilter')) document.getElementById('statusFilter').value = "";
             if(document.getElementById('brandFilter')) document.getElementById('brandFilter').value = "";
             if(document.getElementById('categoryFilter')) document.getElementById('categoryFilter').value = "";
+            if(document.getElementById('asesoraFilter')) document.getElementById('asesoraFilter').value = "";
             $('#dateRangeFilter').val('');
             filterDates = [];
-            currentPage = 1; renderTable();
+            currentPage = 1; 
+            updateAsesoras();
+            renderTable();
         }
 
         function getValidImageUrl(url) {
@@ -1542,6 +1600,16 @@
 
             if (isNewRecord) {
                 rowData[COL.FECHA_SOL] = now;
+                // === ALIMENTACIÓN SEGURA PARA UPDATE OPTIMISTA ===
+                // El backend hace esto automáticamente, pero para que no desaparezca de la vista temporal
+                // necesitamos simular los datos obligatorios del usuario en el frontend:
+                if (isCreator) {
+                    if (userData.rol !== "ASESORA_NACIONAL") rowData[COL.MARCA] = userData.rol.split('_')[1];
+                    if (userData.rol.startsWith("ASESORA_")) rowData[COL.TIPO] = "Admisión";
+                    if (userData.rol.startsWith("SOPORTE_")) rowData[COL.TIPO] = "Soporte";
+                    rowData[COL.ESTADO] = "Pendiente";
+                    rowData[COL.ASESORA_NOMBRE] = userData.nombre;
+                }
             } else {
                 let fechaOriginal = originalRow[COL.FECHA_SOL];
                 if (fechaOriginal && fechaOriginal.toString().includes('T') && fechaOriginal.toString().includes('Z')) {
