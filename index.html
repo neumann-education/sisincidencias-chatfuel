@@ -1001,8 +1001,7 @@
                 if(f[COL.MARCA] === 'JVN') brandTag = 'tag-purple';
 
                 const isMarketing = f[COL.CATEGORIA] === 'Marketing / Consulta Externa';
-                
-                const catDisplay = f[COL.CATEGORIA] ? `<span class="tag ${catTag}">${f[COL.CATEGORIA]}</span>` : '';
+                const catDisplay = f[COL.CATEGORIA] ? `<span>${f[COL.CATEGORIA]}</span>` : '';
 
                 let parsedDate = normalizeDate(f[COL.FECHA_SOL]);
                 let displayDate = parsedDate.isValid() ? parsedDate.format('DD/MM/YYYY HH:mm') : '---';
