@@ -571,6 +571,7 @@
                                 <th id="th-col-1" class="ps-4 cursor-pointer hover-header" onclick="setSort(1)">FECHA / MARCA <span><i class="fas fa-sort-down ms-1" style="color:var(--primary); opacity:1;"></i></span></th>
                                 <th id="th-col-11" class="cursor-pointer hover-header" onclick="setSort(11)">RESPONSABLE <span><i class="fas fa-sort text-muted ms-1" style="opacity:0.3"></i></span></th>
                                 <th id="th-col-3" class="cursor-pointer hover-header" onclick="setSort(3)">CONTACTO <span><i class="fas fa-sort text-muted ms-1" style="opacity:0.3"></i></span></th>
+                                <th id="th-col-14" class="cursor-pointer hover-header" onclick="setSort(14)">CATEGORÍA <span><i class="fas fa-sort text-muted ms-1" style="opacity:0.3"></i></span></th>
                                 <th id="th-col-7" class="text-center cursor-pointer hover-header" onclick="setSort(7)">ESTADO <span><i class="fas fa-sort text-muted ms-1" style="opacity:0.3"></i></span></th>
                                 <th class="text-end pe-4">DETALLE</th>
                             </tr>
@@ -1030,6 +1031,7 @@
                         <td>
                             <span class="fw-medium" style="font-size: 13px; color: var(--text-main);">${f[COL.NUMERO_CONTACTO]}</span>
                         </td>
+                        <td>${catDisplay}</td>
                         <td class="text-center">${getStatusBadge(f[COL.ESTADO])}</td>
                         <td class="text-end pe-4">
                             <button class="btn btn-sm btn-light fw-bold" style="font-size: 11px; border: 1px solid var(--border);" onclick="event.stopPropagation(); openEdit(${i})">
