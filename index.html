@@ -1188,6 +1188,9 @@
             const disCreator = (!isNewRecord && isSoporteAdmin) ? "disabled" : "";
             const readAdmin = isCreator ? "readonly" : "";
             const disAdmin = isCreator ? "disabled" : "";
+            
+            // NUEVA REGLA: En edición (!isNewRecord), bloquea la categoría si NO es SOPORTE o ADMIN.
+            const disCategoria = (!isNewRecord && userData.rol !== "SOPORTE" && userData.rol !== "ADMIN") ? "disabled" : "";
 
             let disMarca = "disabled";
             if (isCreator && userData.rol === "ASESORA_NACIONAL" && isNewRecord) disMarca = "";
@@ -1337,8 +1340,8 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label text-primary small fw-bold text-uppercase" style="font-size: 10px;">Categoría de Incidencia</label>
-                                <select id="edit-14" class="form-select form-select-sm fw-semibold border-primary-subtle" style="background-color: var(--primary-soft);" ${disCreator} onchange="toggleDynamicFields()">
-                                    <option value="">Seleccione...</option>
+                                <select id="edit-14" class="form-select form-select-sm fw-semibold border-primary-subtle" style="background-color: var(--primary-soft);" ${disCategoria} onchange="toggleDynamicFields()">
+                                <option value="">Seleccione...</option>
                                     <option value="Incidencia de Bot" ${row[COL.CATEGORIA] === 'Incidencia de Bot' ? 'selected' : ''}>Incidencia de Bot</option>
                                     <option value="Marketing / Consulta Externa" ${row[COL.CATEGORIA] === 'Marketing / Consulta Externa' ? 'selected' : ''}>Marketing / Consulta Externa</option>
                                 </select>
@@ -1353,7 +1356,7 @@
                                     <label class="form-label d-block fw-bold text-dark mb-2" style="font-size: 12px;">Descripción del Problema</label>
                                     <input type="hidden" id="edit-4" value="">
                                     <textarea id="edit-4-text" class="form-control" rows="3" placeholder="Detalle lo sucedido..." ${readCreator}>${!isMkt ? probTextVal : ''}</textarea>
-                                    <select id="edit-4-select" class="form-select hidden" ${disCreator} onchange="toggleOtrosProblema()">
+                                    <select id="edit-4-select" class="form-select hidden" ${disCategoria} onchange="toggleOtrosProblema()">
                                         <option value="">Seleccione motivo...</option>
                                         <option value="Piensa que somos banco/financiera (pide préstamos)" ${selectVal === 'Piensa que somos banco/financiera (pide préstamos)' ? 'selected' : ''}>Piensa que somos banco/financiera (pide préstamos)</option>
                                         <option value="Piensa que brindamos tratamiento médico/salud" ${selectVal === 'Piensa que brindamos tratamiento médico/salud' ? 'selected' : ''}>Piensa que brindamos tratamiento médico/salud</option>
