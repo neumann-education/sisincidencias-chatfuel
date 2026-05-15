@@ -545,6 +545,7 @@
                                 <option value="">Todas las Categorías</option>
                                 <option value="Incidencia de Bot">Incidencia de Bot</option>
                                 <option value="Marketing / Consulta Externa">Marketing / Consulta Externa</option>
+                                <option value="Automatizaciones">Automatizaciones</option>
                                 <option value="Para mejoras del bot (Calidad)">Para mejoras del bot (Calidad)</option>
                             </select>
                         </div>
@@ -1345,6 +1346,7 @@
                                 <option value="">Seleccione...</option>
                                     <option value="Incidencia de Bot" ${row[COL.CATEGORIA] === 'Incidencia de Bot' ? 'selected' : ''}>Incidencia de Bot</option>
                                     <option value="Marketing / Consulta Externa" ${row[COL.CATEGORIA] === 'Marketing / Consulta Externa' ? 'selected' : ''}>Marketing / Consulta Externa</option>
+                                    <option value="Automatizaciones" ${row[COL.CATEGORIA] === 'Automatizaciones' ? 'selected' : ''}>Automatizaciones</option>
                                     <option value="Para mejoras del bot (Calidad)" ${row[COL.CATEGORIA] === 'Para mejoras del bot (Calidad)' ? 'selected' : ''}>Para mejoras del bot (Calidad)</option>
                                 </select>
                             </div>
@@ -1664,8 +1666,8 @@
                     return Swal.fire('Faltan Datos', 'Debe seleccionar una Categoría para la incidencia.', 'warning');
                 }
 
-                if ((rowData[COL.CATEGORIA] === 'Incidencia de Bot' || rowData[COL.CATEGORIA] === 'Para mejoras del bot (Calidad)') && (!rowData[COL.NUMERO_CONTACTO] || !rowData[COL.PROBLEMA] || !rowData[COL.SOLUCION])) {
-                    return Swal.fire('Faltan Datos', 'Para incidentes o mejoras del Bot, debe llenar el N° de Contacto, el Problema y describir la Solución.', 'warning');
+                if ((rowData[COL.CATEGORIA] === 'Incidencia de Bot' || rowData[COL.CATEGORIA] === 'Para mejoras del bot (Calidad)' || rowData[COL.CATEGORIA] === 'Automatizaciones') && (!rowData[COL.NUMERO_CONTACTO] || !rowData[COL.PROBLEMA] || !rowData[COL.SOLUCION])) {
+                    return Swal.fire('Faltan Datos', 'Para incidentes, mejoras o automatizaciones, debe llenar el N° de Contacto, el Problema y describir la Solución.', 'warning');
                 }
                 if (rowData[COL.CATEGORIA] === 'Marketing / Consulta Externa') {
                     if (!rowData[COL.NUMERO_CONTACTO]) {
