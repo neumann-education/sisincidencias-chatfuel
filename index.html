@@ -524,6 +524,7 @@
                                 <option value="BGU">BGU</option>
                                 <option value="IEMPRESA">IEMPRESA</option>
                                 <option value="JVN">JVN</option>
+                                <option value="ITAE">ITAE</option>
                             </select>
                         </div>
                         <div class="col-lg-2 col-md-6 hidden" id="asesoraContainer">
@@ -757,7 +758,7 @@
             } else if (res.rol === "ASESORA_NACIONAL") {
                 brandSelect.innerHTML = `<option value="">Todas (JVN / IEMPRESA)</option><option value="IEMPRESA">IEMPRESA</option><option value="JVN">JVN</option>`;
             } else {
-                brandSelect.innerHTML = `<option value="">Todas las Marcas</option><option value="BGU">BGU</option><option value="IEMPRESA">IEMPRESA</option><option value="JVN">JVN</option>`;
+                brandSelect.innerHTML = `<option value="">Todas las Marcas</option><option value="BGU">BGU</option><option value="IEMPRESA">IEMPRESA</option><option value="JVN">JVN</option><option value="ITAE">ITAE</option>`;
                 if (res.rol === "CALIDAD") {
                     viewModeContainer.classList.remove('hidden');
                     document.getElementById('viewModeFilter').value = 'mine';
@@ -1009,6 +1010,7 @@
                 if(f[COL.MARCA] === 'BGU') brandTag = 'tag-blue';
                 if(f[COL.MARCA] === 'IEMPRESA') brandTag = 'tag-green';
                 if(f[COL.MARCA] === 'JVN') brandTag = 'tag-purple';
+                if(f[COL.MARCA] === 'ITAE') brandTag = 'tag-pink';
 
                 const isMarketing = f[COL.CATEGORIA] === 'Marketing / Consulta Externa';
                 const catDisplay = f[COL.CATEGORIA] ? `<span>${f[COL.CATEGORIA]}</span>` : '';
@@ -1212,7 +1214,8 @@
             } else {
                 optionsMarca += `<option value="BGU" ${row[COL.MARCA] === 'BGU' ? 'selected' : ''}>BGU</option>
                                  <option value="IEMPRESA" ${row[COL.MARCA] === 'IEMPRESA' ? 'selected' : ''}>IEMPRESA</option>
-                                 <option value="JVN" ${row[COL.MARCA] === 'JVN' ? 'selected' : ''}>JVN</option>`;
+                                 <option value="JVN" ${row[COL.MARCA] === 'JVN' ? 'selected' : ''}>JVN</option>`
+                                <option value="ITAE" ${row[COL.MARCA] === 'ITAE' ? 'selected' : ''}>ITAE</option>`;
             }
 
             // Opciones de Marketing predefinidas
