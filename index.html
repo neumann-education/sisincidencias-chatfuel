@@ -718,10 +718,11 @@
             let displayRol = res.rol;
             if (res.rol.includes("ASESORA")) displayRol = "ASESORA";
             if (res.rol.startsWith("SOPORTE_")) displayRol = "SOPORTE MARCA";
+            if (res.rol === "CALIDAD") displayRol = "CALIDAD";
 
             document.getElementById('rolBadge').innerText = `${res.nombre.toUpperCase()} | ${displayRol}`;
 
-            if (res.rol.startsWith("ASESORA_") || res.rol.startsWith("SOPORTE_")) {
+            if (res.rol.startsWith("ASESORA_") || res.rol.startsWith("SOPORTE_") || res.rol === "CALIDAD") {
                 document.getElementById('btnNuevo').classList.remove('hidden');
             } else {
                 document.getElementById('btnNuevo').classList.add('hidden');
@@ -757,6 +758,10 @@
                 brandSelect.innerHTML = `<option value="">Todas (JVN / IEMPRESA)</option><option value="IEMPRESA">IEMPRESA</option><option value="JVN">JVN</option>`;
             } else {
                 brandSelect.innerHTML = `<option value="">Todas las Marcas</option><option value="BGU">BGU</option><option value="IEMPRESA">IEMPRESA</option><option value="JVN">JVN</option>`;
+                if (res.rol === "CALIDAD") {
+                    viewModeContainer.classList.remove('hidden');
+                    document.getElementById('viewModeFilter').value = 'mine';
+                }
             }
 
             initFilters();
@@ -919,10 +924,13 @@
                 if (userRole !== "SOPORTE" && userRole !== "ADMIN" && userRole !== "MARKETING") {
                     if (userRole === "ASESORA_NACIONAL") {
                         if ((rowBrand !== "JVN" && rowBrand !== "IEMPRESA") || rowTipo !== "Admisión") continue;
-                    } else if (userRole.startsWith("ASESORA_")) {
-                        const allowedBrand = userRole.replace("ASESORA_", "");
-                        // 1. Regla de Oro: JAMAS podrá ver tickets de otra marca. Aislamiento estricto BGU con BGU, JVN con JVN, etc.
-                        if (rowBrand !== allowedBrand || rowTipo !== "Admisión") continue;
+                    } else if (userRole.startsWith("ASESORA_") || userRole === "CALIDAD") {
+                        const isCalidad = userRole === "CALIDAD";
+                        const allowedBrand = isCalidad ? "" : userRole.replace("ASESORA_", "");
+                        
+                        // 1. Regla de Oro
+                        if (!isCalidad && rowBrand !== allowedBrand) continue; // Si es calidad ignora este bloqueo de marca
+                        if (rowTipo !== "Admisión") continue;
                         
                         // 2. Control de Nivel de Vista: Míos vs Todos los de mi marca.
                         const viewMode = document.getElementById('viewModeFilter') ? document.getElementById('viewModeFilter').value : 'all';
@@ -1166,14 +1174,14 @@
         function openEdit(index) {
             isNewRecord = (index === -1);
 
-            const isCreator = userData.rol.startsWith("ASESORA_") || userData.rol.startsWith("SOPORTE_");
+            const isCreator = userData.rol.startsWith("ASESORA_") || userData.rol.startsWith("SOPORTE_") || userData.rol === "CALIDAD";
             const isSoporteAdmin = userData.rol === "SOPORTE" || userData.rol === "ADMIN" || userData.rol === "MARKETING";
 
             let row = isNewRecord ? Array(15).fill("") : [...currentData[index]];
 
             if (isNewRecord && isCreator) {
-                if (userData.rol !== "ASESORA_NACIONAL") row[COL.MARCA] = userData.rol.split('_')[1];
-                if (userData.rol.startsWith("ASESORA_")) row[COL.TIPO] = "Admisión";
+                if (userData.rol !== "ASESORA_NACIONAL" && userData.rol !== "CALIDAD") row[COL.MARCA] = userData.rol.split('_')[1];
+                if (userData.rol.startsWith("ASESORA_") || userData.rol === "CALIDAD") row[COL.TIPO] = "Admisión";
                 if (userData.rol.startsWith("SOPORTE_")) row[COL.TIPO] = "Soporte";
                 row[COL.ESTADO] = "Pendiente";
                 row[COL.ASESORA_NOMBRE] = userData.nombre;
@@ -1195,7 +1203,7 @@
             const disCategoria = (!isNewRecord && userData.rol !== "SOPORTE" && userData.rol !== "ADMIN") ? "disabled" : "";
 
             let disMarca = "disabled";
-            if (isCreator && userData.rol === "ASESORA_NACIONAL" && isNewRecord) disMarca = "";
+            if (isCreator && (userData.rol === "ASESORA_NACIONAL" || userData.rol === "CALIDAD") && isNewRecord) disMarca = "";
 
             let optionsMarca = `<option value="">Seleccione...</option>`;
             if (userData.rol === "ASESORA_NACIONAL") {
@@ -1228,7 +1236,7 @@
             let tipoInput = '';
 
             // Si es creador (asesora/soporte marca) y su rol ya define la marca (disMarca === "disabled")
-            if (isCreator && disMarca === "disabled") {
+            if (isCreator && disMarca === "disabled" && userData.rol !== "ASESORA_NACIONAL" && userData.rol !== "CALIDAD") {
                 staticTags += `<span class="tag tag-gray me-2 shadow-sm border"><i class="fas fa-building me-1"></i> ${row[COL.MARCA]}</span>`;
                 marcaInput = `<input type="hidden" id="edit-2" value="${row[COL.MARCA]}">`;
             } else {
@@ -1522,7 +1530,7 @@
             if (!modal || !modal.classList.contains('show')) return;
 
             const items = (e.clipboardData || e.originalEvent.clipboardData).items;
-            const isCreator = userData.rol.startsWith("ASESORA_") || userData.rol.startsWith("SOPORTE_");
+            const isCreator = userData.rol.startsWith("ASESORA_") || userData.rol.startsWith("SOPORTE_") || userData.rol === "CALIDAD";
             const isSoporteAdmin = userData.rol === "SOPORTE" || userData.rol === "ADMIN" || userData.rol === "MARKETING";
 
             // Iteramos por si el usuario pega múltiples recortes a la vez
@@ -1566,7 +1574,7 @@
 
         async function saveData() {
             let rowData = Array(15).fill("");
-            const isCreator = userData.rol.startsWith("ASESORA_") || userData.rol.startsWith("SOPORTE_");
+            const isCreator = userData.rol.startsWith("ASESORA_") || userData.rol.startsWith("SOPORTE_") || userData.rol === "CALIDAD";
             const isSoporteAdmin = userData.rol === "SOPORTE" || userData.rol === "ADMIN" || userData.rol === "MARKETING";
             const currentId = document.getElementById('edit-0').value;
 
@@ -1612,8 +1620,8 @@
                 // El backend hace esto automáticamente, pero para que no desaparezca de la vista temporal
                 // necesitamos simular los datos obligatorios del usuario en el frontend:
                 if (isCreator) {
-                    if (userData.rol !== "ASESORA_NACIONAL") rowData[COL.MARCA] = userData.rol.split('_')[1];
-                    if (userData.rol.startsWith("ASESORA_")) rowData[COL.TIPO] = "Admisión";
+                    if (userData.rol !== "ASESORA_NACIONAL" && userData.rol !== "CALIDAD") rowData[COL.MARCA] = userData.rol.split('_')[1];
+                    if (userData.rol.startsWith("ASESORA_") || userData.rol === "CALIDAD") rowData[COL.TIPO] = "Admisión";
                     if (userData.rol.startsWith("SOPORTE_")) rowData[COL.TIPO] = "Soporte";
                     rowData[COL.ESTADO] = "Pendiente";
                     rowData[COL.ASESORA_NOMBRE] = userData.nombre;
@@ -1656,7 +1664,7 @@
 
             // Validaciones
             if (isCreator) {
-                if (userData.rol === "ASESORA_NACIONAL" && !rowData[COL.MARCA]) {
+                if ((userData.rol === "ASESORA_NACIONAL" || userData.rol === "CALIDAD") && !rowData[COL.MARCA]) {
                     return Swal.fire('Error', 'Debe seleccionar una Marca', 'warning');
                 }
                 if (!rowData[COL.PLATAFORMA]) {
