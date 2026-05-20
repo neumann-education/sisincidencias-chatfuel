@@ -458,7 +458,6 @@
             </div>
 
             <!-- Cards de Resumen -->
-            <!-- Cards de Resumen -->
             <div class="row g-3 mb-4 hidden" id="statsCards">
                 <!-- TOTAL -->
                 <div class="col-md-3">
@@ -482,22 +481,28 @@
                             <h6 class="text-muted mb-1 small fw-bold text-uppercase">Pendientes</h6>
                             <h3 class="fw-bold mb-0 text-dark" id="stat-pendientes">0</h3>
                         </div>
-                        <div class="mt-3 pt-3 border-top w-100" style="font-size: 10.5px;">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="text-muted"><i class="fas fa-robot opacity-50 me-1"></i> Bot</span>
-                                <span class="fw-bold text-dark px-2 rounded" style="background: var(--warning-soft);" id="pen-bot">0</span>
-                            </div>
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="text-muted"><i class="fas fa-bullhorn opacity-50 me-1"></i> Mkt</span>
-                                <span class="fw-bold text-dark px-2 rounded" style="background: var(--warning-soft);" id="pen-mkt">0</span>
-                            </div>
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="text-muted"><i class="fas fa-cogs opacity-50 me-1"></i> Autom.</span>
-                                <span class="fw-bold text-dark px-2 rounded" style="background: var(--warning-soft);" id="pen-aut">0</span>
-                            </div>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <span class="text-muted"><i class="fas fa-star opacity-50 me-1"></i> Calidad</span>
-                                <span class="fw-bold text-dark px-2 rounded" style="background: var(--warning-soft);" id="pen-cal">0</span>
+                        <div class="mt-3 pt-3 border-top w-100" style="font-size: 10px;">
+                            <div class="row g-2">
+                                <div class="col-6 d-flex justify-content-between align-items-center">
+                                    <span class="text-muted text-truncate" title="Incidencia de Bot"><i class="fas fa-robot opacity-50 me-1"></i> Bot</span>
+                                    <span class="fw-bold text-dark px-2 rounded" style="background: var(--warning-soft);" id="pen-bot">0</span>
+                                </div>
+                                <div class="col-6 d-flex justify-content-between align-items-center">
+                                    <span class="text-muted text-truncate" title="Marketing"><i class="fas fa-bullhorn opacity-50 me-1"></i> Mkt</span>
+                                    <span class="fw-bold text-dark px-2 rounded" style="background: var(--warning-soft);" id="pen-mkt">0</span>
+                                </div>
+                                <div class="col-6 d-flex justify-content-between align-items-center">
+                                    <span class="text-muted text-truncate" title="Automatizaciones"><i class="fas fa-cogs opacity-50 me-1"></i> Autom.</span>
+                                    <span class="fw-bold text-dark px-2 rounded" style="background: var(--warning-soft);" id="pen-aut">0</span>
+                                </div>
+                                <div class="col-6 d-flex justify-content-between align-items-center">
+                                    <span class="text-muted text-truncate" title="Calidad"><i class="fas fa-star opacity-50 me-1"></i> Calidad</span>
+                                    <span class="fw-bold text-dark px-2 rounded" style="background: var(--warning-soft);" id="pen-cal">0</span>
+                                </div>
+                                <div class="col-6 d-flex justify-content-between align-items-center">
+                                    <span class="text-muted text-truncate" title="Incidencia Admisión"><i class="fas fa-user-tie opacity-50 me-1"></i> Admisión</span>
+                                    <span class="fw-bold text-dark px-2 rounded" style="background: var(--warning-soft);" id="pen-adm">0</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -512,22 +517,28 @@
                             <h6 class="text-muted mb-1 small fw-bold text-uppercase">Revisados</h6>
                             <h3 class="fw-bold mb-0 text-dark" id="stat-revisados">0</h3>
                         </div>
-                        <div class="mt-3 pt-3 border-top w-100" style="font-size: 10.5px;">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="text-muted"><i class="fas fa-robot opacity-50 me-1"></i> Bot</span>
-                                <span class="fw-bold text-dark px-2 rounded" style="background: var(--success-soft);" id="rev-bot">0</span>
-                            </div>
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="text-muted"><i class="fas fa-bullhorn opacity-50 me-1"></i> Mkt</span>
-                                <span class="fw-bold text-dark px-2 rounded" style="background: var(--success-soft);" id="rev-mkt">0</span>
-                            </div>
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="text-muted"><i class="fas fa-cogs opacity-50 me-1"></i> Autom.</span>
-                                <span class="fw-bold text-dark px-2 rounded" style="background: var(--success-soft);" id="rev-aut">0</span>
-                            </div>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <span class="text-muted"><i class="fas fa-star opacity-50 me-1"></i> Calidad</span>
-                                <span class="fw-bold text-dark px-2 rounded" style="background: var(--success-soft);" id="rev-cal">0</span>
+                        <div class="mt-3 pt-3 border-top w-100" style="font-size: 10px;">
+                            <div class="row g-2">
+                                <div class="col-6 d-flex justify-content-between align-items-center">
+                                    <span class="text-muted text-truncate" title="Incidencia de Bot"><i class="fas fa-robot opacity-50 me-1"></i> Bot</span>
+                                    <span class="fw-bold text-dark px-2 rounded" style="background: var(--success-soft);" id="rev-bot">0</span>
+                                </div>
+                                <div class="col-6 d-flex justify-content-between align-items-center">
+                                    <span class="text-muted text-truncate" title="Marketing"><i class="fas fa-bullhorn opacity-50 me-1"></i> Mkt</span>
+                                    <span class="fw-bold text-dark px-2 rounded" style="background: var(--success-soft);" id="rev-mkt">0</span>
+                                </div>
+                                <div class="col-6 d-flex justify-content-between align-items-center">
+                                    <span class="text-muted text-truncate" title="Automatizaciones"><i class="fas fa-cogs opacity-50 me-1"></i> Autom.</span>
+                                    <span class="fw-bold text-dark px-2 rounded" style="background: var(--success-soft);" id="rev-aut">0</span>
+                                </div>
+                                <div class="col-6 d-flex justify-content-between align-items-center">
+                                    <span class="text-muted text-truncate" title="Calidad"><i class="fas fa-star opacity-50 me-1"></i> Calidad</span>
+                                    <span class="fw-bold text-dark px-2 rounded" style="background: var(--success-soft);" id="rev-cal">0</span>
+                                </div>
+                                <div class="col-6 d-flex justify-content-between align-items-center">
+                                    <span class="text-muted text-truncate" title="Incidencia Admisión"><i class="fas fa-user-tie opacity-50 me-1"></i> Admisión</span>
+                                    <span class="fw-bold text-dark px-2 rounded" style="background: var(--success-soft);" id="rev-adm">0</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -885,8 +896,8 @@
             let total = dataToCount.length, pendientes = 0, revisados = 0, observados = 0;
             
             // Contadores por sub-categorías
-            let penBot = 0, penMkt = 0, penAut = 0, penCal = 0;
-            let revBot = 0, revMkt = 0, revAut = 0, revCal = 0;
+            let penBot = 0, penMkt = 0, penAut = 0, penCal = 0, penAdm = 0;
+            let revBot = 0, revMkt = 0, revAut = 0, revCal = 0, revAdm = 0;
 
             dataToCount.forEach(item => {
                 const f = item.data;
@@ -899,6 +910,7 @@
                     else if (cat === "Marketing / Consulta Externa") penMkt++;
                     else if (cat === "Automatizaciones") penAut++;
                     else if (cat === "Para mejoras del bot (Calidad)") penCal++;
+                    else if (cat === "Incidencia Admisión") penAdm++;
                 }
                 else if (estado === "Revisado") {
                     revisados++;
@@ -906,6 +918,7 @@
                     else if (cat === "Marketing / Consulta Externa") revMkt++;
                     else if (cat === "Automatizaciones") revAut++;
                     else if (cat === "Para mejoras del bot (Calidad)") revCal++;
+                    else if (cat === "Incidencia Admisión") revAdm++;
                 }
                 else if (estado === "Observado") {
                     observados++;
@@ -923,6 +936,7 @@
                 document.getElementById('pen-mkt').innerText = penMkt;
                 document.getElementById('pen-aut').innerText = penAut;
                 document.getElementById('pen-cal').innerText = penCal;
+                document.getElementById('pen-adm').innerText = penAdm;
             }
             
             // Inyectar sub-categorías en Revisados
@@ -931,6 +945,7 @@
                 document.getElementById('rev-mkt').innerText = revMkt;
                 document.getElementById('rev-aut').innerText = revAut;
                 document.getElementById('rev-cal').innerText = revCal;
+                document.getElementById('rev-adm').innerText = revAdm;
             }
         }
 
@@ -1444,6 +1459,7 @@
                                 <select id="edit-14" class="form-select form-select-sm fw-semibold border-primary-subtle" style="background-color: var(--primary-soft);" ${disCategoria} onchange="toggleDynamicFields()">
                                 <option value="">Seleccione...</option>
                                     <option value="Incidencia de Bot" ${row[COL.CATEGORIA] === 'Incidencia de Bot' ? 'selected' : ''}>Incidencia de Bot</option>
+                                    <option value="Incidencia Admisión" ${row[COL.CATEGORIA] === 'Incidencia Admisión' ? 'selected' : ''}>Incidencia Admisión</option>
                                     <option value="Marketing / Consulta Externa" ${row[COL.CATEGORIA] === 'Marketing / Consulta Externa' ? 'selected' : ''}>Marketing / Consulta Externa</option>
                                     <option value="Automatizaciones" ${row[COL.CATEGORIA] === 'Automatizaciones' ? 'selected' : ''}>Automatizaciones</option>
                                     <option value="Para mejoras del bot (Calidad)" ${row[COL.CATEGORIA] === 'Para mejoras del bot (Calidad)' ? 'selected' : ''}>Para mejoras del bot (Calidad)</option>
@@ -1765,7 +1781,7 @@
                     return Swal.fire('Faltan Datos', 'Debe seleccionar una Categoría para la incidencia.', 'warning');
                 }
 
-                if ((rowData[COL.CATEGORIA] === 'Incidencia de Bot' || rowData[COL.CATEGORIA] === 'Para mejoras del bot (Calidad)' || rowData[COL.CATEGORIA] === 'Automatizaciones') && (!rowData[COL.NUMERO_CONTACTO] || !rowData[COL.PROBLEMA] || !rowData[COL.SOLUCION])) {
+                if ((rowData[COL.CATEGORIA] === 'Incidencia de Bot' || rowData[COL.CATEGORIA] === 'Para mejoras del bot (Calidad)' || rowData[COL.CATEGORIA] === 'Automatizaciones' || rowData[COL.CATEGORIA] === 'Incidencia Admisión') && (!rowData[COL.NUMERO_CONTACTO] || !rowData[COL.PROBLEMA] || !rowData[COL.SOLUCION])) {
                     return Swal.fire('Faltan Datos', 'Para incidentes, mejoras o automatizaciones, debe llenar el N° de Contacto, el Problema y describir la Solución.', 'warning');
                 }
                 if (rowData[COL.CATEGORIA] === 'Marketing / Consulta Externa') {
