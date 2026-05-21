@@ -1036,11 +1036,17 @@
                     } else if (userRole.startsWith("ASESORA_") || userRole === "CALIDAD") {
                         const isCalidad = userRole === "CALIDAD";
                         const isLiderBGU = userRole === "ASESORA_BGU-LIDER";
-                        const allowedBrand = (isCalidad || isLiderBGU) ? "" : userRole.replace("ASESORA_", "");
+                        const isBGUDCE = userRole === "ASESORA_BGUDCE"; // Identificamos a las chicas de BGUDCE
                         
-                        // 1. Regla de Oro
-                        if (isLiderBGU && rowBrand !== "BGU" && rowBrand !== "BGUDCE") continue; // La líder solo ve estas dos
-                        if (!isCalidad && !isLiderBGU && rowBrand !== allowedBrand) continue;
+                        const allowedBrand = (isCalidad || isLiderBGU || isBGUDCE) ? "" : userRole.replace("ASESORA_", "");
+                        
+                        // 1. Regla de Oro Ampliada
+                        // Si es Lider o asesora de BGUDCE, les permitimos ver ambas marcas en su tabla
+                        if ((isLiderBGU || isBGUDCE) && rowBrand !== "BGU" && rowBrand !== "BGUDCE") continue; 
+                        
+                        // Para las demás asesoras, se mantiene el bloqueo estricto a su propia marca
+                        if (!isCalidad && !isLiderBGU && !isBGUDCE && rowBrand !== allowedBrand) continue;
+                        
                         if (rowTipo !== "Admisión") continue;
                         
                         // 2. Control de Nivel de Vista: Míos vs Todos los de mi marca.
