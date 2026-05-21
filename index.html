@@ -582,6 +582,7 @@
                             <select id="brandFilter" class="form-select form-select-sm" onchange="currentPage=1;document.getElementById('asesoraFilter').value='';updateAsesoras();renderTable()">
                                 <option value="">Todas</option>
                                 <option value="BGU">BGU</option>
+                                <option value="BGUDCE">BGU DCE</option>
                                 <option value="IEMPRESA">IEMPRESA</option>
                                 <option value="JVN">JVN</option>
                                 <option value="ITAE">ITAE</option>
@@ -818,7 +819,7 @@
             } else if (res.rol === "ASESORA_NACIONAL") {
                 brandSelect.innerHTML = `<option value="">Todas (JVN / IEMPRESA)</option><option value="IEMPRESA">IEMPRESA</option><option value="JVN">JVN</option>`;
             } else {
-                brandSelect.innerHTML = `<option value="">Todas las Marcas</option><option value="BGU">BGU</option><option value="IEMPRESA">IEMPRESA</option><option value="JVN">JVN</option><option value="ITAE">ITAE</option>`;
+                brandSelect.innerHTML = `<option value="">Todas las Marcas</option><option value="BGU">BGU</option><option value="IEMPRESA">IEMPRESA</option><option value="JVN">JVN</option><option value="ITAE">ITAE</option><option value="BGUDCE">BGU DCE</option>`; // NUEVA MARCA
                 if (res.rol === "CALIDAD") {
                     viewModeContainer.classList.remove('hidden');
                     document.getElementById('viewModeFilter').value = 'mine';
@@ -1114,6 +1115,7 @@
                 if(f[COL.MARCA] === 'IEMPRESA') brandTag = 'tag-green';
                 if(f[COL.MARCA] === 'JVN') brandTag = 'tag-purple';
                 if(f[COL.MARCA] === 'ITAE') brandTag = 'tag-pink';
+                if(f[COL.MARCA] === 'BGUDCE') brandTag = 'tag-amber';
 
                 const isMarketing = f[COL.CATEGORIA] === 'Marketing / Consulta Externa';
                 const catDisplay = f[COL.CATEGORIA] ? `<span>${f[COL.CATEGORIA]}</span>` : '';
@@ -1318,7 +1320,8 @@
                 optionsMarca += `<option value="BGU" ${row[COL.MARCA] === 'BGU' ? 'selected' : ''}>BGU</option>
                  <option value="IEMPRESA" ${row[COL.MARCA] === 'IEMPRESA' ? 'selected' : ''}>IEMPRESA</option>
                  <option value="JVN" ${row[COL.MARCA] === 'JVN' ? 'selected' : ''}>JVN</option>
-                 <option value="ITAE" ${row[COL.MARCA] === 'ITAE' ? 'selected' : ''}>ITAE</option>`; 
+                 <option value="ITAE" ${row[COL.MARCA] === 'ITAE' ? 'selected' : ''}>ITAE</option>
+                 <option value="BGUDCE" ${row[COL.MARCA] === 'BGUDCE' ? 'selected' : ''}>BGU DCE</option>`;
             }
 
             // Opciones de Marketing predefinidas
