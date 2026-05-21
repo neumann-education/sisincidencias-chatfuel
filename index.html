@@ -808,7 +808,7 @@
             // Logica predeterminada: Ocultar selector de vista
             viewModeContainer.classList.add('hidden');
 
-            if ((res.rol.startsWith("ASESORA_") || res.rol.startsWith("SOPORTE_")) && res.rol !== "ASESORA_NACIONAL") {
+            if ((res.rol.startsWith("ASESORA_") || res.rol.startsWith("SOPORTE_")) && res.rol !== "ASESORA_NACIONAL" && res.rol !== "ASESORA_BGU-LIDER") {
                 brandContainer.classList.add('hidden');
                 
                 // Mostrar modo de vista para asesoras normales
@@ -816,6 +816,10 @@
                     viewModeContainer.classList.remove('hidden');
                     document.getElementById('viewModeFilter').value = 'mine'; // Default to mine
                 }
+            } else if (res.rol === "ASESORA_BGU-LIDER") {
+                brandSelect.innerHTML = `<option value="">Todas (BGU / BGU DCE)</option><option value="BGU">BGU</option><option value="BGUDCE">BGU DCE</option>`;
+                viewModeContainer.classList.remove('hidden');
+                document.getElementById('viewModeFilter').value = 'all'; // Default a "Sede completa" para la líder
             } else if (res.rol === "ASESORA_NACIONAL") {
                 brandSelect.innerHTML = `<option value="">Todas (JVN / IEMPRESA)</option><option value="IEMPRESA">IEMPRESA</option><option value="JVN">JVN</option>`;
             } else {
@@ -1031,10 +1035,12 @@
                         if ((rowBrand !== "JVN" && rowBrand !== "IEMPRESA") || rowTipo !== "Admisión") continue;
                     } else if (userRole.startsWith("ASESORA_") || userRole === "CALIDAD") {
                         const isCalidad = userRole === "CALIDAD";
-                        const allowedBrand = isCalidad ? "" : userRole.replace("ASESORA_", "");
+                        const isLiderBGU = userRole === "ASESORA_BGU-LIDER";
+                        const allowedBrand = (isCalidad || isLiderBGU) ? "" : userRole.replace("ASESORA_", "");
                         
                         // 1. Regla de Oro
-                        if (!isCalidad && rowBrand !== allowedBrand) continue; // Si es calidad ignora este bloqueo de marca
+                        if (isLiderBGU && rowBrand !== "BGU" && rowBrand !== "BGUDCE") continue; // La líder solo ve estas dos
+                        if (!isCalidad && !isLiderBGU && rowBrand !== allowedBrand) continue;
                         if (rowTipo !== "Admisión") continue;
                         
                         // 2. Control de Nivel de Vista: Míos vs Todos los de mi marca.
@@ -1287,7 +1293,7 @@
             let row = isNewRecord ? Array(15).fill("") : [...currentData[index]];
 
             if (isNewRecord && isCreator) {
-                if (userData.rol !== "ASESORA_NACIONAL" && userData.rol !== "CALIDAD") row[COL.MARCA] = userData.rol.split('_')[1];
+                if (userData.rol !== "ASESORA_NACIONAL" && userData.rol !== "CALIDAD" && userData.rol !== "ASESORA_BGU-LIDER") row[COL.MARCA] = userData.rol.split('_')[1];
                 if (userData.rol.startsWith("ASESORA_") || userData.rol === "CALIDAD") row[COL.TIPO] = "Admisión";
                 if (userData.rol.startsWith("SOPORTE_")) row[COL.TIPO] = "Soporte";
                 row[COL.ESTADO] = "Pendiente";
@@ -1310,18 +1316,21 @@
             const disCategoria = (!isNewRecord && userData.rol !== "SOPORTE" && userData.rol !== "ADMIN") ? "disabled" : "";
 
             let disMarca = "disabled";
-            if (isCreator && (userData.rol === "ASESORA_NACIONAL" || userData.rol === "CALIDAD") && isNewRecord) disMarca = "";
+            if (isCreator && (userData.rol === "ASESORA_NACIONAL" || userData.rol === "CALIDAD" || userData.rol === "ASESORA_BGU-LIDER") && isNewRecord) disMarca = "";
 
             let optionsMarca = `<option value="">Seleccione...</option>`;
             if (userData.rol === "ASESORA_NACIONAL") {
                 optionsMarca += `<option value="IEMPRESA" ${row[COL.MARCA] === 'IEMPRESA' ? 'selected' : ''}>IEMPRESA</option>
                                  <option value="JVN" ${row[COL.MARCA] === 'JVN' ? 'selected' : ''}>JVN</option>`;
+            } else if (userData.rol === "ASESORA_BGU-LIDER") {
+                optionsMarca += `<option value="BGU" ${row[COL.MARCA] === 'BGU' ? 'selected' : ''}>BGU</option>
+                                 <option value="BGUDCE" ${row[COL.MARCA] === 'BGUDCE' ? 'selected' : ''}>BGU DCE</option>`;
             } else {
                 optionsMarca += `<option value="BGU" ${row[COL.MARCA] === 'BGU' ? 'selected' : ''}>BGU</option>
                  <option value="IEMPRESA" ${row[COL.MARCA] === 'IEMPRESA' ? 'selected' : ''}>IEMPRESA</option>
                  <option value="JVN" ${row[COL.MARCA] === 'JVN' ? 'selected' : ''}>JVN</option>
                  <option value="ITAE" ${row[COL.MARCA] === 'ITAE' ? 'selected' : ''}>ITAE</option>
-                 <option value="BGUDCE" ${row[COL.MARCA] === 'BGUDCE' ? 'selected' : ''}>BGU DCE</option>`;
+                 <option value="BGUDCE" ${row[COL.MARCA] === 'BGUDCE' ? 'selected' : ''}>BGU DCE</option>`; 
             }
 
             // Opciones de Marketing predefinidas
@@ -1345,7 +1354,7 @@
             let tipoInput = '';
 
             // Si es creador (asesora/soporte marca) y su rol ya define la marca (disMarca === "disabled")
-            if (isCreator && disMarca === "disabled" && userData.rol !== "ASESORA_NACIONAL" && userData.rol !== "CALIDAD") {
+            if (isCreator && disMarca === "disabled" && userData.rol !== "ASESORA_NACIONAL" && userData.rol !== "CALIDAD" && userData.rol !== "ASESORA_BGU-LIDER") {
                 staticTags += `<span class="tag tag-gray me-2 shadow-sm border"><i class="fas fa-building me-1"></i> ${row[COL.MARCA]}</span>`;
                 marcaInput = `<input type="hidden" id="edit-2" value="${row[COL.MARCA]}">`;
             } else {
@@ -1730,7 +1739,7 @@
                 // El backend hace esto automáticamente, pero para que no desaparezca de la vista temporal
                 // necesitamos simular los datos obligatorios del usuario en el frontend:
                 if (isCreator) {
-                    if (userData.rol !== "ASESORA_NACIONAL" && userData.rol !== "CALIDAD") rowData[COL.MARCA] = userData.rol.split('_')[1];
+                    if (userData.rol !== "ASESORA_NACIONAL" && userData.rol !== "CALIDAD" && userData.rol !== "ASESORA_BGU-LIDER") rowData[COL.MARCA] = userData.rol.split('_')[1];
                     if (userData.rol.startsWith("ASESORA_") || userData.rol === "CALIDAD") rowData[COL.TIPO] = "Admisión";
                     if (userData.rol.startsWith("SOPORTE_")) rowData[COL.TIPO] = "Soporte";
                     rowData[COL.ESTADO] = "Pendiente";
@@ -1774,7 +1783,7 @@
 
             // Validaciones
             if (isCreator) {
-                if ((userData.rol === "ASESORA_NACIONAL" || userData.rol === "CALIDAD") && !rowData[COL.MARCA]) {
+                if ((userData.rol === "ASESORA_NACIONAL" || userData.rol === "CALIDAD" || userData.rol === "ASESORA_BGU-LIDER") && !rowData[COL.MARCA]) {
                     return Swal.fire('Error', 'Debe seleccionar una Marca', 'warning');
                 }
                 if (!rowData[COL.PLATAFORMA]) {
