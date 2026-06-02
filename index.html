@@ -503,6 +503,10 @@
                                     <span class="text-muted text-truncate" title="Incidencia Admisión"><i class="fas fa-user-tie opacity-50 me-1"></i> Admisión</span>
                                     <span class="fw-bold text-dark px-2 rounded" style="background: var(--warning-soft);" id="pen-adm">0</span>
                                 </div>
+                                <div class="col-6 d-flex justify-content-between align-items-center">
+                                    <span class="text-muted text-truncate" title="Chat Abierto"><i class="fas fa-comments opacity-50 me-1"></i> Chat Ab.</span>
+                                    <span class="fw-bold text-dark px-2 rounded" style="background: var(--warning-soft);" id="pen-cha">0</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -538,6 +542,10 @@
                                 <div class="col-6 d-flex justify-content-between align-items-center">
                                     <span class="text-muted text-truncate" title="Incidencia Admisión"><i class="fas fa-user-tie opacity-50 me-1"></i> Admisión</span>
                                     <span class="fw-bold text-dark px-2 rounded" style="background: var(--success-soft);" id="rev-adm">0</span>
+                                </div>
+                                <div class="col-6 d-flex justify-content-between align-items-center">
+                                    <span class="text-muted text-truncate" title="Chat Abierto"><i class="fas fa-comments opacity-50 me-1"></i> Chat Ab.</span>
+                                    <span class="fw-bold text-dark px-2 rounded" style="background: var(--success-soft);" id="rev-cha">0</span>
                                 </div>
                             </div>
                         </div>
@@ -610,6 +618,7 @@
                                 <option value="Automatizaciones">Automatizaciones</option>
                                 <option value="Para mejoras del bot (Calidad)">Para mejoras del bot (Calidad)</option>
                                 <option value="Incidencia Admisión">Incidencia Admisión</option>
+                                <option value="Chat Abierto">Chat Abierto</option>
                             </select>
                         </div>
                     </div>
@@ -902,21 +911,22 @@
             let total = dataToCount.length, pendientes = 0, revisados = 0, observados = 0;
             
             // Contadores por sub-categorías
-            let penBot = 0, penMkt = 0, penAut = 0, penCal = 0, penAdm = 0;
-            let revBot = 0, revMkt = 0, revAut = 0, revCal = 0, revAdm = 0;
+            let penBot = 0, penMkt = 0, penAut = 0, penCal = 0, penAdm = 0, penCha = 0;
+            let revBot = 0, revMkt = 0, revAut = 0, revCal = 0, revAdm = 0, revCha = 0;
 
             dataToCount.forEach(item => {
                 const f = item.data;
                 const estado = f[COL.ESTADO];
                 const cat = f[COL.CATEGORIA];
 
-                if (estado === "Pendiente") {
+               if (estado === "Pendiente") {
                     pendientes++;
                     if (cat === "Incidencia de Bot") penBot++;
                     else if (cat === "Marketing / Consulta Externa") penMkt++;
                     else if (cat === "Automatizaciones") penAut++;
                     else if (cat === "Para mejoras del bot (Calidad)") penCal++;
                     else if (cat === "Incidencia Admisión") penAdm++;
+                    else if (cat === "Chat Abierto") penCha++; // <-- LÍNEA NUEVA
                 }
                 else if (estado === "Revisado") {
                     revisados++;
@@ -925,6 +935,7 @@
                     else if (cat === "Automatizaciones") revAut++;
                     else if (cat === "Para mejoras del bot (Calidad)") revCal++;
                     else if (cat === "Incidencia Admisión") revAdm++;
+                    else if (cat === "Chat Abierto") revCha++; // <-- LÍNEA NUEVA
                 }
                 else if (estado === "Observado") {
                     observados++;
@@ -943,6 +954,7 @@
                 document.getElementById('pen-aut').innerText = penAut;
                 document.getElementById('pen-cal').innerText = penCal;
                 document.getElementById('pen-adm').innerText = penAdm;
+                document.getElementById('pen-cha').innerText = penCha; // <-- LÍNEA NUEVA
             }
             
             // Inyectar sub-categorías en Revisados
@@ -952,6 +964,7 @@
                 document.getElementById('rev-aut').innerText = revAut;
                 document.getElementById('rev-cal').innerText = revCal;
                 document.getElementById('rev-adm').innerText = revAdm;
+                document.getElementById('rev-cha').innerText = revCha; // <-- LÍNEA NUEVA
             }
         }
 
@@ -1476,12 +1489,13 @@
                             <div class="col-md-6">
                                 <label class="form-label text-primary small fw-bold text-uppercase" style="font-size: 10px;">Categoría de Incidencia</label>
                                 <select id="edit-14" class="form-select form-select-sm fw-semibold border-primary-subtle" style="background-color: var(--primary-soft);" ${disCategoria} onchange="toggleDynamicFields()">
-                                <option value="">Seleccione...</option>
+                                    <option value="">Seleccione...</option>
                                     <option value="Incidencia de Bot" ${row[COL.CATEGORIA] === 'Incidencia de Bot' ? 'selected' : ''}>Incidencia de Bot</option>
                                     <option value="Incidencia Admisión" ${row[COL.CATEGORIA] === 'Incidencia Admisión' ? 'selected' : ''}>Incidencia Admisión</option>
                                     <option value="Marketing / Consulta Externa" ${row[COL.CATEGORIA] === 'Marketing / Consulta Externa' ? 'selected' : ''}>Marketing / Consulta Externa</option>
                                     <option value="Automatizaciones" ${row[COL.CATEGORIA] === 'Automatizaciones' ? 'selected' : ''}>Automatizaciones</option>
                                     <option value="Para mejoras del bot (Calidad)" ${row[COL.CATEGORIA] === 'Para mejoras del bot (Calidad)' ? 'selected' : ''}>Para mejoras del bot (Calidad)</option>
+                                    <option value="Chat Abierto" ${row[COL.CATEGORIA] === 'Chat Abierto' ? 'selected' : ''}>Chat Abierto</option>
                                 </select>
                             </div>
                             <div class="col-12">
@@ -1800,8 +1814,8 @@
                     return Swal.fire('Faltan Datos', 'Debe seleccionar una Categoría para la incidencia.', 'warning');
                 }
 
-                if ((rowData[COL.CATEGORIA] === 'Incidencia de Bot' || rowData[COL.CATEGORIA] === 'Para mejoras del bot (Calidad)' || rowData[COL.CATEGORIA] === 'Automatizaciones' || rowData[COL.CATEGORIA] === 'Incidencia Admisión') && (!rowData[COL.NUMERO_CONTACTO] || !rowData[COL.PROBLEMA] || !rowData[COL.SOLUCION])) {
-                    return Swal.fire('Faltan Datos', 'Para incidentes, mejoras o automatizaciones, debe llenar el N° de Contacto, el Problema y describir la Solución.', 'warning');
+                if ((rowData[COL.CATEGORIA] === 'Incidencia de Bot' || rowData[COL.CATEGORIA] === 'Para mejoras del bot (Calidad)' || rowData[COL.CATEGORIA] === 'Automatizaciones' || rowData[COL.CATEGORIA] === 'Incidencia Admisión' || rowData[COL.CATEGORIA] === 'Chat Abierto') && (!rowData[COL.NUMERO_CONTACTO] || !rowData[COL.PROBLEMA] || !rowData[COL.SOLUCION])) {
+                    return Swal.fire('Faltan Datos', 'Para incidentes, mejoras, automatizaciones o chat abierto, debe llenar el N° de Contacto, el Problema y describir la Solución.', 'warning');
                 }
                 if (rowData[COL.CATEGORIA] === 'Marketing / Consulta Externa') {
                     if (!rowData[COL.NUMERO_CONTACTO]) {
