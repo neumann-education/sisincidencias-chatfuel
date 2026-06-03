@@ -458,9 +458,10 @@
             </div>
 
             <!-- Cards de Resumen -->
+            <!-- Cards de Resumen -->
             <div class="row g-3 mb-4 hidden" id="statsCards">
                 <!-- TOTAL -->
-                <div class="col-md-3">
+                <div class="col-xl col-lg-4 col-md-6">
                     <div class="stat-card bg-white border-light h-100 d-flex flex-column" onclick="clearFilters()">
                         <div class="mb-auto">
                             <div class="stat-icon bg-primary text-white">
@@ -472,7 +473,7 @@
                     </div>
                 </div>
                 <!-- PENDIENTES -->
-                <div class="col-md-3">
+                <div class="col-xl col-lg-4 col-md-6">
                     <div class="stat-card bg-white border-light h-100 d-flex flex-column" onclick="filterByStatus('Pendiente')">
                         <div class="mb-auto">
                             <div class="stat-icon" style="background: var(--warning-soft); color: var(--warning);">
@@ -511,8 +512,48 @@
                         </div>
                     </div>
                 </div>
+                <!-- EN PROCESO (NUEVO) -->
+                <div class="col-xl col-lg-4 col-md-6">
+                    <div class="stat-card bg-white border-light h-100 d-flex flex-column" onclick="filterByStatus('En Proceso')">
+                        <div class="mb-auto">
+                            <div class="stat-icon" style="background: var(--primary-soft); color: var(--primary);">
+                                <i class="fas fa-sync-alt"></i>
+                            </div>
+                            <h6 class="text-muted mb-1 small fw-bold text-uppercase">En Proceso</h6>
+                            <h3 class="fw-bold mb-0 text-dark" id="stat-enproceso">0</h3>
+                        </div>
+                        <div class="mt-3 pt-3 border-top w-100" style="font-size: 10px;">
+                            <div class="row g-2">
+                                <div class="col-6 d-flex justify-content-between align-items-center">
+                                    <span class="text-muted text-truncate" title="Incidencia de Bot"><i class="fas fa-robot opacity-50 me-1"></i> Bot</span>
+                                    <span class="fw-bold text-dark px-2 rounded" style="background: var(--primary-soft); color: var(--primary);" id="pro-bot">0</span>
+                                </div>
+                                <div class="col-6 d-flex justify-content-between align-items-center">
+                                    <span class="text-muted text-truncate" title="Marketing"><i class="fas fa-bullhorn opacity-50 me-1"></i> Mkt</span>
+                                    <span class="fw-bold text-dark px-2 rounded" style="background: var(--primary-soft); color: var(--primary);" id="pro-mkt">0</span>
+                                </div>
+                                <div class="col-6 d-flex justify-content-between align-items-center">
+                                    <span class="text-muted text-truncate" title="Automatizaciones"><i class="fas fa-cogs opacity-50 me-1"></i> Autom.</span>
+                                    <span class="fw-bold text-dark px-2 rounded" style="background: var(--primary-soft); color: var(--primary);" id="pro-aut">0</span>
+                                </div>
+                                <div class="col-6 d-flex justify-content-between align-items-center">
+                                    <span class="text-muted text-truncate" title="Calidad"><i class="fas fa-star opacity-50 me-1"></i> Calidad</span>
+                                    <span class="fw-bold text-dark px-2 rounded" style="background: var(--primary-soft); color: var(--primary);" id="pro-cal">0</span>
+                                </div>
+                                <div class="col-6 d-flex justify-content-between align-items-center">
+                                    <span class="text-muted text-truncate" title="Incidencia Admisión"><i class="fas fa-user-tie opacity-50 me-1"></i> Admisión</span>
+                                    <span class="fw-bold text-dark px-2 rounded" style="background: var(--primary-soft); color: var(--primary);" id="pro-adm">0</span>
+                                </div>
+                                <div class="col-6 d-flex justify-content-between align-items-center">
+                                    <span class="text-muted text-truncate" title="Chat Abierto"><i class="fas fa-comments opacity-50 me-1"></i> Chat Ab.</span>
+                                    <span class="fw-bold text-dark px-2 rounded" style="background: var(--primary-soft); color: var(--primary);" id="pro-cha">0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <!-- REVISADOS -->
-                <div class="col-md-3">
+                <div class="col-xl col-lg-4 col-md-6">
                     <div class="stat-card bg-white border-light h-100 d-flex flex-column" onclick="filterByStatus('Revisado')">
                         <div class="mb-auto">
                             <div class="stat-icon" style="background: var(--success-soft); color: var(--success);">
@@ -552,7 +593,7 @@
                     </div>
                 </div>
                 <!-- OBSERVADOS -->
-                <div class="col-md-3">
+                <div class="col-xl col-lg-4 col-md-6">
                     <div class="stat-card bg-white border-light h-100 d-flex flex-column" onclick="filterByStatus('Observado')">
                         <div class="mb-auto">
                             <div class="stat-icon" style="background: var(--danger-soft); color: var(--danger);">
@@ -581,6 +622,7 @@
                             <select id="statusFilter" class="form-select form-select-sm" onchange="currentPage=1;renderTable()">
                                 <option value="">Todos</option>
                                 <option value="Pendiente">Pendiente</option>
+                                <option value="En Proceso">En Proceso</option>
                                 <option value="Revisado">Revisado</option>
                                 <option value="Observado">Observado</option>
                             </select>
@@ -908,10 +950,11 @@
         }
 
         function updateStats(dataToCount) {
-            let total = dataToCount.length, pendientes = 0, revisados = 0, observados = 0;
+            let total = dataToCount.length, pendientes = 0, enproceso = 0, revisados = 0, observados = 0;
             
             // Contadores por sub-categorías
             let penBot = 0, penMkt = 0, penAut = 0, penCal = 0, penAdm = 0, penCha = 0;
+            let proBot = 0, proMkt = 0, proAut = 0, proCal = 0, proAdm = 0, proCha = 0;
             let revBot = 0, revMkt = 0, revAut = 0, revCal = 0, revAdm = 0, revCha = 0;
 
             dataToCount.forEach(item => {
@@ -926,7 +969,16 @@
                     else if (cat === "Automatizaciones") penAut++;
                     else if (cat === "Para mejoras del bot (Calidad)") penCal++;
                     else if (cat === "Incidencia Admisión") penAdm++;
-                    else if (cat === "Chat Abierto") penCha++; // <-- LÍNEA NUEVA
+                    else if (cat === "Chat Abierto") penCha++;
+                }
+                else if (estado === "En Proceso") {
+                    enproceso++;
+                    if (cat === "Incidencia de Bot") proBot++;
+                    else if (cat === "Marketing / Consulta Externa") proMkt++;
+                    else if (cat === "Automatizaciones") proAut++;
+                    else if (cat === "Para mejoras del bot (Calidad)") proCal++;
+                    else if (cat === "Incidencia Admisión") proAdm++;
+                    else if (cat === "Chat Abierto") proCha++;
                 }
                 else if (estado === "Revisado") {
                     revisados++;
@@ -935,7 +987,7 @@
                     else if (cat === "Automatizaciones") revAut++;
                     else if (cat === "Para mejoras del bot (Calidad)") revCal++;
                     else if (cat === "Incidencia Admisión") revAdm++;
-                    else if (cat === "Chat Abierto") revCha++; // <-- LÍNEA NUEVA
+                    else if (cat === "Chat Abierto") revCha++;
                 }
                 else if (estado === "Observado") {
                     observados++;
@@ -944,6 +996,7 @@
 
             document.getElementById('stat-total').innerText = total;
             document.getElementById('stat-pendientes').innerText = pendientes;
+            if(document.getElementById('stat-enproceso')) document.getElementById('stat-enproceso').innerText = enproceso;
             document.getElementById('stat-revisados').innerText = revisados;
             document.getElementById('stat-observados').innerText = observados;
 
@@ -954,7 +1007,17 @@
                 document.getElementById('pen-aut').innerText = penAut;
                 document.getElementById('pen-cal').innerText = penCal;
                 document.getElementById('pen-adm').innerText = penAdm;
-                document.getElementById('pen-cha').innerText = penCha; // <-- LÍNEA NUEVA
+                document.getElementById('pen-cha').innerText = penCha;
+            }
+
+            // Inyectar sub-categorías en En Proceso
+            if(document.getElementById('pro-bot')) {
+                document.getElementById('pro-bot').innerText = proBot;
+                document.getElementById('pro-mkt').innerText = proMkt;
+                document.getElementById('pro-aut').innerText = proAut;
+                document.getElementById('pro-cal').innerText = proCal;
+                document.getElementById('pro-adm').innerText = proAdm;
+                document.getElementById('pro-cha').innerText = proCha;
             }
             
             // Inyectar sub-categorías en Revisados
@@ -964,7 +1027,7 @@
                 document.getElementById('rev-aut').innerText = revAut;
                 document.getElementById('rev-cal').innerText = revCal;
                 document.getElementById('rev-adm').innerText = revAdm;
-                document.getElementById('rev-cha').innerText = revCha; // <-- LÍNEA NUEVA
+                document.getElementById('rev-cha').innerText = revCha;
             }
         }
 
@@ -1190,6 +1253,7 @@
 
         function getStatusBadge(status) {
             let cls = 'tag-amber';
+            if (status === 'En Proceso') cls = 'tag-blue'; // NUEVA LÍNEA
             if (status === 'Revisado') cls = 'tag-emerald';
             if (status === 'Observado' || status === 'Rechazado') cls = 'tag-red';
             return `<span class="tag ${cls}">${status || 'Pendiente'}</span>`;
@@ -1432,6 +1496,7 @@
                                     <label class="form-label text-muted small fw-bold text-uppercase" style="font-size: 10px;">Estado de Resolución</label>
                                     <select id="edit-7" class="form-select fw-bold" style="border-width: 2px;" ${disAdmin}>
                                         <option value="Pendiente" ${row[COL.ESTADO] === 'Pendiente' ? 'selected' : ''}>⏳ Pendiente</option>
+                                        <option value="En Proceso" ${row[COL.ESTADO] === 'En Proceso' ? 'selected' : ''}>⚙️ En Proceso</option> <!-- NUEVA LÍNEA -->
                                         <option value="Revisado" ${row[COL.ESTADO] === 'Revisado' ? 'selected' : ''}>✅ Completado</option>
                                         <option value="Observado" ${row[COL.ESTADO] === 'Observado' ? 'selected' : ''}>❌ Observado</option>
                                     </select>
@@ -1777,7 +1842,7 @@
             }
 
             if (isSoporteAdmin && statusPrev !== statusNew) {
-                if (statusPrev === "Pendiente" && (statusNew === "Revisado" || statusNew === "Observado")) {
+                if (statusPrev === "Pendiente" && (statusNew === "Revisado" || statusNew === "Observado" || statusNew === "En Proceso")) {
                     rowData[COL.FECHA_ATENCION] = now;
                 } else if (statusPrev !== "Pendiente" && statusNew === "Pendiente") {
                     rowData[COL.FECHA_ATENCION] = "";
