@@ -840,7 +840,7 @@
 
             document.getElementById('rolBadge').innerText = `${res.nombre.toUpperCase()} | ${displayRol}`;
 
-            if (res.rol.startsWith("ASESORA_") || res.rol.startsWith("SOPORTE_") || res.rol === "CALIDAD") {
+            if (res.rol.startsWith("ASESORA_") || res.rol.startsWith("SOPORTE_") || res.rol === "CALIDAD" || res.rol === "MARKETING") {
                 document.getElementById('btnNuevo').classList.remove('hidden');
             } else {
                 document.getElementById('btnNuevo').classList.add('hidden');
@@ -1375,15 +1375,16 @@
         function openEdit(index) {
             isNewRecord = (index === -1);
 
-            const isCreator = userData.rol.startsWith("ASESORA_") || userData.rol.startsWith("SOPORTE_") || userData.rol === "CALIDAD";
+            const isCreator = userData.rol.startsWith("ASESORA_") || userData.rol.startsWith("SOPORTE_") || userData.rol === "CALIDAD" || userData.rol === "MARKETING";
             const isSoporteAdmin = userData.rol === "SOPORTE" || userData.rol === "ADMIN" || userData.rol === "MARKETING";
 
             let row = isNewRecord ? Array(15).fill("") : [...currentData[index]];
 
             if (isNewRecord && isCreator) {
-                if (userData.rol !== "ASESORA_NACIONAL" && userData.rol !== "CALIDAD" && userData.rol !== "ASESORA_BGU-LIDER") row[COL.MARCA] = userData.rol.split('_')[1];
+                if (userData.rol !== "ASESORA_NACIONAL" && userData.rol !== "CALIDAD" && userData.rol !== "ASESORA_BGU-LIDER" && userData.rol !== "MARKETING") row[COL.MARCA] = userData.rol.split('_')[1];
                 if (userData.rol.startsWith("ASESORA_") || userData.rol === "CALIDAD") row[COL.TIPO] = "Admisión";
                 if (userData.rol.startsWith("SOPORTE_")) row[COL.TIPO] = "Soporte";
+                if (userData.rol === "MARKETING") row[COL.TIPO] = "Marketing";
                 row[COL.ESTADO] = "Pendiente";
                 row[COL.ASESORA_NOMBRE] = userData.nombre;
             }
@@ -1397,15 +1398,15 @@
 
             const readCreator = (!isNewRecord && isSoporteAdmin) ? "readonly" : "";
             const disCreator = (!isNewRecord && isSoporteAdmin) ? "disabled" : "";
-            const readAdmin = isCreator ? "readonly" : "";
-            const disAdmin = isCreator ? "disabled" : "";
+            const readAdmin = (isCreator && !isSoporteAdmin) ? "readonly" : "";
+            const disAdmin = (isCreator && !isSoporteAdmin) ? "disabled" : "";
             
             // NUEVA REGLA: En edición (!isNewRecord), bloquea la categoría si NO es SOPORTE o ADMIN.
             const disCategoria = (!isNewRecord && userData.rol !== "SOPORTE" && userData.rol !== "ADMIN") ? "disabled" : "";
 
             let disMarca = "disabled";
-            if (isCreator && (userData.rol === "ASESORA_NACIONAL" || userData.rol === "CALIDAD" || userData.rol === "ASESORA_BGU-LIDER") && isNewRecord) disMarca = "";
-
+            if (isCreator && (userData.rol === "ASESORA_NACIONAL" || userData.rol === "CALIDAD" || userData.rol === "ASESORA_BGU-LIDER" || userData.rol === "MARKETING") && isNewRecord) disMarca = "";
+            
             let optionsMarca = `<option value="">Seleccione...</option>`;
             if (userData.rol === "ASESORA_NACIONAL") {
                 optionsMarca += `<option value="IEMPRESA" ${row[COL.MARCA] === 'IEMPRESA' ? 'selected' : ''}>IEMPRESA</option>
@@ -1783,7 +1784,7 @@
 
         async function saveData() {
             let rowData = Array(15).fill("");
-            const isCreator = userData.rol.startsWith("ASESORA_") || userData.rol.startsWith("SOPORTE_") || userData.rol === "CALIDAD";
+            const isCreator = userData.rol.startsWith("ASESORA_") || userData.rol.startsWith("SOPORTE_") || userData.rol === "CALIDAD" || userData.rol === "MARKETING";
             const isSoporteAdmin = userData.rol === "SOPORTE" || userData.rol === "ADMIN" || userData.rol === "MARKETING";
             const currentId = document.getElementById('edit-0').value;
 
@@ -1829,9 +1830,10 @@
                 // El backend hace esto automáticamente, pero para que no desaparezca de la vista temporal
                 // necesitamos simular los datos obligatorios del usuario en el frontend:
                 if (isCreator) {
-                    if (userData.rol !== "ASESORA_NACIONAL" && userData.rol !== "CALIDAD" && userData.rol !== "ASESORA_BGU-LIDER") rowData[COL.MARCA] = userData.rol.split('_')[1];
+                    if (userData.rol !== "ASESORA_NACIONAL" && userData.rol !== "CALIDAD" && userData.rol !== "ASESORA_BGU-LIDER" && userData.rol !== "MARKETING") rowData[COL.MARCA] = userData.rol.split('_')[1];
                     if (userData.rol.startsWith("ASESORA_") || userData.rol === "CALIDAD") rowData[COL.TIPO] = "Admisión";
                     if (userData.rol.startsWith("SOPORTE_")) rowData[COL.TIPO] = "Soporte";
+                    if (userData.rol === "MARKETING") rowData[COL.TIPO] = "Marketing";
                     rowData[COL.ESTADO] = "Pendiente";
                     rowData[COL.ASESORA_NOMBRE] = userData.nombre;
                 }
@@ -1873,7 +1875,7 @@
 
             // Validaciones
             if (isCreator) {
-                if ((userData.rol === "ASESORA_NACIONAL" || userData.rol === "CALIDAD" || userData.rol === "ASESORA_BGU-LIDER") && !rowData[COL.MARCA]) {
+                if ((userData.rol === "ASESORA_NACIONAL" || userData.rol === "CALIDAD" || userData.rol === "ASESORA_BGU-LIDER" || userData.rol === "MARKETING") && !rowData[COL.MARCA]) {
                     return Swal.fire('Error', 'Debe seleccionar una Marca', 'warning');
                 }
                 if (!rowData[COL.PLATAFORMA]) {
