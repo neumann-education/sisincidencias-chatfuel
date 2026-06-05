@@ -784,12 +784,16 @@
             FECHA_ATENCION: 10, ASESORA_NOMBRE: 11, PLATAFORMA: 12, TIPO: 13, CATEGORIA: 14
         };
 
-        function saveSession(data) { localStorage.setItem('incident_session', JSON.stringify({ user: data, loginTime: Date.now() })); }
+        function saveSession(data) { 
+            // Ya no guardamos la hora de inicio, solo los datos del usuario
+            localStorage.setItem('incident_session', JSON.stringify({ user: data })); 
+        }
+        
         function getSession() {
             const sessionRaw = localStorage.getItem('incident_session');
             if (!sessionRaw) return null;
             const session = JSON.parse(sessionRaw);
-            if (Date.now() - session.loginTime > SESSION_TIMEOUT) { localStorage.removeItem('incident_session'); return null; }
+            // Retornamos el usuario directamente sin comprobar límites de tiempo
             return session.user;
         }
         function clearSession() { localStorage.removeItem('incident_session'); location.reload(); }
