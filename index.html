@@ -610,6 +610,7 @@
             </div>
 
             <!-- Filtros Avanzados -->
+            <!-- Filtros Avanzados -->
             <div class="filter-card border-0 shadow-sm mb-4">
                 <div class="card-body p-4">
                     <div class="row g-3 align-items-end mb-3">
@@ -620,15 +621,19 @@
                                 <input type="text" id="dateRangeFilter" class="form-control border-start-0 ps-0" placeholder="Filtrar por fecha..." readonly>
                             </div>
                         </div>
+                        
+                        <!-- FILTRO PLATAFORMA (Corregido: Ahora es una columna separada) -->
                         <div class="col-lg-2 col-md-6">
-                            <div class="col-lg-2 col-md-6">
-                                <label class="form-label small fw-bold text-muted text-uppercase mb-2" style="font-size: 10px; letter-spacing: 0.05em;">Plataforma</label>
-                                <select id="platformFilter" class="form-select form-select-sm" onchange="currentPage=1; renderTable();">
-                                    <option value="">Ambas (Todas)</option>
-                                    <option value="Chatfuel">Chatfuel</option>
-                                    <option value="ORA">ORA</option>
-                                </select>
-                            </div>
+                            <label class="form-label small fw-bold text-muted text-uppercase mb-2" style="font-size: 10px; letter-spacing: 0.05em;">Plataforma</label>
+                            <select id="platformFilter" class="form-select form-select-sm" onchange="currentPage=1; renderTable();">
+                                <option value="">Ambas</option>
+                                <option value="Chatfuel">Chatfuel</option>
+                                <option value="ORA">ORA</option>
+                            </select>
+                        </div>
+
+                        <!-- FILTRO ESTADO -->
+                        <div class="col-lg-2 col-md-6">
                             <label class="form-label small fw-bold text-muted text-uppercase mb-2" style="font-size: 10px; letter-spacing: 0.05em;">Estado</label>
                             <select id="statusFilter" class="form-select form-select-sm" onchange="currentPage=1;renderTable()">
                                 <option value="">Todos</option>
@@ -638,6 +643,8 @@
                                 <option value="Observado">Observado</option>
                             </select>
                         </div>
+                        
+                        <!-- FILTRO MARCA -->
                         <div class="col-lg-2 col-md-6" id="brandContainer">
                             <label class="form-label small fw-bold text-muted text-uppercase mb-2" style="font-size: 10px; letter-spacing: 0.05em;">Marca</label>
                             <select id="brandFilter" class="form-select form-select-sm" onchange="currentPage=1;document.getElementById('asesoraFilter').value='';updateAsesoras();renderTable()">
@@ -649,6 +656,8 @@
                                 <option value="ITAE">ITAE</option>
                             </select>
                         </div>
+
+                        <!-- FILTROS OCULTOS POR DEFECTO -->
                         <div class="col-lg-2 col-md-6 hidden" id="asesoraContainer">
                             <label class="form-label small fw-bold text-muted text-uppercase mb-2" style="font-size: 10px; letter-spacing: 0.05em;">Responsable</label>
                             <select id="asesoraFilter" class="form-select form-select-sm" onchange="currentPage=1;renderTable()">
@@ -662,10 +671,12 @@
                                 <option value="all">Sede completa</option>
                             </select>
                         </div>
+
+                        <!-- FILTRO CATEGORÍA -->
                         <div class="col-lg-3 col-md-6">
                             <label class="form-label small fw-bold text-muted text-uppercase mb-2" style="font-size: 10px; letter-spacing: 0.05em;">Categoría</label>
                             <select id="categoryFilter" class="form-select form-select-sm" onchange="currentPage=1;renderTable()">
-                                <option value="">Todas las Categorías</option>
+                                <option value="">Todas</option>
                                 <option value="Incidencia de Bot">Incidencia de Bot</option>
                                 <option value="Marketing / Consulta Externa">Marketing / Consulta Externa</option>
                                 <option value="Automatizaciones">Automatizaciones</option>
@@ -900,6 +911,12 @@
             } else {
                 document.getElementById('btnAccesos').classList.add('hidden');
                 document.getElementById('asesoraContainer').classList.add('hidden');
+            }
+
+            if (res.rol === "ADMIN" || res.rol === "SOPORTE" || res.rol === "CALIDAD") {
+                document.getElementById('btnReportes').classList.remove('hidden');
+            } else {
+                document.getElementById('btnReportes').classList.add('hidden');
             }
 
             const brandContainer = document.getElementById('brandContainer');
