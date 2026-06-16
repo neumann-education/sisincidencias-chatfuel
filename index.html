@@ -446,7 +446,7 @@
                     <p class="text-muted mb-0">Seguimiento de problemas en flujos de Chatfuel.</p>
                 </div>
                 <div class="d-flex gap-2">
-                    <button id="btnDownload" class="btn btn-outline-success hidden fw-bold bg-white" style="font-size: 11px; padding: 10px 16px; border-radius: 8px;" onclick="downloadCSV()">
+                    <button id="btnDownload" class="btn btn-outline-success hidden fw-bold bg-white shadow-sm" style="font-size: 11px; padding: 10px 16px; border-radius: 8px;" onclick="openDownloadModal()">
                         <i class="fas fa-file-excel me-2"></i>DESCARGAR REPORTE
                     </button>
                     <button id="btnReportes" class="btn btn-outline-primary hidden fw-bold bg-white" style="font-size: 11px; padding: 10px 16px; border-radius: 8px;" onclick="toggleReportsView()">
@@ -770,6 +770,44 @@
                         data-bs-dismiss="modal">Cerrar</button>
                     <button type="button" class="btn btn-primary px-4 fw-bold" style="border-radius: 8px; font-size: 13px;" onclick="saveData()">
                         <i class="fas fa-save me-2"></i>Guardar Cambios
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL CONFIRMACIÓN DE DESCARGA -->
+    <div class="modal fade" id="downloadModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: var(--radius-lg);">
+                <div class="modal-header px-4 py-3 border-bottom bg-white" style="border-radius: var(--radius-lg) var(--radius-lg) 0 0;">
+                    <div>
+                        <h5 class="modal-title fw-bold mb-0" style="color: var(--dark); font-size: 18px;">
+                            <i class="fas fa-file-export text-success me-2"></i>Resumen de Exportación
+                        </h5>
+                        <p class="text-muted small mb-0 mt-1">Revisa los parámetros antes de generar el archivo CSV.</p>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4" style="background-color: var(--bg-app);">
+                    
+                    <!-- Tarjeta de Total -->
+                    <div class="d-flex align-items-center justify-content-between bg-white p-3 rounded-3 border mb-4 shadow-sm" style="border-left: 4px solid var(--success) !important;">
+                        <span class="fw-bold text-dark" style="font-size: 13px;">Volumen de datos a exportar</span>
+                        <span class="badge bg-success-soft text-success fs-6 px-3 py-2 rounded-pill fw-bold" id="dl-total">0 registros</span>
+                    </div>
+
+                    <!-- Cuadrícula de Filtros -->
+                    <h6 class="fw-bold text-muted mb-3" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;">Filtros Aplicados</h6>
+                    <div class="row g-2" id="dl-filters-container">
+                        <!-- Se llena mediante JavaScript -->
+                    </div>
+
+                </div>
+                <div class="modal-footer bg-white px-4 py-3 border-top" style="border-radius: 0 0 var(--radius-lg) var(--radius-lg);">
+                    <button type="button" class="btn btn-link text-decoration-none text-muted fw-bold small" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success fw-bold px-4 shadow-sm" style="border-radius: 8px; font-size: 13px;" onclick="confirmDownload()">
+                        <i class="fas fa-download me-2"></i>Confirmar y Descargar
                     </button>
                 </div>
             </div>
@@ -2094,6 +2132,101 @@
             }
         }
 
+        /** ====================================
+         *  MÓDULO DE DESCARGA Y EXPORTACIÓN (UX/UI)
+         *  ==================================== */
+        function openDownloadModal() {
+            if (!window.lastFilteredData || window.lastFilteredData.length === 0) {
+                return Swal.fire('Sin resultados', 'No hay datos en la tabla para exportar. Intenta ampliar tus filtros.', 'info');
+            }
+
+            // 1. Actualizar contador total
+            document.getElementById('dl-total').innerText = `${window.lastFilteredData.length} registro(s)`;
+
+            // 2. Leer valores actuales de los filtros
+            const fDate = document.getElementById('dateRangeFilter').value || 'Histórico completo';
+            const fPlat = document.getElementById('platformFilter').value || 'Ambas plataformas';
+            const fStat = document.getElementById('statusFilter').value || 'Todos los estados';
+            const fBran = document.getElementById('brandFilter').value || 'Todas las marcas';
+            const fCat  = document.getElementById('categoryFilter').value || 'Todas las categorías';
+            const fSearch = document.getElementById('nameFilter').value || 'Sin texto de búsqueda';
+
+            // 3. Crear el diseño de la cuadrícula
+            const filtersInfo = [
+                { label: 'Rango de Fecha', value: fDate, icon: 'far fa-calendar' },
+                { label: 'Estado', value: fStat, icon: 'fas fa-flag' },
+                { label: 'Plataforma', value: fPlat, icon: 'fas fa-mobile-alt' },
+                { label: 'Marca', value: fBran, icon: 'far fa-building' },
+                { label: 'Categoría', value: fCat, icon: 'fas fa-layer-group' },
+                { label: 'Búsqueda Rápida', value: fSearch, icon: 'fas fa-search' }
+            ];
+
+            let htmlFilters = '';
+            filtersInfo.forEach(f => {
+                // Diseño de las mini-cards para cada filtro
+                let textColor = f.value.includes('Todas') || f.value.includes('Todos') || f.value.includes('Histórico') || f.value.includes('Ambas') || f.value.includes('Sin texto') ? 'text-muted' : 'text-primary fw-bold';
+                
+                htmlFilters += `
+                    <div class="col-6">
+                        <div class="p-2 bg-white border rounded-3 d-flex flex-column justify-content-center h-100 shadow-sm" style="min-height: 54px;">
+                            <span class="text-muted fw-bold mb-1 text-uppercase" style="font-size: 9px; letter-spacing: 0.05em;">
+                                <i class="${f.icon} me-1 opacity-75"></i>${f.label}
+                            </span>
+                            <span class="${textColor} text-truncate w-100" style="font-size: 11.5px;" title="${f.value}">
+                                ${f.value}
+                            </span>
+                        </div>
+                    </div>`;
+            });
+
+            document.getElementById('dl-filters-container').innerHTML = htmlFilters;
+
+            // Abrir el modal
+            new bootstrap.Modal('#downloadModal').show();
+        }
+
+        function confirmDownload() {
+            // Cerramos el modal suavemente
+            bootstrap.Modal.getInstance(document.getElementById('downloadModal')).hide();
+
+            // Mensaje de feedback de UX
+            const Toast = Swal.mixin({ toast: true, position: 'bottom-end', showConfirmButton: false });
+            Toast.fire({ icon: 'success', title: 'Generando archivo Excel...', timer: 2500 });
+
+            // Lógica de exportación (Generación de CSV)
+            const headers = ['ID', 'Fecha', 'Marca', 'N. Contacto', 'Problema', 'Solucion', 'Estado', 'Responsable', 'Plataforma', 'Tipo', 'Categoria'];
+            let csvContent = "data:text/csv;charset=utf-8,\uFEFF" + headers.join(",") + "\n";
+
+            window.lastFilteredData.forEach(item => {
+                const f = item.data;
+                const cleanProblema = String(f[COL.PROBLEMA] || '').replace(/"/g, '""').replace(/\n/g, ' ');
+                const cleanSolucion = String(f[COL.SOLUCION] || '').replace(/"/g, '""').replace(/\n/g, ' ');
+                let dt = normalizeDate(f[COL.FECHA_SOL]);
+                let fechaFormateada = dt.isValid() ? dt.format('DD/MM/YYYY HH:mm:ss') : (f[COL.FECHA_SOL] || '');
+                let numContacto = `"${f[COL.NUMERO_CONTACTO] || ''}\t"`;
+
+                const row = [
+                    f[COL.ID], fechaFormateada, f[COL.MARCA], numContacto,
+                    `"${cleanProblema}"`, `"${cleanSolucion}"`,
+                    f[COL.ESTADO], f[COL.ASESORA_NOMBRE], f[COL.PLATAFORMA], 
+                    f[COL.TIPO], f[COL.CATEGORIA]
+                ];
+                csvContent += row.join(",") + "\n";
+            });
+
+            // Descarga invisible en el navegador
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `Reporte_Incidencias_${moment().format('YYYYMMDD_HHmm')}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        /** ====================================
+         *  FUNCIÓN: DESCARGAR REPORTE A EXCEL (CSV)
+         *  ==================================== */
         function downloadCSV() {
             if (!window.lastFilteredData || window.lastFilteredData.length === 0) {
                 return Swal.fire('Aviso', 'No hay datos para descargar. Ajusta los filtros.', 'info');
@@ -2107,16 +2240,25 @@
 
             window.lastFilteredData.forEach(item => {
                 const f = item.data;
-                // Limpiamos saltos de línea y comillas de los textos largos para que no rompan el Excel
+                
+                // 1. Limpiamos saltos de línea y comillas de los textos largos
                 const cleanProblema = String(f[COL.PROBLEMA] || '').replace(/"/g, '""').replace(/\n/g, ' ');
                 const cleanSolucion = String(f[COL.SOLUCION] || '').replace(/"/g, '""').replace(/\n/g, ' ');
 
+                // 2. CORRECCIÓN DE FECHA: De formato crudo ISO a DD/MM/YYYY HH:mm:ss
+                let dt = normalizeDate(f[COL.FECHA_SOL]);
+                let fechaFormateada = dt.isValid() ? dt.format('DD/MM/YYYY HH:mm:ss') : (f[COL.FECHA_SOL] || '');
+
+                // 3. TRUCO EXCEL: Forzamos el N° de Contacto como texto añadiendo un tabulador oculto
+                // Esto evita que Excel borre los "0" iniciales o deforme el número
+                let numContacto = `"${f[COL.NUMERO_CONTACTO] || ''}\t"`;
+
                 const row = [
                     f[COL.ID], 
-                    f[COL.FECHA_SOL], 
+                    fechaFormateada, // <--- Aquí inyectamos la fecha ya bonita
                     f[COL.MARCA], 
-                    f[COL.NUMERO_CONTACTO],
-                    `"${cleanProblema}"`, // Envolvemos en comillas
+                    numContacto,     // <--- Aquí inyectamos el número protegido
+                    `"${cleanProblema}"`, 
                     `"${cleanSolucion}"`,
                     f[COL.ESTADO], 
                     f[COL.ASESORA_NOMBRE], 
