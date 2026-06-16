@@ -446,6 +446,9 @@
                     <p class="text-muted mb-0">Seguimiento de problemas en flujos de Chatfuel.</p>
                 </div>
                 <div class="d-flex gap-2">
+                    <button id="btnReportes" class="btn btn-outline-primary hidden fw-bold bg-white" style="font-size: 11px; padding: 10px 16px; border-radius: 8px;" onclick="toggleReportsView()">
+                        <i class="fas fa-chart-pie me-2"></i>MÉTRICAS
+                    </button>
                     <button id="btnAccesos" class="btn btn-light fw-bold text-muted hidden shadow-sm border"
                         style="font-size: 11px; padding: 10px 16px; border-radius: 8px;"
                         onclick="openAccessModal()">
@@ -618,6 +621,14 @@
                             </div>
                         </div>
                         <div class="col-lg-2 col-md-6">
+                            <div class="col-lg-2 col-md-6">
+                                <label class="form-label small fw-bold text-muted text-uppercase mb-2" style="font-size: 10px; letter-spacing: 0.05em;">Plataforma</label>
+                                <select id="platformFilter" class="form-select form-select-sm" onchange="currentPage=1; renderTable();">
+                                    <option value="">Ambas (Todas)</option>
+                                    <option value="Chatfuel">Chatfuel</option>
+                                    <option value="ORA">ORA</option>
+                                </select>
+                            </div>
                             <label class="form-label small fw-bold text-muted text-uppercase mb-2" style="font-size: 10px; letter-spacing: 0.05em;">Estado</label>
                             <select id="statusFilter" class="form-select form-select-sm" onchange="currentPage=1;renderTable()">
                                 <option value="">Todos</option>
@@ -673,6 +684,40 @@
                                 <input type="text" id="nameFilter" class="form-control border-start-0 ps-0" placeholder="Buscar por ID, Responsable, Contacto o Problema..." oninput="currentPage=1;renderTable()">
                                 <button class="btn btn-outline-light border text-muted" title="Limpiar todos los filtros" onclick="clearFilters()"><i class="fas fa-times"></i></button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VISTA DE GRÁFICOS (Oculta por defecto) -->
+            <div id="chartsContainer" class="hidden mb-4">
+                <div class="row g-4">
+                    <!-- Gráfica: Categorías x Estado -->
+                    <div class="col-lg-8">
+                        <div class="card h-100 p-4 shadow-sm border-0" style="border-radius: var(--radius-lg);">
+                            <h6 class="fw-bold mb-3 text-dark text-uppercase small"><i class="fas fa-layer-group text-primary me-2"></i>Incidencias por Categoría y Estado</h6>
+                            <div style="height: 300px;"><canvas id="chartCategorias"></canvas></div>
+                        </div>
+                    </div>
+                    <!-- Gráfica: Plataformas -->
+                    <div class="col-lg-4">
+                        <div class="card h-100 p-4 shadow-sm border-0" style="border-radius: var(--radius-lg);">
+                            <h6 class="fw-bold mb-3 text-dark text-uppercase small"><i class="fas fa-mobile-alt text-primary me-2"></i>Distribución por Plataforma</h6>
+                            <div style="height: 300px;"><canvas id="chartPlataformas"></canvas></div>
+                        </div>
+                    </div>
+                    <!-- Gráfica: Evolución Temporal -->
+                    <div class="col-lg-6">
+                        <div class="card h-100 p-4 shadow-sm border-0" style="border-radius: var(--radius-lg);">
+                            <h6 class="fw-bold mb-3 text-dark text-uppercase small"><i class="fas fa-chart-line text-primary me-2"></i>Evolución de Registros en el Tiempo</h6>
+                            <div style="height: 300px;"><canvas id="chartEvolucion"></canvas></div>
+                        </div>
+                    </div>
+                    <!-- Gráfica: Responsables -->
+                    <div class="col-lg-6">
+                        <div class="card h-100 p-4 shadow-sm border-0" style="border-radius: var(--radius-lg);">
+                            <h6 class="fw-bold mb-3 text-dark text-uppercase small"><i class="fas fa-users text-primary me-2"></i>Top Responsables de Registro</h6>
+                            <div style="height: 300px;"><canvas id="chartResponsables"></canvas></div>
                         </div>
                     </div>
                 </div>
@@ -1158,6 +1203,9 @@
                 const bFilter = document.getElementById('brandFilter').value;
                 if (bFilter && f[COL.MARCA] !== bFilter) continue;
                 
+                const pFilter = document.getElementById('platformFilter') ? document.getElementById('platformFilter').value : "";
+                if (pFilter && f[COL.PLATAFORMA] !== pFilter) continue;
+                
                 const aFilterEl = document.getElementById('asesoraFilter');
                 if (aFilterEl && aFilterEl.value && String(f[COL.ASESORA_NOMBRE]).trim() !== aFilterEl.value) continue;
 
@@ -1253,6 +1301,8 @@
             updateStats(filteredData);
             renderPagination(totalRecords, totalPages);
             updateSortIcons();
+            window.lastFilteredData = filteredData; // NUEVO: Guarda la data filtrada en memoria
+            if (isReportsView) renderCharts(); // NUEVO: Actualiza la gráfica si estás en esa vista
         }
 
         function getStatusBadge(status) {
@@ -1301,6 +1351,7 @@
         }
         function clearFilters() {
             if(document.getElementById('nameFilter')) document.getElementById('nameFilter').value = "";
+            if(document.getElementById('platformFilter')) document.getElementById('platformFilter').value = "";
             if(document.getElementById('statusFilter')) document.getElementById('statusFilter').value = "";
             if(document.getElementById('brandFilter')) document.getElementById('brandFilter').value = "";
             if(document.getElementById('categoryFilter')) document.getElementById('categoryFilter').value = "";
@@ -1999,7 +2050,136 @@
                 Swal.fire('Error', 'Hubo un problema al enviar los correos.', 'error');
             }
         }
+
+        /** ====================================
+         *  MÓDULO DE BUSINESS INTELLIGENCE (Gráficas)
+         *  ==================================== */
+        let isReportsView = false;
+        let chartInstances = {}; // Para destruir gráficas viejas al recargar
+        
+        function toggleReportsView() {
+            isReportsView = !isReportsView;
+            const btn = document.getElementById('btnReportes');
+            const tableCard = document.querySelector('.table-card');
+            const chartsContainer = document.getElementById('chartsContainer');
+        
+            if (isReportsView) {
+                btn.innerHTML = '<i class="fas fa-table me-2"></i>VER TABLA';
+                btn.classList.replace('btn-outline-primary', 'btn-primary');
+                btn.classList.replace('bg-white', 'text-white');
+                
+                tableCard.classList.add('hidden');
+                chartsContainer.classList.remove('hidden');
+                renderCharts(); // Dibujar las gráficas
+            } else {
+                btn.innerHTML = '<i class="fas fa-chart-pie me-2"></i>MÉTRICAS';
+                btn.classList.replace('btn-primary', 'btn-outline-primary');
+                btn.classList.add('bg-white');
+                
+                chartsContainer.classList.add('hidden');
+                tableCard.classList.remove('hidden');
+            }
+        }
+        
+        function renderCharts() {
+            if (!isReportsView) return;
+            
+            // Obtenemos los datos ya filtrados en tiempo real por tu panel de filtros
+            const data = window.lastFilteredData || [];
+        
+            // Estructuras de datos para las gráficas
+            let catStats = {};
+            let platStats = { 'Chatfuel': 0, 'ORA': 0, 'Sin Asignar': 0 };
+            let dateStats = {};
+            let respStats = {};
+        
+            data.forEach(item => {
+                const f = item.data;
+                const cat = f[COL.CATEGORIA] || 'Sin Categoría';
+                const est = f[COL.ESTADO] || 'Pendiente';
+                const plat = f[COL.PLATAFORMA] || 'Sin Asignar';
+                const resp = f[COL.ASESORA_NOMBRE] || 'Sin registrar';
+                
+                // Formato de fecha
+                let dt = normalizeDate(f[COL.FECHA_SOL]);
+                const dateStr = dt.isValid() ? dt.format('DD/MM/YYYY') : 'Desconocido';
+        
+                // Acumular Categorías por Estado
+                if (!catStats[cat]) catStats[cat] = {'Pendiente':0, 'En Proceso':0, 'Revisado':0, 'Observado':0};
+                if (catStats[cat][est] !== undefined) catStats[cat][est]++;
+        
+                // Acumular Plataformas
+                if (platStats[plat] !== undefined) platStats[plat]++; else platStats['Sin Asignar']++;
+        
+                // Acumular Fechas
+                dateStats[dateStr] = (dateStats[dateStr] || 0) + 1;
+        
+                // Acumular Responsables
+                respStats[resp] = (respStats[resp] || 0) + 1;
+            });
+        
+            // --- Colores Corporativos del CSS ---
+            const colors = {
+                pendiente: '#f59e0b', enproceso: '#4f46e5', revisado: '#10b981', observado: '#ef4444', 
+                chatfuel: '#3b82f6', ora: '#8b5cf6', neutro: '#cbd5e1'
+            };
+        
+            // Función auxiliar para crear gráficas y destruir previas
+            const createChart = (id, type, data, options) => {
+                const ctx = document.getElementById(id).getContext('2d');
+                if (chartInstances[id]) chartInstances[id].destroy();
+                chartInstances[id] = new Chart(ctx, { type, data, options: { responsive: true, maintainAspectRatio: false, ...options } });
+            };
+        
+            // 1. Gráfica Categorías x Estado (Stacked Bar)
+            const catLabels = Object.keys(catStats);
+            createChart('chartCategorias', 'bar', {
+                labels: catLabels,
+                datasets: [
+                    { label: 'Pendiente', backgroundColor: colors.pendiente, data: catLabels.map(l => catStats[l]['Pendiente']) },
+                    { label: 'En Proceso', backgroundColor: colors.enproceso, data: catLabels.map(l => catStats[l]['En Proceso']) },
+                    { label: 'Revisado', backgroundColor: colors.revisado, data: catLabels.map(l => catStats[l]['Revisado']) },
+                    { label: 'Observado', backgroundColor: colors.observado, data: catLabels.map(l => catStats[l]['Observado']) }
+                ]
+            }, { scales: { x: { stacked: true }, y: { stacked: true } } });
+        
+            // 2. Gráfica Plataformas (Doughnut)
+            createChart('chartPlataformas', 'doughnut', {
+                labels: ['Chatfuel', 'ORA', 'Sin Asignar'],
+                datasets: [{
+                    data: [platStats['Chatfuel'], platStats['ORA'], platStats['Sin Asignar']],
+                    backgroundColor: [colors.chatfuel, colors.ora, colors.neutro],
+                    borderWidth: 0
+                }]
+            }, { cutout: '70%', plugins: { legend: { position: 'bottom' } } });
+        
+            // 3. Gráfica Evolución Temporal (Line)
+            const sortedDates = Object.keys(dateStats).sort((a,b) => moment(a, 'DD/MM/YYYY').valueOf() - moment(b, 'DD/MM/YYYY').valueOf());
+            createChart('chartEvolucion', 'line', {
+                labels: sortedDates,
+                datasets: [{
+                    label: 'Incidencias Registradas',
+                    data: sortedDates.map(d => dateStats[d]),
+                    borderColor: colors.enproceso, backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                    fill: true, tension: 0.3, pointBackgroundColor: colors.enproceso
+                }]
+            }, { plugins: { legend: { display: false } } });
+        
+            // 4. Top Responsables (Horizontal Bar)
+            const topResp = Object.keys(respStats).sort((a,b) => respStats[b] - respStats[a]).slice(0, 10);
+            createChart('chartResponsables', 'bar', {
+                labels: topResp.map(r => r.length > 20 ? r.substring(0, 20)+'...' : r),
+                datasets: [{
+                    label: 'Total Incidencias',
+                    data: topResp.map(r => respStats[r]),
+                    backgroundColor: colors.revisado,
+                    borderRadius: 4
+                }]
+            }, { indexAxis: 'y', plugins: { legend: { display: false } } });
+        }
+        
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </body>
 
 </html>
