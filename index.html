@@ -464,7 +464,6 @@
             </div>
 
             <!-- Cards de Resumen -->
-            <!-- Cards de Resumen -->
             <div class="row g-3 mb-4 hidden" id="statsCards">
                 <!-- TOTAL -->
                 <div class="col-xl col-lg-4 col-md-6">
@@ -612,7 +611,6 @@
                 </div>
             </div>
 
-            <!-- Filtros Avanzados -->
             <!-- Filtros Avanzados -->
             <div class="filter-card border-0 shadow-sm mb-4">
                 <div class="card-body p-4">
@@ -2110,16 +2108,16 @@
         
             if (isReportsView) {
                 btn.innerHTML = '<i class="fas fa-table me-2"></i>VER TABLA';
-                btn.classList.replace('btn-outline-primary', 'btn-primary');
-                btn.classList.replace('bg-white', 'text-white');
+                btn.classList.remove('btn-outline-primary', 'bg-white', 'text-primary');
+                btn.classList.add('btn-primary', 'text-white');
                 
                 tableCard.classList.add('hidden');
                 chartsContainer.classList.remove('hidden');
                 renderCharts(); // Dibujar las gráficas
             } else {
                 btn.innerHTML = '<i class="fas fa-chart-pie me-2"></i>MÉTRICAS';
-                btn.classList.replace('btn-primary', 'btn-outline-primary');
-                btn.classList.add('bg-white');
+                btn.classList.remove('btn-primary', 'text-white');
+                btn.classList.add('btn-outline-primary', 'bg-white');
                 
                 chartsContainer.classList.add('hidden');
                 tableCard.classList.remove('hidden');
