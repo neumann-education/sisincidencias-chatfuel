@@ -1489,7 +1489,8 @@
         function openEdit(index) {
             isNewRecord = (index === -1);
 
-            const isCreator = userData.rol.startsWith("ASESORA_") || userData.rol.startsWith("SOPORTE_") || userData.rol === "CALIDAD" || userData.rol === "MARKETING" || userData.rol === "SOPORTE" || userData.rol === "ADMIN";
+            // Limpiamos SOPORTE_ como solicitaste
+            const isCreator = userData.rol.startsWith("ASESORA_") || userData.rol === "CALIDAD" || userData.rol === "MARKETING" || userData.rol === "SOPORTE" || userData.rol === "ADMIN";
             const isSoporteAdmin = userData.rol === "SOPORTE" || userData.rol === "ADMIN" || userData.rol === "MARKETING";
 
             let row = isNewRecord ? Array(15).fill("") : [...currentData[index]];
@@ -1500,9 +1501,8 @@
             if (isNewRecord && isCreator) {
                 if (userData.rol !== "ASESORA_NACIONAL" && userData.rol !== "CALIDAD" && userData.rol !== "ASESORA_BGU-LIDER" && userData.rol !== "MARKETING" && userData.rol !== "SOPORTE" && userData.rol !== "ADMIN") row[COL.MARCA] = userData.rol.split('_')[1];
                 if (userData.rol.startsWith("ASESORA_") || userData.rol === "CALIDAD") row[COL.TIPO] = "Admisión";
-                if (userData.rol.startsWith("SOPORTE_") || userData.rol === "SOPORTE") row[COL.TIPO] = "Soporte";
+                if (userData.rol === "SOPORTE" || userData.rol === "ADMIN") row[COL.TIPO] = "Soporte";
                 if (userData.rol === "MARKETING") row[COL.TIPO] = "Marketing";
-                if (userData.rol === "ADMIN") row[COL.TIPO] = "Soporte";
                 row[COL.ESTADO] = "Pendiente";
                 row[COL.ASESORA_NOMBRE] = userData.nombre;
             }
@@ -1594,7 +1594,7 @@
 
             let panelSoporteHTML = '';
             
-            if (isCreator && (isNewRecord || row[COL.ESTADO] === 'Pendiente')) {
+            if (isNewRecord || (!isSoporteAdmin && row[COL.ESTADO] === 'Pendiente')) {
                 panelSoporteHTML = `
                     <div class="col-md-5 bg-light d-flex flex-column align-items-center justify-content-center p-5 text-center">
                         <i class="fas fa-clock mb-3" style="font-size: 48px; color: var(--border);"></i>
