@@ -653,7 +653,7 @@
                             <select id="brandFilter" class="form-select form-select-sm" onchange="currentPage=1;document.getElementById('asesoraFilter').value='';updateAsesoras();renderTable()">
                                 <option value="">Todas</option>
                                 <option value="BGUPREGRADO">BGU Pregrado</option>
-                                <option value="BGUPOSGRADO">BGU Posgrado</option>
+                                <option value="BGUMAESTRIA">BGU Maestría</option>
                                 <option value="BGUDOCTORADO">BGU Doctorado</option>
                                 <option value="BGUDCE">BGU DCE</option>
                                 <option value="IEMPRESA">IEMPRESA</option>
@@ -965,13 +965,13 @@
                     document.getElementById('viewModeFilter').value = 'mine'; // Default to mine
                 }
             } else if (res.rol === "ASESORA_BGU-LIDER") {
-                brandSelect.innerHTML = `<option value="">Todas (BGU / BGU DCE)</option><option value="BGUPREGRADO">BGU Pregrado</option><option value="BGUPOSGRADO">BGU Posgrado</option><option value="BGUDOCTORADO">BGU Doctorado</option><option value="BGUDCE">BGU DCE</option>`;
+                brandSelect.innerHTML = `<option value="">Todas (BGU / BGU DCE)</option><option value="BGUPREGRADO">BGU Pregrado</option><option value="BGUMAESTRIA">BGU Maestría</option><option value="BGUDOCTORADO">BGU Doctorado</option><option value="BGUDCE">BGU DCE</option>`;
                 viewModeContainer.classList.remove('hidden');
                 document.getElementById('viewModeFilter').value = 'all'; // Default a "Sede completa" para la líder
             } else if (res.rol === "ASESORA_NACIONAL") {
                 brandSelect.innerHTML = `<option value="">Todas (JVN / IEMPRESA)</option><option value="IEMPRESA">IEMPRESA</option><option value="JVN">JVN</option>`;
             } else {
-                brandSelect.innerHTML = `<option value="">Todas las Marcas</option><option value="BGUPREGRADO">BGU Pregrado</option><option value="BGUPOSGRADO">BGU Posgrado</option><option value="BGUDOCTORADO">BGU Doctorado</option><option value="IEMPRESA">IEMPRESA</option><option value="JVN">JVN</option><option value="ITAE">ITAE</option><option value="BGUDCE">BGU DCE</option>`;
+                brandSelect.innerHTML = `<option value="">Todas las Marcas</option><option value="BGUPREGRADO">BGU Pregrado</option><option value="BGUMAESTRIA">BGU Maestría</option><option value="BGUDOCTORADO">BGU Doctorado</option><option value="IEMPRESA">IEMPRESA</option><option value="JVN">JVN</option><option value="ITAE">ITAE</option><option value="BGUDCE">BGU DCE</option>`;
                 if (res.rol === "CALIDAD") {
                     viewModeContainer.classList.remove('hidden');
                     document.getElementById('viewModeFilter').value = 'mine';
@@ -1215,7 +1215,7 @@
                         
                         // 1. Regla de Oro Ampliada
                         // Si es Lider o asesora de BGUDCE, les permitimos ver ambas marcas en su tabla
-                        const isBGUFamily = (b) => b === "BGUPREGRADO" || b === "BGUPOSGRADO" || b === "BGUDOCTORADO" || b === "BGUDCE";
+                        const isBGUFamily = (b) => b === "BGUPREGRADO" || b === "BGUMAESTRIA" || b === "BGUDOCTORADO" || b === "BGUDCE";
                         if ((isLiderBGU || isBGUDCE) && !isBGUFamily(rowBrand)) continue; 
                         
                         // Para las demás asesoras, se mantiene el bloqueo estricto a su propia marca
@@ -1301,7 +1301,7 @@
                 
                 let brandTag = 'tag-gray';
                 if(f[COL.MARCA] === 'BGUPREGRADO') brandTag = 'tag-blue';
-                if(f[COL.MARCA] === 'BGUPOSGRADO') brandTag = 'tag-indigo';
+                if(f[COL.MARCA] === 'BGUMAESTRIA') brandTag = 'tag-indigo';
                 if(f[COL.MARCA] === 'BGUDOCTORADO') brandTag = 'tag-teal';
                 if(f[COL.MARCA] === 'IEMPRESA') brandTag = 'tag-green';
                 if(f[COL.MARCA] === 'JVN') brandTag = 'tag-purple';
@@ -1359,7 +1359,7 @@
         function getBrandLabel(code) {
             const map = {
                 'BGUPREGRADO': 'BGU Pregrado',
-                'BGUPOSGRADO': 'BGU Posgrado',
+                'BGUMAESTRIA': 'BGU Maestría',
                 'BGUDOCTORADO': 'BGU Doctorado',
                 'BGUDCE': 'BGU DCE'
             };
@@ -1536,12 +1536,12 @@
                                  <option value="JVN" ${row[COL.MARCA] === 'JVN' ? 'selected' : ''}>JVN</option>`;
             } else if (userData.rol === "ASESORA_BGU-LIDER") {
                 optionsMarca += `<option value="BGUPREGRADO" ${row[COL.MARCA] === 'BGUPREGRADO' ? 'selected' : ''}>BGU Pregrado</option>
-                                 <option value="BGUPOSGRADO" ${row[COL.MARCA] === 'BGUPOSGRADO' ? 'selected' : ''}>BGU Posgrado</option>
+                                 <option value="BGUMAESTRIA" ${row[COL.MARCA] === 'BGUMAESTRIA' ? 'selected' : ''}>BGU Maestría</option>
                                  <option value="BGUDOCTORADO" ${row[COL.MARCA] === 'BGUDOCTORADO' ? 'selected' : ''}>BGU Doctorado</option>
                                  <option value="BGUDCE" ${row[COL.MARCA] === 'BGUDCE' ? 'selected' : ''}>BGU DCE</option>`;
             } else {
                 optionsMarca += `<option value="BGUPREGRADO" ${row[COL.MARCA] === 'BGUPREGRADO' ? 'selected' : ''}>BGU Pregrado</option>
-                 <option value="BGUPOSGRADO" ${row[COL.MARCA] === 'BGUPOSGRADO' ? 'selected' : ''}>BGU Posgrado</option>
+                 <option value="BGUMAESTRIA" ${row[COL.MARCA] === 'BGUMAESTRIA' ? 'selected' : ''}>BGU Maestría</option>
                  <option value="BGUDOCTORADO" ${row[COL.MARCA] === 'BGUDOCTORADO' ? 'selected' : ''}>BGU Doctorado</option>
                  <option value="IEMPRESA" ${row[COL.MARCA] === 'IEMPRESA' ? 'selected' : ''}>IEMPRESA</option>
                  <option value="JVN" ${row[COL.MARCA] === 'JVN' ? 'selected' : ''}>JVN</option>
