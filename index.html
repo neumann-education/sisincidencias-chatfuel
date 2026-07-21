@@ -1525,7 +1525,10 @@
             const disCategoria = (isLocked || (!isNewRecord && userData.rol !== "SOPORTE" && userData.rol !== "ADMIN" && userData.rol !== "CALIDAD")) ? "disabled" : "";
 
             let disMarca = "disabled";
-            if (!isLocked && isCreator && (userData.rol === "ASESORA_NACIONAL" || userData.rol === "CALIDAD" || userData.rol === "ASESORA_BGU-LIDER" || userData.rol === "MARKETING" || userData.rol === "SOPORTE" || userData.rol === "ADMIN") && isNewRecord) disMarca = "";
+            // CORRECCIÓN: Le quitamos "&& isNewRecord" para que Calidad, Soporte, Admin, etc., puedan editar la marca de tickets existentes.
+            if (!isLocked && (userData.rol === "ASESORA_NACIONAL" || userData.rol === "CALIDAD" || userData.rol === "ASESORA_BGU-LIDER" || userData.rol === "MARKETING" || userData.rol === "SOPORTE" || userData.rol === "ADMIN")) {
+                disMarca = "";
+            }
             
             let optionsMarca = `<option value="">Seleccione...</option>`;
             if (userData.rol === "ASESORA_NACIONAL") {
