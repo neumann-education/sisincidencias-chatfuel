@@ -330,6 +330,8 @@
         .tag-gray { background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; }
         .tag-red { background: #fef2f2; color: #991b1b; border: 1px solid #fee2e2; }
         .tag-emerald { background: #ecfdf5; color: #065f46; border: 1px solid #d1fae5; }
+        .tag-teal { background: #f0fdfa; color: #115e59; border: 1px solid #ccfbf1; }
+        .tag-indigo { background: #eef2ff; color: #3730a3; border: 1px solid #e0e7ff; }
 
         /* Loader */
         .loading-overlay {
@@ -650,7 +652,9 @@
                             <label class="form-label small fw-bold text-muted text-uppercase mb-2" style="font-size: 10px; letter-spacing: 0.05em;">Marca</label>
                             <select id="brandFilter" class="form-select form-select-sm" onchange="currentPage=1;document.getElementById('asesoraFilter').value='';updateAsesoras();renderTable()">
                                 <option value="">Todas</option>
-                                <option value="BGU">BGU</option>
+                                <option value="BGUPREGRADO">BGU Pregrado</option>
+                                <option value="BGUPOSGRADO">BGU Posgrado</option>
+                                <option value="BGUDOCTORADO">BGU Doctorado</option>
                                 <option value="BGUDCE">BGU DCE</option>
                                 <option value="IEMPRESA">IEMPRESA</option>
                                 <option value="JVN">JVN</option>
@@ -760,7 +764,7 @@
                 <div class="modal-footer bg-white px-4 py-3 border-top">
                     <button type="button" class="btn btn-link text-decoration-none text-muted fw-bold small"
                         data-bs-dismiss="modal">Cerrar</button>
-                    <button type="button" class="btn btn-primary px-4 fw-bold" style="border-radius: 8px; font-size: 13px;" onclick="saveData()">
+                    <button type="button" id="btnGuardarCambios" class="btn btn-primary px-4 fw-bold" style="border-radius: 8px; font-size: 13px;" onclick="saveData()">
                         <i class="fas fa-save me-2"></i>Guardar Cambios
                     </button>
                 </div>
@@ -920,7 +924,7 @@
 
             document.getElementById('rolBadge').innerText = `${res.nombre.toUpperCase()} | ${displayRol}`;
 
-            if (res.rol.startsWith("ASESORA_") || res.rol.startsWith("SOPORTE_") || res.rol === "CALIDAD" || res.rol === "MARKETING") {
+            if (res.rol.startsWith("ASESORA_") || res.rol.startsWith("SOPORTE_") || res.rol === "CALIDAD" || res.rol === "MARKETING" || res.rol === "SOPORTE" || res.rol === "ADMIN") {
                 document.getElementById('btnNuevo').classList.remove('hidden');
             } else {
                 document.getElementById('btnNuevo').classList.add('hidden');
@@ -961,13 +965,13 @@
                     document.getElementById('viewModeFilter').value = 'mine'; // Default to mine
                 }
             } else if (res.rol === "ASESORA_BGU-LIDER") {
-                brandSelect.innerHTML = `<option value="">Todas (BGU / BGU DCE)</option><option value="BGU">BGU</option><option value="BGUDCE">BGU DCE</option>`;
+                brandSelect.innerHTML = `<option value="">Todas (BGU / BGU DCE)</option><option value="BGUPREGRADO">BGU Pregrado</option><option value="BGUPOSGRADO">BGU Posgrado</option><option value="BGUDOCTORADO">BGU Doctorado</option><option value="BGUDCE">BGU DCE</option>`;
                 viewModeContainer.classList.remove('hidden');
                 document.getElementById('viewModeFilter').value = 'all'; // Default a "Sede completa" para la líder
             } else if (res.rol === "ASESORA_NACIONAL") {
                 brandSelect.innerHTML = `<option value="">Todas (JVN / IEMPRESA)</option><option value="IEMPRESA">IEMPRESA</option><option value="JVN">JVN</option>`;
             } else {
-                brandSelect.innerHTML = `<option value="">Todas las Marcas</option><option value="BGU">BGU</option><option value="IEMPRESA">IEMPRESA</option><option value="JVN">JVN</option><option value="ITAE">ITAE</option><option value="BGUDCE">BGU DCE</option>`; // NUEVA MARCA
+                brandSelect.innerHTML = `<option value="">Todas las Marcas</option><option value="BGUPREGRADO">BGU Pregrado</option><option value="BGUPOSGRADO">BGU Posgrado</option><option value="BGUDOCTORADO">BGU Doctorado</option><option value="IEMPRESA">IEMPRESA</option><option value="JVN">JVN</option><option value="ITAE">ITAE</option><option value="BGUDCE">BGU DCE</option>`;
                 if (res.rol === "CALIDAD") {
                     viewModeContainer.classList.remove('hidden');
                     document.getElementById('viewModeFilter').value = 'mine';
@@ -1211,7 +1215,8 @@
                         
                         // 1. Regla de Oro Ampliada
                         // Si es Lider o asesora de BGUDCE, les permitimos ver ambas marcas en su tabla
-                        if ((isLiderBGU || isBGUDCE) && rowBrand !== "BGU" && rowBrand !== "BGUDCE") continue; 
+                        const isBGUFamily = (b) => b === "BGUPREGRADO" || b === "BGUPOSGRADO" || b === "BGUDOCTORADO" || b === "BGUDCE";
+                        if ((isLiderBGU || isBGUDCE) && !isBGUFamily(rowBrand)) continue; 
                         
                         // Para las demás asesoras, se mantiene el bloqueo estricto a su propia marca
                         if (!isCalidad && !isLiderBGU && !isBGUDCE && rowBrand !== allowedBrand) continue;
@@ -1295,7 +1300,9 @@
                 const f = item.data;
                 
                 let brandTag = 'tag-gray';
-                if(f[COL.MARCA] === 'BGU') brandTag = 'tag-blue';
+                if(f[COL.MARCA] === 'BGUPREGRADO') brandTag = 'tag-blue';
+                if(f[COL.MARCA] === 'BGUPOSGRADO') brandTag = 'tag-indigo';
+                if(f[COL.MARCA] === 'BGUDOCTORADO') brandTag = 'tag-teal';
                 if(f[COL.MARCA] === 'IEMPRESA') brandTag = 'tag-green';
                 if(f[COL.MARCA] === 'JVN') brandTag = 'tag-purple';
                 if(f[COL.MARCA] === 'ITAE') brandTag = 'tag-pink';
@@ -1318,7 +1325,7 @@
                                 </span>
                                 <div class="d-flex gap-1">
                                     <span class="tag tag-gray border shadow-sm">#${f[COL.ID]}</span>
-                                    <span class="tag ${brandTag} shadow-sm border-0">${f[COL.MARCA]}</span>
+                                    <span class="tag ${brandTag} shadow-sm border-0">${getBrandLabel(f[COL.MARCA])}</span>
                                 </div>
                             </div>
                         </td>
@@ -1346,6 +1353,17 @@
             updateSortIcons();
             window.lastFilteredData = filteredData; // NUEVO: Guarda la data filtrada en memoria
             if (isReportsView) renderCharts(); // NUEVO: Actualiza la gráfica si estás en esa vista
+        }
+
+        // Etiquetas legibles para el desplegable/columnas de marca
+        function getBrandLabel(code) {
+            const map = {
+                'BGUPREGRADO': 'BGU Pregrado',
+                'BGUPOSGRADO': 'BGU Posgrado',
+                'BGUDOCTORADO': 'BGU Doctorado',
+                'BGUDCE': 'BGU DCE'
+            };
+            return map[code] || code || '';
         }
 
         function getStatusBadge(status) {
@@ -1418,7 +1436,9 @@
 
         // NUEVA FUNCIÓN PARA CONTROLAR AMBOS COMPORTAMIENTOS DINÁMICOS
         function toggleDynamicFields() {
-            const cat = document.getElementById('edit-14').value;
+            const catEl = document.getElementById('edit-14');
+            if (!catEl) return;
+            const cat = catEl.value;
             const solContainer = document.getElementById('container-solucion');
             const solInput = document.getElementById('edit-5');
 
@@ -1469,16 +1489,20 @@
         function openEdit(index) {
             isNewRecord = (index === -1);
 
-            const isCreator = userData.rol.startsWith("ASESORA_") || userData.rol.startsWith("SOPORTE_") || userData.rol === "CALIDAD" || userData.rol === "MARKETING";
+            const isCreator = userData.rol.startsWith("ASESORA_") || userData.rol.startsWith("SOPORTE_") || userData.rol === "CALIDAD" || userData.rol === "MARKETING" || userData.rol === "SOPORTE" || userData.rol === "ADMIN";
             const isSoporteAdmin = userData.rol === "SOPORTE" || userData.rol === "ADMIN" || userData.rol === "MARKETING";
 
             let row = isNewRecord ? Array(15).fill("") : [...currentData[index]];
 
+            // Ticket bloqueado: ya no se puede editar nada una vez Revisado u Observado
+            const isLocked = !isNewRecord && (row[COL.ESTADO] === 'Revisado' || row[COL.ESTADO] === 'Observado');
+
             if (isNewRecord && isCreator) {
-                if (userData.rol !== "ASESORA_NACIONAL" && userData.rol !== "CALIDAD" && userData.rol !== "ASESORA_BGU-LIDER" && userData.rol !== "MARKETING") row[COL.MARCA] = userData.rol.split('_')[1];
+                if (userData.rol !== "ASESORA_NACIONAL" && userData.rol !== "CALIDAD" && userData.rol !== "ASESORA_BGU-LIDER" && userData.rol !== "MARKETING" && userData.rol !== "SOPORTE" && userData.rol !== "ADMIN") row[COL.MARCA] = userData.rol.split('_')[1];
                 if (userData.rol.startsWith("ASESORA_") || userData.rol === "CALIDAD") row[COL.TIPO] = "Admisión";
-                if (userData.rol.startsWith("SOPORTE_")) row[COL.TIPO] = "Soporte";
+                if (userData.rol.startsWith("SOPORTE_") || userData.rol === "SOPORTE") row[COL.TIPO] = "Soporte";
                 if (userData.rol === "MARKETING") row[COL.TIPO] = "Marketing";
+                if (userData.rol === "ADMIN") row[COL.TIPO] = "Soporte";
                 row[COL.ESTADO] = "Pendiente";
                 row[COL.ASESORA_NOMBRE] = userData.nombre;
             }
@@ -1490,26 +1514,32 @@
 
             const formContainer = document.getElementById("editForm");
 
-            const readCreator = (!isNewRecord && isSoporteAdmin) ? "readonly" : "";
-            const disCreator = (!isNewRecord && isSoporteAdmin) ? "disabled" : "";
-            const readAdmin = (isCreator && !isSoporteAdmin) ? "readonly" : "";
-            const disAdmin = (isCreator && !isSoporteAdmin) ? "disabled" : "";
+            const readCreator = (isLocked || (!isNewRecord && isSoporteAdmin)) ? "readonly" : "";
+            const disCreator = (isLocked || (!isNewRecord && isSoporteAdmin)) ? "disabled" : "";
+            // El panel de Resolución Soporte (Estado + Respuesta al Asesor) sigue editable para SOPORTE/ADMIN
+            // incluso si el ticket ya está bloqueado (Revisado/Observado). Para el resto de roles, se bloquea.
+            const readAdmin = (!isSoporteAdmin && (isLocked || isCreator)) ? "readonly" : "";
+            const disAdmin = (!isSoporteAdmin && (isLocked || isCreator)) ? "disabled" : "";
             
-            // NUEVA REGLA: En edición (!isNewRecord), bloquea la categoría si NO es SOPORTE o ADMIN.
-            const disCategoria = (!isNewRecord && userData.rol !== "SOPORTE" && userData.rol !== "ADMIN") ? "disabled" : "";
+            // Categoría editable para SOPORTE, ADMIN y CALIDAD (aunque el ticket ya exista), salvo que esté bloqueado
+            const disCategoria = (isLocked || (!isNewRecord && userData.rol !== "SOPORTE" && userData.rol !== "ADMIN" && userData.rol !== "CALIDAD")) ? "disabled" : "";
 
             let disMarca = "disabled";
-            if (isCreator && (userData.rol === "ASESORA_NACIONAL" || userData.rol === "CALIDAD" || userData.rol === "ASESORA_BGU-LIDER" || userData.rol === "MARKETING") && isNewRecord) disMarca = "";
+            if (!isLocked && isCreator && (userData.rol === "ASESORA_NACIONAL" || userData.rol === "CALIDAD" || userData.rol === "ASESORA_BGU-LIDER" || userData.rol === "MARKETING" || userData.rol === "SOPORTE" || userData.rol === "ADMIN") && isNewRecord) disMarca = "";
             
             let optionsMarca = `<option value="">Seleccione...</option>`;
             if (userData.rol === "ASESORA_NACIONAL") {
                 optionsMarca += `<option value="IEMPRESA" ${row[COL.MARCA] === 'IEMPRESA' ? 'selected' : ''}>IEMPRESA</option>
                                  <option value="JVN" ${row[COL.MARCA] === 'JVN' ? 'selected' : ''}>JVN</option>`;
             } else if (userData.rol === "ASESORA_BGU-LIDER") {
-                optionsMarca += `<option value="BGU" ${row[COL.MARCA] === 'BGU' ? 'selected' : ''}>BGU</option>
+                optionsMarca += `<option value="BGUPREGRADO" ${row[COL.MARCA] === 'BGUPREGRADO' ? 'selected' : ''}>BGU Pregrado</option>
+                                 <option value="BGUPOSGRADO" ${row[COL.MARCA] === 'BGUPOSGRADO' ? 'selected' : ''}>BGU Posgrado</option>
+                                 <option value="BGUDOCTORADO" ${row[COL.MARCA] === 'BGUDOCTORADO' ? 'selected' : ''}>BGU Doctorado</option>
                                  <option value="BGUDCE" ${row[COL.MARCA] === 'BGUDCE' ? 'selected' : ''}>BGU DCE</option>`;
             } else {
-                optionsMarca += `<option value="BGU" ${row[COL.MARCA] === 'BGU' ? 'selected' : ''}>BGU</option>
+                optionsMarca += `<option value="BGUPREGRADO" ${row[COL.MARCA] === 'BGUPREGRADO' ? 'selected' : ''}>BGU Pregrado</option>
+                 <option value="BGUPOSGRADO" ${row[COL.MARCA] === 'BGUPOSGRADO' ? 'selected' : ''}>BGU Posgrado</option>
+                 <option value="BGUDOCTORADO" ${row[COL.MARCA] === 'BGUDOCTORADO' ? 'selected' : ''}>BGU Doctorado</option>
                  <option value="IEMPRESA" ${row[COL.MARCA] === 'IEMPRESA' ? 'selected' : ''}>IEMPRESA</option>
                  <option value="JVN" ${row[COL.MARCA] === 'JVN' ? 'selected' : ''}>JVN</option>
                  <option value="ITAE" ${row[COL.MARCA] === 'ITAE' ? 'selected' : ''}>ITAE</option>
@@ -1537,8 +1567,8 @@
             let tipoInput = '';
 
             // Si es creador (asesora/soporte marca) y su rol ya define la marca (disMarca === "disabled")
-            if (isCreator && disMarca === "disabled" && userData.rol !== "ASESORA_NACIONAL" && userData.rol !== "CALIDAD" && userData.rol !== "ASESORA_BGU-LIDER") {
-                staticTags += `<span class="tag tag-gray me-2 shadow-sm border"><i class="fas fa-building me-1"></i> ${row[COL.MARCA]}</span>`;
+            if (isCreator && disMarca === "disabled" && userData.rol !== "ASESORA_NACIONAL" && userData.rol !== "CALIDAD" && userData.rol !== "ASESORA_BGU-LIDER" && userData.rol !== "SOPORTE" && userData.rol !== "ADMIN") {
+                staticTags += `<span class="tag tag-gray me-2 shadow-sm border"><i class="fas fa-building me-1"></i> ${getBrandLabel(row[COL.MARCA])}</span>`;
                 marcaInput = `<input type="hidden" id="edit-2" value="${row[COL.MARCA]}">`;
             } else {
                 marcaInput = `
@@ -1622,7 +1652,19 @@
                 `;
             }
 
+            let lockedBanner = isLocked ? `
+                <div class="col-12">
+                    <div class="alert alert-secondary d-flex align-items-center gap-2 mb-0 rounded-0 border-0 border-bottom" style="background-color: var(--secondary);">
+                        <i class="fas fa-lock text-muted"></i>
+                        <span class="small fw-bold text-muted">${isSoporteAdmin
+                            ? `Este ticket ya fue marcado como "${row[COL.ESTADO]}". Solo puedes ajustar el Estado y la Respuesta al Asesor.`
+                            : `Este ticket ya fue marcado como "${row[COL.ESTADO]}" y no puede editarse.`}</span>
+                    </div>
+                </div>
+            ` : '';
+
             let html = `
+                ${lockedBanner}
                 <input type="hidden" id="edit-0" value="${row[COL.ID] || ''}">
                 <input type="hidden" id="edit-1" value="${row[COL.FECHA_SOL] || ''}">
                 <input type="hidden" id="edit-10" value="${row[COL.FECHA_ATENCION] || ''}">
@@ -1693,7 +1735,7 @@
                             <div class="col-12">
                                 <label class="form-label text-muted small fw-bold text-uppercase" style="font-size: 10px;"><i class="far fa-images me-1"></i> Evidencia</label>
                                 <input type="hidden" id="edit-6" value="${row[COL.IMG_INCIDENCIA] || ''}">
-                                ${isCreator ? `
+                                ${(isCreator && !isLocked) ? `
                                     <input type="file" id="file-incidencia" class="d-none" accept="image/*" multiple>
                                     <div id="drop-incidencia" class="drop-zone py-3" style="border-style: solid; background-color: var(--secondary);">
                                         <i class="fas fa-paperclip text-muted mb-1"></i>
@@ -1720,9 +1762,19 @@
             populatePreviewContainer('preview-container-incidencia', row[COL.IMG_INCIDENCIA], 'edit-6');
             populatePreviewContainer('preview-container-soporte', row[COL.IMG_SOPORTE], 'edit-9');
 
-            // Asignamos eventos para subir múltiples imágenes
-            if (isCreator) bindImageEvents('drop-incidencia', 'file-incidencia', 'preview-container-incidencia', 'edit-6');
+            // Asignamos eventos para subir múltiples imágenes (solo si no está bloqueado)
+            if (isCreator && !isLocked) bindImageEvents('drop-incidencia', 'file-incidencia', 'preview-container-incidencia', 'edit-6');
             if (isSoporteAdmin) bindImageEvents('drop-soporte', 'file-soporte', 'preview-container-soporte', 'edit-9');
+
+            // Oculta / deshabilita el botón de Guardar si el ticket está bloqueado
+            const btnGuardar = document.getElementById('btnGuardarCambios');
+            if (btnGuardar) {
+                if (isLocked && !isSoporteAdmin) {
+                    btnGuardar.classList.add('hidden');
+                } else {
+                    btnGuardar.classList.remove('hidden');
+                }
+            }
         }
 
         // NUEVAS FUNCIONES PARA MÚLTIPLES IMÁGENES
@@ -1878,13 +1930,19 @@
 
         async function saveData() {
             let rowData = Array(15).fill("");
-            const isCreator = userData.rol.startsWith("ASESORA_") || userData.rol.startsWith("SOPORTE_") || userData.rol === "CALIDAD" || userData.rol === "MARKETING";
+            const isCreator = userData.rol.startsWith("ASESORA_") || userData.rol.startsWith("SOPORTE_") || userData.rol === "CALIDAD" || userData.rol === "MARKETING" || userData.rol === "SOPORTE" || userData.rol === "ADMIN";
             const isSoporteAdmin = userData.rol === "SOPORTE" || userData.rol === "ADMIN" || userData.rol === "MARKETING";
             const currentId = document.getElementById('edit-0').value;
 
             let originalRow = null;
             if (!isNewRecord && currentId) {
                 originalRow = currentData.find(r => r[0].toString() === currentId.toString());
+            }
+
+            // Salvaguarda: si el ticket ya está Revisado/Observado, solo SOPORTE/ADMIN pueden seguir guardando
+            // (para ajustar el Estado o la Respuesta al Asesor). El resto de roles queda bloqueado.
+            if (originalRow && (originalRow[COL.ESTADO] === 'Revisado' || originalRow[COL.ESTADO] === 'Observado') && !isSoporteAdmin) {
+                return Swal.fire('Ticket cerrado', 'Este ticket ya fue resuelto y no puede editarse.', 'info');
             }
 
             let statusPrev = originalRow ? originalRow[COL.ESTADO] : "";
@@ -1924,10 +1982,11 @@
                 // El backend hace esto automáticamente, pero para que no desaparezca de la vista temporal
                 // necesitamos simular los datos obligatorios del usuario en el frontend:
                 if (isCreator) {
-                    if (userData.rol !== "ASESORA_NACIONAL" && userData.rol !== "CALIDAD" && userData.rol !== "ASESORA_BGU-LIDER" && userData.rol !== "MARKETING") rowData[COL.MARCA] = userData.rol.split('_')[1];
+                    if (userData.rol !== "ASESORA_NACIONAL" && userData.rol !== "CALIDAD" && userData.rol !== "ASESORA_BGU-LIDER" && userData.rol !== "MARKETING" && userData.rol !== "SOPORTE" && userData.rol !== "ADMIN") rowData[COL.MARCA] = userData.rol.split('_')[1];
                     if (userData.rol.startsWith("ASESORA_") || userData.rol === "CALIDAD") rowData[COL.TIPO] = "Admisión";
-                    if (userData.rol.startsWith("SOPORTE_")) rowData[COL.TIPO] = "Soporte";
+                    if (userData.rol.startsWith("SOPORTE_") || userData.rol === "SOPORTE") rowData[COL.TIPO] = "Soporte";
                     if (userData.rol === "MARKETING") rowData[COL.TIPO] = "Marketing";
+                    if (userData.rol === "ADMIN") rowData[COL.TIPO] = "Soporte";
                     rowData[COL.ESTADO] = "Pendiente";
                     rowData[COL.ASESORA_NOMBRE] = userData.nombre;
                 }
@@ -1969,7 +2028,7 @@
 
             // Validaciones
             if (isCreator) {
-                if ((userData.rol === "ASESORA_NACIONAL" || userData.rol === "CALIDAD" || userData.rol === "ASESORA_BGU-LIDER" || userData.rol === "MARKETING") && !rowData[COL.MARCA]) {
+                if ((userData.rol === "ASESORA_NACIONAL" || userData.rol === "CALIDAD" || userData.rol === "ASESORA_BGU-LIDER" || userData.rol === "MARKETING" || userData.rol === "SOPORTE" || userData.rol === "ADMIN") && !rowData[COL.MARCA]) {
                     return Swal.fire('Error', 'Debe seleccionar una Marca', 'warning');
                 }
                 if (!rowData[COL.PLATAFORMA]) {
@@ -2198,7 +2257,7 @@
                 let numContacto = `"${f[COL.NUMERO_CONTACTO] || ''}\t"`;
 
                 const row = [
-                    f[COL.ID], fechaFormateada, f[COL.MARCA], numContacto,
+                    f[COL.ID], fechaFormateada, getBrandLabel(f[COL.MARCA]), numContacto,
                     `"${cleanProblema}"`, `"${cleanSolucion}"`,
                     f[COL.ESTADO], f[COL.ASESORA_NOMBRE], f[COL.PLATAFORMA], 
                     f[COL.TIPO], f[COL.CATEGORIA]
@@ -2248,7 +2307,7 @@
                 const row = [
                     f[COL.ID], 
                     fechaFormateada, // <--- Aquí inyectamos la fecha ya bonita
-                    f[COL.MARCA], 
+                    getBrandLabel(f[COL.MARCA]), 
                     numContacto,     // <--- Aquí inyectamos el número protegido
                     `"${cleanProblema}"`, 
                     `"${cleanSolucion}"`,
