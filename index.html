@@ -1514,8 +1514,8 @@
 
             const formContainer = document.getElementById("editForm");
 
-            const readCreator = (isLocked || (!isNewRecord && isSoporteAdmin)) ? "readonly" : "";
-            const disCreator = (isLocked || (!isNewRecord && isSoporteAdmin)) ? "disabled" : "";
+            const readCreator = isLocked ? "readonly" : "";
+            const disCreator = isLocked ? "disabled" : "";
             // El panel de Resolución Soporte (Estado + Respuesta al Asesor) sigue editable para SOPORTE/ADMIN
             // incluso si el ticket ya está bloqueado (Revisado/Observado). Para el resto de roles, se bloquea.
             const readAdmin = (!isSoporteAdmin && (isLocked || isCreator)) ? "readonly" : "";
@@ -1653,15 +1653,13 @@
             }
 
             let lockedBanner = isLocked ? `
-                <div class="col-12">
-                    <div class="alert alert-secondary d-flex align-items-center gap-2 mb-0 rounded-0 border-0 border-bottom" style="background-color: var(--secondary);">
-                        <i class="fas fa-lock text-muted"></i>
-                        <span class="small fw-bold text-muted">${isSoporteAdmin
-                            ? `Este ticket ya fue marcado como "${row[COL.ESTADO]}". Solo puedes ajustar el Estado y la Respuesta al Asesor.`
-                            : `Este ticket ya fue marcado como "${row[COL.ESTADO]}" y no puede editarse.`}</span>
-                    </div>
+            <div class="col-12">
+                <div class="alert alert-secondary d-flex align-items-center gap-2 mb-0 rounded-0 border-0 border-bottom" style="background-color: var(--secondary);">
+                    <i class="fas fa-lock text-muted"></i>
+                    <span class="small fw-bold text-muted">Este ticket ya fue marcado como "${row[COL.ESTADO]}" y no puede editarse.</span>
                 </div>
-            ` : '';
+            </div>
+        ` : '';
 
             let html = `
                 ${lockedBanner}
